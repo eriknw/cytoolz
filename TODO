@@ -1,0 +1,23 @@
+dicttoolz:
+    update_in
+    get_in
+
+itertoolz:
+    merge_sorted
+    interleave
+    take_nth
+    first
+    second
+    nth
+    last
+    rest
+    get
+    mapcat
+    sliding_window
+    partition
+    partition_all
+    pluck
+
+itertoolz.recipes
+
+curried
