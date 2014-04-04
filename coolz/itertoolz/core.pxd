@@ -38,6 +38,24 @@ cpdef inline object take(int n, object seq)
 cpdef object drop(int n, object seq)
 
 
+cpdef inline object take_nth(int n, object seq)
+
+
+cpdef object first(object seq)
+
+
+cpdef object second(object seq)
+
+
+cpdef object nth(int n, object seq)
+
+
+cpdef object last(object seq)
+
+
+cpdef object rest(object seq)
+
+
 cpdef inline object cons(object el, object seq)
 
 

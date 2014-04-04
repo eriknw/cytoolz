@@ -1,6 +1,7 @@
 from cpython.dict cimport PyDict_Contains, PyDict_GetItem, PyDict_New, PyDict_SetItem
 from cpython.list cimport PyList_New, PyList_Append
 from cpython.ref cimport PyObject
+from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
 from itertools import chain, islice
 
@@ -202,7 +203,8 @@ cpdef bint isiterable(object x):
         iter(x)
         return True
     except TypeError:
-        return False
+        pass
+    return False
 
 
 cpdef bint isdistinct(object seq):
@@ -257,6 +259,74 @@ cpdef object drop(int n, object seq):
     except StopIteration:
         pass
     return iter_seq
+
+
+cpdef inline object take_nth(int n, object seq):
+    """ Every nth item in seq
+
+    >>> list(take_nth(2, [10, 20, 30, 40, 50]))
+    [10, 30, 50]
+    """
+    return islice(seq, 0, None, n)
+
+
+cpdef object first(object seq):
+    """ The first element in a sequence
+
+    >>> first('ABC')
+    'A'
+    """
+    return next(iter(seq))
+
+
+cpdef object second(object seq):
+    """ The second element in a sequence
+
+    >>> second('ABC')
+    'B'
+    """
+    seq = iter(seq)
+    next(seq)
+    return next(seq)
+
+
+cpdef object nth(int n, object seq):
+    """ The nth element in a sequence
+
+    >>> nth(1, 'ABC')
+    'B'
+    """
+    if PySequence_Check(seq):
+        return seq[n]
+    seq = iter(seq)
+    while n > 0:
+        n -= 1
+        next(seq)
+    return next(seq)
+
+
+cpdef object last(object seq):
+    """ The last element in a sequence
+
+    >>> last('ABC')
+    'C'
+    """
+    cdef object val
+    if PySequence_Check(seq):
+        return seq[-1]
+    seq = iter(seq)
+    try:
+        while True:
+            val = next(seq)
+    except StopIteration:
+        pass
+    return val
+
+
+cpdef object rest(object seq):
+    seq = iter(seq)
+    next(seq)
+    return seq
 
 
 cpdef inline object cons(object el, object seq):

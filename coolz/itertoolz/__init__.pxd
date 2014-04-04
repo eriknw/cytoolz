@@ -1,3 +1,4 @@
 from .core cimport (groupby, remove, concat, concatv, frequencies, interpose,
-                    take, drop, unique, reduceby, isiterable, isdistinct,
-                    cons, iterate, accumulate, count)
+                    first, second, nth, take, drop, rest, last, unique,
+                    reduceby, isiterable, isdistinct, cons, iterate,
+                    accumulate, count, take_nth)

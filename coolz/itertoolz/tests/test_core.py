@@ -4,11 +4,12 @@ from functools import partial
 from coolz.itertoolz.core import (remove, groupby,
                                   concat, concatv, unique,
                                   identity, isiterable,
-                                  isdistinct,
-                                  take, drop, interpose,
-                                  cons, frequencies,
+                                  isdistinct, first, second,
+                                  nth, take, drop, interpose,
+                                  rest, last, cons, frequencies,
                                   reduceby, iterate, accumulate,
-                                  count)
+                                  count,
+                                  take_nth)
 
 from toolz.compatibility import range, filter
 from operator import add, mul
@@ -88,45 +89,35 @@ def test_isdistinct():
     assert isdistinct(iter([1, 2, 1])) is False
 
 
-'''
 def test_nth():
     assert nth(2, 'ABCDE') == 'C'
     assert nth(2, iter('ABCDE')) == 'C'
     assert nth(1, (3, 2, 1)) == 2
     assert nth(0, {'foo': 'bar'}) == 'foo'
     assert raises(StopIteration, lambda: nth(10, {10: 'foo'}))
-'''
 
 
-'''
 def test_first():
     assert first('ABCDE') == 'A'
     assert first((3, 2, 1)) == 3
     assert isinstance(first({0: 'zero', 1: 'one'}), int)
-'''
 
 
-'''
 def test_second():
     assert second('ABCDE') == 'B'
     assert second((3, 2, 1)) == 2
     assert isinstance(second({0: 'zero', 1: 'one'}), int)
-'''
 
 
-'''
 def test_last():
     assert last('ABCDE') == 'E'
     assert last((3, 2, 1)) == 1
     assert isinstance(last({0: 'zero', 1: 'one'}), int)
-'''
 
 
-'''
 def test_rest():
     assert list(rest('ABCDE')) == list('BCDE')
     assert list(rest((3, 2, 1))) == list((2, 1))
-'''
 
 
 def test_take():
@@ -139,10 +130,8 @@ def test_drop():
     assert list(drop(1, (3, 2, 1))) == list((2, 1))
 
 
-'''
 def test_take_nth():
     assert list(take_nth(2, 'ABCDE')) == list('ACE')
-'''
 
 
 '''
@@ -193,7 +182,7 @@ def test_concatv():
 
 
 def test_interpose():
-    # assert "a" == first(rest(interpose("a", range(1000000000))))
+    assert "a" == first(rest(interpose("a", range(1000000000))))
     assert "tXaXrXzXaXn" == "".join(interpose("X", "tarzan"))
     assert list(interpose(0, itertools.repeat(1, 4))) == [1, 0, 1, 0, 1, 0, 1]
     assert list(interpose('.', ['a', 'b', 'c'])) == ['a', '.', 'b', '.', 'c']

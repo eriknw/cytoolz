@@ -1,6 +1,8 @@
-from .itertoolz cimport (groupby, frequencies, reduceby, take, drop, concat,
-                         concatv, isdistinct, interpose, unique, isiterable,
-                         remove, iterate, accumulate, count, cons)
+from .itertoolz cimport (groupby, frequencies, reduceby,
+                         first, second, nth, take, drop, rest, last,
+                         concat, concatv, isdistinct, interpose, unique,
+                         isiterable, remove, iterate, accumulate,
+                         count, cons, take_nth)
 
 from .functoolz cimport (memoize, c_memoize, curry, c_compose, c_thread_first,
                          c_thread_last, identity, c_pipe, complement, c_juxt,
@@ -8,4 +10,3 @@ from .functoolz cimport (memoize, c_memoize, curry, c_compose, c_thread_first,
 
 from .dicttoolz cimport (c_merge, c_merge_with, keymap, valmap, assoc,
                          keyfilter, valfilter)
-

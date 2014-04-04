@@ -5,12 +5,6 @@ dicttoolz:
 itertoolz:
     merge_sorted
     interleave
-    take_nth
-    first
-    second
-    nth
-    last
-    rest
     get
     mapcat
     sliding_window
