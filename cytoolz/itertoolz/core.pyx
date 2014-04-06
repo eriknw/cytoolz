@@ -1,6 +1,6 @@
 from cpython.dict cimport PyDict_Contains, PyDict_GetItem, PyDict_New, PyDict_SetItem
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
-from cpython.list cimport PyList_Append, PyList_Check, PyList_New
+from cpython.list cimport PyList_Append, PyList_Check, PyList_GET_SIZE, PyList_New
 from cpython.ref cimport PyObject, Py_INCREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
@@ -377,7 +377,8 @@ cpdef object get(object ind, object seq, object default=no_default):
     cdef tuple result
     cdef PyObject *obj
     if PyList_Check(ind):
-        result = PyTuple_New(len(ind))
+        i = PyList_GET_SIZE(ind)
+        result = PyTuple_New(i)
         # List of indices, no default
         if default is no_default:
             for i, val in enumerate(ind):
