@@ -1,8 +1,13 @@
 import inspect
 from cpython.dict cimport PyDict_Merge, PyDict_New
+from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
 from cpython.object cimport PyCallable_Check, PyObject_Call, PyObject_CallObject
+from cpython.ref cimport PyObject
+from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
-from cpython.tuple cimport PyTuple_Check
+from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
+
+from cytoolz.cpython cimport PyObject_Call as CyObject_Call
 
 
 cpdef inline object identity(object x):
@@ -92,7 +97,7 @@ def thread_last(val, *forms):
     return c_thread_last(val, forms)
 
 
-def _num_required_args(func):
+cpdef object _num_required_args(object func):
     """ Number of args for func
 
     >>> def foo(a, b, c=None):
@@ -114,52 +119,8 @@ def _num_required_args(func):
         num_defaults = len(spec.defaults) if spec.defaults else 0
         return len(spec.args) - num_defaults
     except TypeError:
-        return None
-
-
-cdef class _Partial:
-    """ Partially apply arguments like `functools.partial`"""
-
-    def __cinit__(self, object func, tuple args, dict keywords):
-        self.func = func
-        self.args = args
-        self.keywords = keywords if keywords else None
-
-    def __call__(self, *args, **kwargs):
-        return self._call(args, kwargs)
-
-    cdef object _call(self, tuple args, dict kwargs):
-        cdef tuple args_apply
-        cdef dict kw_apply
-
-        if not self.args:
-            args_apply = args
-        elif not args:
-            args_apply = self.args
-        else:
-            args_apply = self.args + args
-
-        if not kwargs:
-            # may be None, which is faster for PyObject_Call below
-            kw_apply = self.keywords
-        elif not self.keywords:
-            kw_apply = kwargs
-        else:
-            kw_apply = kwargs
-            PyDict_Merge(kw_apply, self.keywords, False)
-            ## Equivalent to:
-            # for key, val in self.keywords.items():
-            #     if key not in kw_apply:
-            #         kw_apply[key] = val
-
-        # XXX determine when PyObject_Call fails, or tweak flow above
-        #     so the `if kw_apply is None` check below is unecessary.
-
-        # return PyObject_Call(self.func, args_apply, kw_apply)
-
-        if kw_apply is None:
-            kw_apply = {}
-        return self.func(*args_apply, **kw_apply)
+        pass
+    return None
 
 
 cdef class curry:
@@ -190,18 +151,6 @@ cdef class curry:
         cytoolz.curried - namespace of curried functions
                           http://toolz.readthedocs.org/en/latest/curry.html
     """
-    property func:
-        def __get__(self):
-            return self.call.func
-
-    property args:
-        def __get__(self):
-            return self.call.args
-
-    property keywords:
-        def __get__(self):
-            return self.call.keywords
-
     property __doc__:
         def __get__(self):
             return self.func.__doc__
@@ -226,7 +175,9 @@ cdef class curry:
             args = func.args + args
             func = func.func
 
-        self.call = _Partial(func, args, kwargs)
+        self.func = func
+        self.args = args
+        self.keywords = kwargs if kwargs else None
 
     def __str__(self):
         return str(self.func)
@@ -235,17 +186,29 @@ cdef class curry:
         return repr(self.func)
 
     def __call__(self, *args, **kwargs):
-        try:
-            return self.call._call(args, kwargs)
-        except TypeError:
+        cdef PyObject *obj
+        cdef object val
+
+        if PyTuple_GET_SIZE(args) == 0:
+            args = self.args
+        elif PyTuple_GET_SIZE(self.args) != 0:
+            args = PySequence_Concat(self.args, args)
+        if self.keywords is not None:
+            PyDict_Merge(kwargs, self.keywords, False)
+
+        obj = CyObject_Call(self.func, args, kwargs)
+        if obj is not NULL:
+            val = <object>obj
+            return val
+
+        val = <object>PyErr_Occurred()
+        if PyErr_ExceptionMatches(TypeError):
+            PyErr_Clear()
             required_args = _num_required_args(self.func)
-
             # If there was a genuine TypeError
-            if (required_args is not None and
-                    len(self.args) + len(args) >= required_args):
-                raise
-
-            return curry(self.call, *args, **kwargs)
+            if required_args is None or len(args) < required_args:
+                return curry(self.func, *args, **kwargs)
+        raise val
 
 
 cdef class c_memoize:

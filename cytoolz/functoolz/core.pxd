@@ -7,15 +7,10 @@ cdef object c_thread_first(object val, object forms)
 cdef object c_thread_last(object val, object forms)
 
 
-cdef class _Partial:
+cdef class curry:
     cdef readonly object func
     cdef readonly tuple args
     cdef readonly dict keywords
-    cdef object _call(self, tuple args, dict kwargs)
-
-
-cdef class curry:
-    cdef readonly _Partial call
 
 
 cdef class c_memoize:
