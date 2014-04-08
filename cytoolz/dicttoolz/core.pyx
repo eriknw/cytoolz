@@ -1,9 +1,8 @@
-from cpython.dict cimport (PyDict_Check, PyDict_Contains, PyDict_Copy,
+from cpython.dict cimport (PyDict_Check, PyDict_Copy, PyDict_GetItem,
                            PyDict_Merge, PyDict_New, PyDict_SetItem,
                            PyDict_Update)
 from cpython.list cimport PyList_Append, PyList_New
-
-
+from cpython.ref cimport PyObject
 
 
 cdef dict c_merge(object dicts):
@@ -12,7 +11,6 @@ cdef dict c_merge(object dicts):
     for d in dicts:
         PyDict_Update(rv, d)
     return rv
-
 
 
 def merge(*dicts):
@@ -37,16 +35,19 @@ def merge(*dicts):
 cdef dict c_merge_with(object func, object dicts):
     cdef dict result, rv
     cdef list seq
+    cdef object k, v
+    cdef PyObject *obj
     result = PyDict_New()
     rv = PyDict_New()
     for d in dicts:
         for k, v in d.iteritems():
-            if PyDict_Contains(result, k):
-                PyList_Append(result[k], v)
-            else:
+            obj = PyDict_GetItem(result, k)
+            if obj is NULL:
                 seq = PyList_New(0)
                 PyList_Append(seq, v)
                 PyDict_SetItem(result, k, seq)
+            else:
+                PyList_Append(<object>obj, v)
     for k, v in result.iteritems():
         PyDict_SetItem(rv, k, func(v))
     return rv

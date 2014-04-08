@@ -1,4 +1,4 @@
-from cpython.dict cimport PyDict_Contains, PyDict_GetItem, PyDict_New, PyDict_SetItem
+from cpython.dict cimport PyDict_GetItem, PyDict_New, PyDict_SetItem
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_Check, PyList_GET_SIZE, PyList_New
 from cpython.ref cimport PyObject, Py_INCREF
@@ -103,25 +103,8 @@ cpdef dict groupby(object func, object seq):
     """
     cdef dict d
     cdef list vals
-    cdef object item, key
-    d = PyDict_New()
-    for item in seq:
-        key = func(item)
-        if PyDict_Contains(d, key):
-            PyList_Append(d[key], item)
-        else:
-            vals = PyList_New(0)
-            PyList_Append(vals, item)
-            PyDict_SetItem(d, key, vals)
-    return d
-
-
-'''  Alternative implementation of `groupby`
-cpdef dict groupby(object func, object seq):
-    cdef dict d
-    cdef list vals
-    cdef object item, key
     cdef PyObject *obj
+    cdef object item, key
     d = PyDict_New()
     for item in seq:
         key = func(item)
@@ -131,10 +114,8 @@ cpdef dict groupby(object func, object seq):
             PyList_Append(vals, item)
             PyDict_SetItem(d, key, vals)
         else:
-            vals = <list>obj
-            PyList_Append(vals, item)
+            PyList_Append(<object>obj, item)
     return d
-'''
 
 
 cdef class _unique_key:
