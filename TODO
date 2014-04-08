@@ -4,7 +4,6 @@ dicttoolz:
 
 itertoolz:
     merge_sorted
-    interleave
     mapcat
     sliding_window
     partition

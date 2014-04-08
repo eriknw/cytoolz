@@ -1,8 +1,8 @@
 from .itertoolz import (groupby, frequencies, reduceby,
                         first, second, nth, take, drop, rest, last,
-                        get, concat, concatv, isdistinct, interpose, unique,
-                        isiterable, remove, iterate, accumulate,
-                        count, cons, take_nth)
+                        get, concat, concatv, isdistinct, interleave,
+                        interpose, unique, isiterable, remove, iterate,
+                        accumulate, count, cons, take_nth)
 
 from .functoolz import (memoize, curry, compose, thread_first,
                         thread_last, identity, pipe, complement, juxt, do)

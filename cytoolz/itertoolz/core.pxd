@@ -12,6 +12,14 @@ cdef class accumulate:
 cpdef dict groupby(object func, object seq)
 
 
+cdef class interleave:
+    cdef list iters
+    cdef list newiters
+    cdef tuple pass_exceptions
+    cdef int i
+    cdef int n
+
+
 cdef class _unique_key:
     cdef object key
     cdef object iter_seq

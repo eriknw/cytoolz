@@ -1,13 +1,14 @@
 from cpython.dict cimport PyDict_GetItem, PyDict_New, PyDict_SetItem
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
-from cpython.list cimport PyList_Append, PyList_Check, PyList_GET_SIZE, PyList_New
-from cpython.ref cimport PyObject, Py_INCREF
+from cpython.list cimport (PyList_Append, PyList_Check, PyList_GET_ITEM,
+                           PyList_GET_SIZE, PyList_New)
+from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_New, PyTuple_SET_ITEM
 from itertools import chain, islice
 
-from cytoolz.cpython cimport PyObject_GetItem
+from cytoolz.cpython cimport PyIter_Next, PyObject_GetItem
 
 
 concatv = chain
@@ -116,6 +117,74 @@ cpdef dict groupby(object func, object seq):
         else:
             PyList_Append(<object>obj, item)
     return d
+
+
+cdef class interleave:
+    """ Interleave a sequence of sequences
+
+    >>> list(interleave([[1, 2], [3, 4]]))
+    [1, 3, 2, 4]
+
+    >>> ''.join(interleave(('ABC', 'XY')))
+    'AXBYC'
+
+    Both the individual sequences and the sequence of sequences may be infinite
+
+    Returns a lazy iterator
+    """
+    def __cinit__(self, seqs, pass_exceptions=()):
+        self.iters = PyList_New(0)
+        for seq in seqs:
+            PyList_Append(self.iters, iter(seq))
+        self.newiters = PyList_New(0)
+        self.pass_exceptions = tuple(pass_exceptions)
+        self.i = 0
+        self.n = PyList_GET_SIZE(self.iters)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        # This implementation is similar to what is done in `toolz` in that we
+        # construct a new list of iterators, `self.newiters`, when a value is
+        # successfully retrieved from an iterator from `self.iters`.
+        cdef PyObject *obj
+        cdef object val
+
+        if self.i == self.n:
+            self.n = PyList_GET_SIZE(self.newiters)
+            self.i = 0
+            if self.n == 0:
+                raise StopIteration
+            self.iters = self.newiters
+            self.newiters = PyList_New(0)
+        val = <object>PyList_GET_ITEM(self.iters, self.i)
+        self.i += 1
+        obj = PyIter_Next(val)
+
+        while obj is NULL:
+            obj = PyErr_Occurred()
+            if obj is not NULL:
+                val = <object>obj
+                if not PyErr_GivenExceptionMatches(val, self.pass_exceptions):
+                    raise val
+                PyErr_Clear()
+
+            if self.i == self.n:
+                self.n = PyList_GET_SIZE(self.newiters)
+                self.i = 0
+                if self.n == 0:
+                    raise StopIteration
+                self.iters = self.newiters
+                self.newiters = PyList_New(0)
+            val = <object>PyList_GET_ITEM(self.iters, self.i)
+            self.i += 1
+            obj = PyIter_Next(val)
+
+        PyList_Append(self.newiters, val)
+        val = <object>obj
+        Py_DECREF(val)
+        return val
 
 
 cdef class _unique_key:

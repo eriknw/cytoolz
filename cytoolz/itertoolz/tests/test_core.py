@@ -2,7 +2,7 @@ import itertools
 from cytoolz.utils import raises
 from functools import partial
 from cytoolz.itertoolz.core import (remove, groupby,
-                                    concat, concatv, unique,
+                                    concat, concatv, interleave, unique,
                                     identity, isiterable,
                                     isdistinct, first, second,
                                     nth, take, drop, interpose, get,
@@ -59,11 +59,9 @@ def test_merge_sorted():
 '''
 
 
-'''
 def test_interleave():
     assert ''.join(interleave(('ABC', '123'))) == 'A1B2C3'
     assert ''.join(interleave(('ABC', '1'))) == 'A1BC'
-'''
 
 
 def test_unique():
