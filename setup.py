@@ -1,6 +1,5 @@
 from distutils.core import setup
 from distutils.extension import Extension
-# from Cython.Build import cythonize
 from Cython.Distutils import build_ext
 
 ext_modules = [
@@ -10,6 +9,8 @@ ext_modules = [
               ["cytoolz/functoolz.pyx"]),
     Extension("cytoolz.dicttoolz",
               ["cytoolz/dicttoolz.pyx"]),
+    Extension("cytoolz.recipes",
+              ["cytoolz/recipes.pyx"]),
 ]
 
 setup(

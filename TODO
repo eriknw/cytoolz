@@ -9,8 +9,4 @@ itertoolz:
     partition_all
     pluck
 
-itertoolz.recipes
-    countby
-    partitionby
-
 curried

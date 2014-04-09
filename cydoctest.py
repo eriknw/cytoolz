@@ -68,8 +68,10 @@ if __name__ == '__main__':
     import cytoolz.dicttoolz
     import cytoolz.functoolz
     import cytoolz.itertoolz
+    import cytoolz.recipes
 
     testmod(cytoolz)
     testmod(cytoolz.dicttoolz)
     testmod(cytoolz.functoolz)
     testmod(cytoolz.itertoolz)
+    testmod(cytoolz.recipes)

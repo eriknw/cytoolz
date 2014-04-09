@@ -4,9 +4,9 @@ from .functoolz import *
 
 from .dicttoolz import *
 
-# from .recipes import *
+from .recipes import *
 
-# from .compatibility import map, filter
+from .compatibility import map, filter
 
 # from . import sandbox
 
