@@ -70,6 +70,9 @@ cpdef object get(object ind, object seq, object default=*)
 cpdef object cons(object el, object seq)
 
 
+cpdef object mapcat(object func, object seqs)
+
+
 cdef class interpose:
     cdef object el
     cdef object iter_seq

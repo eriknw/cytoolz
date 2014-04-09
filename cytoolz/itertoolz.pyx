@@ -11,7 +11,7 @@ from cpython.tuple cimport PyTuple_New, PyTuple_SET_ITEM
 from .cpython cimport PyIter_Next, PyObject_GetItem
 
 from itertools import chain, islice
-from .compatibility import zip, zip_longest
+from .compatibility import map, zip, zip_longest
 
 
 # commented lines below show what need to be added and where
@@ -19,8 +19,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'interleave',
 #         ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
-           'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
-#          'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
+           'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'partition', 'count']
 #          'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
 
@@ -465,6 +464,16 @@ cpdef object get(object ind, object seq, object default=no_default):
             return default
         raise val
     return <object>obj
+
+
+cpdef object mapcat(object func, object seqs):
+    """ Apply func to each sequence in seqs, concatenating results.
+
+    >>> list(mapcat(lambda s: [c.upper() for c in s],
+    ...             [["a", "b"], ["c", "d", "e"]]))
+    ['A', 'B', 'C', 'D', 'E']
+    """
+    return concat(map(func, seqs))
 
 
 cpdef object cons(object el, object seq):

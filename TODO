@@ -4,7 +4,6 @@ dicttoolz:
 
 itertoolz:
     merge_sorted
-    mapcat
     sliding_window
     partition_all
     pluck

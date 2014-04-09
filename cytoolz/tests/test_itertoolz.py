@@ -4,7 +4,7 @@ from functools import partial
 from cytoolz.itertoolz import (remove, groupby,
                                concat, concatv, interleave, unique,
                                identity, isiterable,
-                               isdistinct, first, second,
+                               mapcat, isdistinct, first, second,
                                nth, take, drop, interpose, get,
                                rest, last, cons, frequencies,
                                reduceby, iterate, accumulate,
@@ -147,7 +147,6 @@ def test_get():
     assert raises(TypeError, lambda: get({}, [1, 2, 3]))
 
 
-'''
 def test_mapcat():
     assert (list(mapcat(identity, [[1, 2, 3], [4, 5, 6]])) ==
             [1, 2, 3, 4, 5, 6])
@@ -158,7 +157,6 @@ def test_mapcat():
     inc = lambda i: i + 1
     assert ([4, 5, 6, 7, 8, 9] ==
             list(mapcat(partial(map, inc), [[3, 4, 5], [6, 7, 8]])))
-'''
 
 
 def test_cons():
