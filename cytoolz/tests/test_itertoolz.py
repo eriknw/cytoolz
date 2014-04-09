@@ -1,15 +1,15 @@
 import itertools
 from cytoolz.utils import raises
 from functools import partial
-from cytoolz.itertoolz.core import (remove, groupby,
-                                    concat, concatv, interleave, unique,
-                                    identity, isiterable,
-                                    isdistinct, first, second,
-                                    nth, take, drop, interpose, get,
-                                    rest, last, cons, frequencies,
-                                    reduceby, iterate, accumulate,
-                                    count,
-                                    take_nth)
+from cytoolz.itertoolz import (remove, groupby,
+                               concat, concatv, interleave, unique,
+                               identity, isiterable,
+                               isdistinct, first, second,
+                               nth, take, drop, interpose, get,
+                               rest, last, cons, frequencies,
+                               reduceby, iterate, accumulate,
+                               count,
+                               take_nth)
 
 from toolz.compatibility import range, filter
 from operator import add, mul

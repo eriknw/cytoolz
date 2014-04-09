@@ -5,6 +5,10 @@ from cpython.list cimport PyList_Append, PyList_New
 from cpython.ref cimport PyObject
 
 
+__all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'valfilter', 'keyfilter',
+           'assoc']  # 'update_in', 'get_in']
+
+
 cdef dict c_merge(object dicts):
     cdef dict rv
     rv = PyDict_New()

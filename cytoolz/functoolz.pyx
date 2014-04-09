@@ -7,7 +7,11 @@ from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
 
-from cytoolz.cpython cimport PyObject_Call as CyObject_Call
+from .cpython cimport PyObject_Call as CyObject_Call
+
+
+__all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
+           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
 
 
 cpdef inline object identity(object x):

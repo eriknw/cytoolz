@@ -8,7 +8,18 @@ from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_New, PyTuple_SET_ITEM
 from itertools import chain, islice
 
-from cytoolz.cpython cimport PyIter_Next, PyObject_GetItem
+from .cpython cimport PyIter_Next, PyObject_GetItem
+
+
+# commented lines below show what need to be added and where
+__all__ = ['remove', 'accumulate', 'groupby', 'interleave',
+#         ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
+           'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
+           'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
+           'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
+#          'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
+           'count']
+#          'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
 
 
 concatv = chain

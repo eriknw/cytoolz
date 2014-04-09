@@ -1,6 +1,6 @@
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
-                               compose, pipe, complement, do, juxt)
-from cytoolz.functoolz.core import _num_required_args
+                               compose, pipe, complement, do, juxt,
+                               _num_required_args)
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial

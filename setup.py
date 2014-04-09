@@ -4,23 +4,18 @@ from distutils.extension import Extension
 from Cython.Distutils import build_ext
 
 ext_modules = [
-    Extension("cytoolz.itertoolz.core",
-              ["cytoolz/itertoolz/core.pyx"]),
-    Extension("cytoolz.functoolz.core",
-              ["cytoolz/functoolz/core.pyx"]),
-    Extension("cytoolz.dicttoolz.core",
-              ["cytoolz/dicttoolz/core.pyx"]),
+    Extension("cytoolz.itertoolz",
+              ["cytoolz/itertoolz.pyx"]),
+    Extension("cytoolz.functoolz",
+              ["cytoolz/functoolz.pyx"]),
+    Extension("cytoolz.dicttoolz",
+              ["cytoolz/dicttoolz.pyx"]),
 ]
 
 setup(
     name="cytoolz",
     cmdclass={"build_ext": build_ext},
     ext_modules=ext_modules,
-    packages=['cytoolz',
-              'cytoolz.itertoolz',
-              'cytoolz.functoolz',
-              'cytoolz.dicttoolz',
-              # 'cytoolz.sandbox',
-              ],
-    package_data={'cytoolz': ['*.pxd', '*/*.pxd']},
+    packages=['cytoolz'],
+    package_data={'cytoolz': ['*.pxd']},
 )

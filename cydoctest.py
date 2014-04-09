@@ -68,14 +68,8 @@ if __name__ == '__main__':
     import cytoolz.dicttoolz
     import cytoolz.functoolz
     import cytoolz.itertoolz
-    import cytoolz.dicttoolz.core
-    import cytoolz.functoolz.core
-    import cytoolz.itertoolz.core
 
     testmod(cytoolz)
     testmod(cytoolz.dicttoolz)
     testmod(cytoolz.functoolz)
     testmod(cytoolz.itertoolz)
-    testmod(cytoolz.dicttoolz.core)
-    testmod(cytoolz.functoolz.core)
-    testmod(cytoolz.itertoolz.core)
