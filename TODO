@@ -6,10 +6,11 @@ itertoolz:
     merge_sorted
     mapcat
     sliding_window
-    partition
     partition_all
     pluck
 
 itertoolz.recipes
+    countby
+    partitionby
 
 curried

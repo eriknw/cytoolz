@@ -4,7 +4,7 @@ from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial
-from toolz.compatibility import reduce
+from cytoolz.compatibility import reduce
 
 
 def iseven(x):

@@ -6,9 +6,12 @@ from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_New, PyTuple_SET_ITEM
-from itertools import chain, islice
 
+# Locally defined bindings that differ from `cython.cpython` bindings
 from .cpython cimport PyIter_Next, PyObject_GetItem
+
+from itertools import chain, islice
+from .compatibility import zip, zip_longest
 
 
 # commented lines below show what need to be added and where
@@ -18,7 +21,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
 #          'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
-           'count']
+           'partition', 'count']
 #          'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
 
 
@@ -641,6 +644,34 @@ cdef class iterate:
         else:
             self.x = self.func(self.x)
         return self.x
+
+
+no_pad = '__no__pad__'
+
+
+cpdef object partition(int n, object seq, object pad=no_pad):
+    """ Partition sequence into tuples of length n
+
+    >>> list(partition(2, [1, 2, 3, 4]))
+    [(1, 2), (3, 4)]
+
+    If the length of ``seq`` is not evenly divisible by ``n``, the final tuple
+    is dropped if ``pad`` is not specified, or filled to length ``n`` by pad:
+
+    >>> list(partition(2, [1, 2, 3, 4, 5]))
+    [(1, 2), (3, 4)]
+
+    >>> list(partition(2, [1, 2, 3, 4, 5], pad=None))
+    [(1, 2), (3, 4), (5, None)]
+
+    See Also:
+        partition_all
+    """
+    args = [iter(seq)] * n
+    if pad is no_pad:
+        return zip(*args)
+    else:
+        return zip_longest(*args, fillvalue=pad)
 
 
 cpdef int count(object seq):

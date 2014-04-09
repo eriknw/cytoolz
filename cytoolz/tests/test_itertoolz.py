@@ -8,10 +8,10 @@ from cytoolz.itertoolz import (remove, groupby,
                                nth, take, drop, interpose, get,
                                rest, last, cons, frequencies,
                                reduceby, iterate, accumulate,
-                               count,
+                               count, partition,
                                take_nth)
 
-from toolz.compatibility import range, filter
+from cytoolz.compatibility import range, filter
 from operator import add, mul
 
 
@@ -233,14 +233,12 @@ def test_sliding_window_of_short_iterator():
 '''
 
 
-'''
 def test_partition():
     assert list(partition(2, [1, 2, 3, 4])) == [(1, 2), (3, 4)]
     assert list(partition(3, range(7))) == [(0, 1, 2), (3, 4, 5)]
     assert list(partition(3, range(4), pad=-1)) == [(0, 1, 2),
                                                     (3, -1, -1)]
     assert list(partition(2, [])) == []
-'''
 
 
 '''

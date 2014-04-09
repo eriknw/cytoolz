@@ -89,4 +89,7 @@ cdef class iterate:
     cdef object val
 
 
+cpdef object partition(int n, object seq, object pad=*)
+
+
 cpdef int count(object seq)

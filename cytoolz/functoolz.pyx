@@ -7,6 +7,7 @@ from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
 
+# Locally defined bindings that differ from `cython.cpython` bindings
 from .cpython cimport PyObject_Call as CyObject_Call
 
 
