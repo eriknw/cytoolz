@@ -1,12 +1,13 @@
-from .itertoolz cimport (groupby, frequencies, reduceby,
-                         first, second, nth, take, drop, rest, last,
-                         get, concat, concatv, isdistinct, interleave,
-                         interpose, unique, isiterable, remove, iterate,
-                         accumulate, partition, count, cons, take_nth)
+from cytoolz.itertoolz cimport (
+    accumulate, cons, count, drop, get, groupby, first, frequencies,
+    interleave, interpose, isdistinct, isiterable, iterate, last, nth,
+    partition, reduceby, remove, rest, second, take, take_nth, unique)
 
-from .functoolz cimport (memoize, c_memoize, curry, c_compose, c_thread_first,
-                         c_thread_last, identity, c_pipe, complement, c_juxt,
-                         do)
 
-from .dicttoolz cimport (c_merge, c_merge_with, keymap, valmap, assoc,
-                         keyfilter, valfilter)
+from cytoolz.functoolz cimport (
+    c_compose, c_juxt, c_memoize, c_pipe, c_thread_first, c_thread_last,
+    complement, curry, do, identity, memoize)
+
+
+from cytoolz.dicttoolz cimport (
+    assoc, c_merge, c_merge_with, keyfilter, keymap, valfilter, valmap)
