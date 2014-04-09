@@ -1,12 +1,16 @@
 from cpython.dict cimport (PyDict_Check, PyDict_Copy, PyDict_GetItem,
                            PyDict_Merge, PyDict_New, PyDict_SetItem,
                            PyDict_Update)
+from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
 from cpython.ref cimport PyObject
 
+# Locally defined bindings that differ from `cython.cpython` bindings
+from .cpython cimport PyObject_GetItem
+
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'valfilter', 'keyfilter',
-           'assoc']  # 'update_in', 'get_in']
+           'assoc', 'get_in']  # 'update_in']
 
 
 cdef dict c_merge(object dicts):
@@ -166,3 +170,52 @@ cpdef dict assoc(object d, object key, object value):
     rv = PyDict_Copy(d)
     PyDict_SetItem(rv, key, value)
     return rv
+
+
+cdef tuple _get_in_exceptions = (KeyError, IndexError, TypeError)
+
+
+cpdef object get_in(object keys, object coll, object default=None, bint no_default=False):
+    """
+    Returns coll[i0][i1]...[iX] where [i0, i1, ..., iX]==keys.
+
+    If coll[i0][i1]...[iX] cannot be found, returns ``default``, unless
+    ``no_default`` is specified, then it raises KeyError or IndexError.
+
+    ``get_in`` is a generalization of ``operator.getitem`` for nested data
+    structures such as dictionaries and lists.
+
+    >>> transaction = {'name': 'Alice',
+    ...                'purchase': {'items': ['Apple', 'Orange'],
+    ...                             'costs': [0.50, 1.25]},
+    ...                'credit card': '5555-1234-1234-1234'}
+    >>> get_in(['purchase', 'items', 0], transaction)
+    'Apple'
+    >>> get_in(['name'], transaction)
+    'Alice'
+    >>> get_in(['purchase', 'total'], transaction)
+    >>> get_in(['purchase', 'items', 'apple'], transaction)
+    >>> get_in(['purchase', 'items', 10], transaction)
+    >>> get_in(['purchase', 'total'], transaction, 0)
+    0
+    >>> get_in(['y'], {}, no_default=True)  # doctest: +SKIP
+    Traceback (most recent call last):
+        ...
+    KeyError: 'y'
+
+    See Also:
+        itertoolz.get
+        operator.getitem
+    """
+    cdef object item
+    cdef PyObject *obj
+    for item in keys:
+        obj = PyObject_GetItem(coll, item)
+        if obj is NULL:
+            item = <object>PyErr_Occurred()
+            if no_default or not PyErr_GivenExceptionMatches(item, _get_in_exceptions):
+                raise item
+            PyErr_Clear()
+            return default
+        coll = <object>obj
+    return coll

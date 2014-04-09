@@ -1,6 +1,5 @@
 dicttoolz:
     update_in
-    get_in
 
 itertoolz:
     merge_sorted
