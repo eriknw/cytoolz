@@ -1,4 +1,4 @@
-cpdef inline object identity(object x)
+cpdef object identity(object x)
 
 
 cdef object c_thread_first(object val, object forms)
@@ -43,7 +43,7 @@ cdef class _juxt_inner:
     cdef tuple funcs
 
 
-cdef inline object c_juxt(object funcs)
+cdef object c_juxt(object funcs)
 
 
 cpdef object do(object func, object x)

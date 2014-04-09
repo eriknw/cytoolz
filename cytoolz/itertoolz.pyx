@@ -29,7 +29,7 @@ concatv = chain
 concat = chain.from_iterable
 
 
-cpdef inline object identity(object x):
+cpdef object identity(object x):
     return x
 
 
@@ -299,7 +299,7 @@ cpdef bint isdistinct(object seq):
         return len(seq) == len(set(seq))
 
 
-cpdef inline object take(int n, object seq):
+cpdef object take(int n, object seq):
     """ The first n elements of a sequence
 
     >>> list(take(2, [10, 20, 30, 40, 50]))
@@ -329,7 +329,7 @@ cpdef object drop(int n, object seq):
     return iter_seq
 
 
-cpdef inline object take_nth(int n, object seq):
+cpdef object take_nth(int n, object seq):
     """ Every nth item in seq
 
     >>> list(take_nth(2, [10, 20, 30, 40, 50]))
@@ -476,7 +476,7 @@ cpdef object get(object ind, object seq, object default=no_default):
     return <object>obj
 
 
-cpdef inline object cons(object el, object seq):
+cpdef object cons(object el, object seq):
     """ Add el to beginning of (possibly infinite) sequence seq.
 
     >>> list(cons(1, [2, 3]))

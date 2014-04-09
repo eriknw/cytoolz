@@ -40,13 +40,13 @@ cpdef bint isiterable(object x)
 cpdef bint isdistinct(object seq)
 
 
-cpdef inline object take(int n, object seq)
+cpdef object take(int n, object seq)
 
 
 cpdef object drop(int n, object seq)
 
 
-cpdef inline object take_nth(int n, object seq)
+cpdef object take_nth(int n, object seq)
 
 
 cpdef object first(object seq)
@@ -67,7 +67,7 @@ cpdef object rest(object seq)
 cpdef object get(object ind, object seq, object default=*)
 
 
-cpdef inline object cons(object el, object seq)
+cpdef object cons(object el, object seq)
 
 
 cdef class interpose:

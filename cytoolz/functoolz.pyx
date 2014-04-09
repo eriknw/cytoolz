@@ -15,7 +15,7 @@ __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
            'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
 
 
-cpdef inline object identity(object x):
+cpdef object identity(object x):
     return x
 
 
@@ -413,7 +413,7 @@ cdef class _juxt_inner:
             return (PyObject_CallObject(func, args) for func in self.funcs)
 
 
-cdef inline object c_juxt(object funcs):
+cdef object c_juxt(object funcs):
     return _juxt_inner(funcs)
 
 
