@@ -1,6 +1,3 @@
-dicttoolz:
-    update_in
-
 itertoolz:
     merge_sorted
     sliding_window

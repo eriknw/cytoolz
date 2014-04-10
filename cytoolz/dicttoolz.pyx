@@ -10,7 +10,7 @@ from .cpython cimport PyObject_GetItem
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'valfilter', 'keyfilter',
-           'assoc', 'get_in']  # 'update_in']
+           'assoc', 'get_in', 'update_in']
 
 
 cdef dict c_merge(object dicts):
@@ -172,10 +172,72 @@ cpdef dict assoc(object d, object key, object value):
     return rv
 
 
+cpdef dict update_in(object d, object keys, object func, object default=None):
+    """ Update value in a (potentially) nested dictionary
+
+    inputs:
+    d - dictionary on which to operate
+    keys - list or tuple giving the location of the value to be changed in d
+    func - function to operate on that value
+
+    If keys == [k0,..,kX] and d[k0]..[kX] == v, update_in returns a copy of the
+    original dictionary with v replaced by func(v), but does not mutate the
+    original dictionary.
+
+    If k0 is not a key in d, update_in creates nested dictionaries to the depth
+    specified by the keys, with the innermost value set to func(default).
+
+    >>> inc = lambda x: x + 1
+    >>> update_in({'a': 0}, ['a'], inc)
+    {'a': 1}
+
+    >>> transaction = {'name': 'Alice',
+    ...                'purchase': {'items': ['Apple', 'Orange'],
+    ...                             'costs': [0.50, 1.25]},
+    ...                'credit card': '5555-1234-1234-1234'}
+    >>> update_in(transaction, ['purchase', 'costs'], sum) # doctest: +SKIP
+    {'credit card': '5555-1234-1234-1234',
+     'name': 'Alice',
+     'purchase': {'costs': 1.75, 'items': ['Apple', 'Orange']}}
+
+    >>> # updating a value when k0 is not in d
+    >>> update_in({}, [1, 2, 3], str, default="bar")
+    {1: {2: {3: 'bar'}}}
+    >>> update_in({1: 'foo'}, [2, 3, 4], inc, 0)
+    {1: 'foo', 2: {3: {4: 1}}}
+    """
+    cdef object prevkey, key
+    cdef dict rv, inner, dtemp
+    cdef PyObject *obj
+    prevkey, keys = keys[0], keys[1:]
+    rv = PyDict_Copy(d)
+    inner = rv
+
+    for key in keys:
+        obj = PyDict_GetItem(d, prevkey)
+        if obj is NULL:
+            d = PyDict_New()
+            dtemp = d
+        else:
+            d = <object>obj
+            dtemp = PyDict_Copy(d)
+        PyDict_SetItem(inner, prevkey, dtemp)
+        prevkey = key
+        inner = dtemp
+
+    obj = PyDict_GetItem(d, prevkey)
+    if obj is NULL:
+        key = func(default)
+    else:
+        key = func(<object>obj)
+    PyDict_SetItem(inner, prevkey, key)
+    return rv
+
+
 cdef tuple _get_in_exceptions = (KeyError, IndexError, TypeError)
 
 
-cpdef object get_in(object keys, object coll, object default=None, bint no_default=False):
+cpdef object get_in(object keys, object coll, object default=None, object no_default=False):
     """
     Returns coll[i0][i1]...[iX] where [i0, i1, ..., iX]==keys.
 

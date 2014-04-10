@@ -1,5 +1,5 @@
 from cytoolz.utils import raises
-from cytoolz.dicttoolz import (merge, merge_with, valmap, keymap, # update_in,
+from cytoolz.dicttoolz import (merge, merge_with, valmap, keymap, update_in,
                                assoc, keyfilter, valfilter)
 
 
@@ -64,7 +64,6 @@ def test_assoc():
     assert d is oldd
 
 
-'''
 def test_update_in():
     assert update_in({"a": 0}, ["a"], inc) == {"a": 1}
     assert update_in({"a": 0, "b": 1}, ["b"], str) == {"a": 0, "b": "1"}
@@ -86,5 +85,4 @@ def test_update_in():
     oldd = d
     update_in(d, ['x'], inc)
     assert d is oldd
-'''
 

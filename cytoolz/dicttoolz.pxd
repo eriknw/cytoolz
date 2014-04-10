@@ -19,4 +19,7 @@ cpdef dict keyfilter(object predicate, object d)
 cpdef dict assoc(object d, object key, object value)
 
 
-cpdef object get_in(object keys, object coll, object default=*, bint no_default=*)
+cpdef dict update_in(object d, object keys, object func, object default=*)
+
+
+cpdef object get_in(object keys, object coll, object default=*, object no_default=*)
