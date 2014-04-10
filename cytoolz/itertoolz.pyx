@@ -363,6 +363,9 @@ cpdef object nth(int n, object seq):
     return next(seq)
 
 
+no_default = '__no__default__'
+
+
 cpdef object last(object seq):
     """ The last element in a sequence
 
@@ -372,12 +375,11 @@ cpdef object last(object seq):
     cdef object val
     if PySequence_Check(seq):
         return seq[-1]
-    seq = iter(seq)
-    try:
-        while True:
-            val = next(seq)
-    except StopIteration:
+    val = no_default
+    for val in seq:
         pass
+    if val is no_default:
+        raise IndexError
     return val
 
 
@@ -385,9 +387,6 @@ cpdef object rest(object seq):
     seq = iter(seq)
     next(seq)
     return seq
-
-
-no_default = '__no__default__'
 
 
 cdef tuple _get_exceptions = (IndexError, KeyError, TypeError)
