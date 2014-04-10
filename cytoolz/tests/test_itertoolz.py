@@ -9,7 +9,7 @@ from cytoolz.itertoolz import (remove, groupby,
                                rest, last, cons, frequencies,
                                reduceby, iterate, accumulate,
                                sliding_window, count, partition,
-                               take_nth)
+                               partition_all, take_nth)
 
 from cytoolz.compatibility import range, filter
 from operator import add, mul
@@ -237,12 +237,10 @@ def test_partition():
     assert list(partition(2, [])) == []
 
 
-'''
 def test_partition_all():
     assert list(partition_all(2, [1, 2, 3, 4])) == [(1, 2), (3, 4)]
     assert list(partition_all(3, range(5))) == [(0, 1, 2), (3, 4)]
     assert list(partition_all(2, [])) == []
-'''
 
 
 def test_count():

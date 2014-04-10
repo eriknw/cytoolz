@@ -1,6 +1,5 @@
 itertoolz:
     merge_sorted
-    partition_all
     pluck
 
 curried

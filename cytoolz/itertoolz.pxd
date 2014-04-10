@@ -101,4 +101,9 @@ cdef class sliding_window:
 cpdef object partition(int n, object seq, object pad=*)
 
 
+cdef class partition_all:
+    cdef int n
+    cdef object iterseq
+
+
 cpdef int count(object seq)

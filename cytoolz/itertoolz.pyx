@@ -5,7 +5,7 @@ from cpython.list cimport (PyList_Append, PyList_Check, PyList_GET_ITEM,
 from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
-from cpython.tuple cimport PyTuple_New, PyTuple_SET_ITEM
+from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 
 # Locally defined bindings that differ from `cython.cpython` bindings
 from .cpython cimport PyIter_Next, PyObject_GetItem
@@ -20,7 +20,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'interleave',
            'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
-           'sliding_window', 'partition', 'count']
+           'sliding_window', 'partition', 'partition_all', 'count']
 #          'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
 
 
@@ -713,6 +713,45 @@ cpdef object partition(int n, object seq, object pad=no_pad):
         return zip(*args)
     else:
         return zip_longest(*args, fillvalue=pad)
+
+
+cdef class partition_all:
+    """ Partition all elements of sequence into tuples of length at most n
+
+    The final tuple may be shorter to accommodate extra elements.
+
+    >>> list(partition_all(2, [1, 2, 3, 4]))
+    [(1, 2), (3, 4)]
+
+    >>> list(partition_all(2, [1, 2, 3, 4, 5]))
+    [(1, 2), (3, 4), (5,)]
+
+    See Also:
+        partition
+    """
+    def __cinit__(self, int n, object seq):
+        self.n = n
+        self.iterseq = iter(seq)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef tuple result
+        cdef object item
+        cdef int i = 0
+        result = PyTuple_New(self.n)
+        for item in self.iterseq:
+            Py_INCREF(item)
+            PyTuple_SET_ITEM(result, i, item)
+            i += 1
+            if i == self.n:
+                break
+        if i == 0:
+            raise StopIteration
+        if i != self.n:
+            return PyTuple_GetSlice(result, 0, i)
+        return result
 
 
 cpdef int count(object seq):
