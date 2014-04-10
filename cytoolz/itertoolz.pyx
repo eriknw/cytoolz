@@ -732,3 +732,12 @@ cpdef int count(object seq):
     for _ in seq:
         i += 1
     return i
+
+
+# I find `_consume` convenient for benchmarking.  Perhaps this belongs
+# elsewhere, so it is private (leading underscore) and hidden away for now.
+
+cpdef object _consume(object seq):
+    """ Efficiently consume an iterable """
+    for _ in seq:
+        pass
