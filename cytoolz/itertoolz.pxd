@@ -92,6 +92,12 @@ cdef class iterate:
     cdef object val
 
 
+cdef class sliding_window:
+    cdef object iterseq
+    cdef tuple prev
+    cdef int n
+
+
 cpdef object partition(int n, object seq, object pad=*)
 
 

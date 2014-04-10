@@ -8,7 +8,7 @@ from cytoolz.itertoolz import (remove, groupby,
                                nth, take, drop, interpose, get,
                                rest, last, cons, frequencies,
                                reduceby, iterate, accumulate,
-                               count, partition,
+                               sliding_window, count, partition,
                                take_nth)
 
 from cytoolz.compatibility import range, filter
@@ -220,7 +220,6 @@ def test_accumulate_works_on_consumable_iterables():
     assert list(accumulate(add, iter((1, 2, 3)))) == [1, 3, 6]
 
 
-'''
 def test_sliding_window():
     assert list(sliding_window(2, [1, 2, 3, 4])) == [(1, 2), (2, 3), (3, 4)]
     assert list(sliding_window(3, [1, 2, 3, 4])) == [(1, 2, 3), (2, 3, 4)]
@@ -228,7 +227,6 @@ def test_sliding_window():
 
 def test_sliding_window_of_short_iterator():
     assert list(sliding_window(3, [1, 2])) == []
-'''
 
 
 def test_partition():

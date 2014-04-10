@@ -20,7 +20,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'interleave',
            'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
-           'partition', 'count']
+           'sliding_window', 'partition', 'count']
 #          'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
 
 
@@ -644,6 +644,48 @@ cdef class iterate:
         else:
             self.x = self.func(self.x)
         return self.x
+
+
+cdef class sliding_window:
+    """ A sequence of overlapping subsequences
+
+    >>> list(sliding_window(2, [1, 2, 3, 4]))
+    [(1, 2), (2, 3), (3, 4)]
+
+    This function creates a sliding window suitable for transformations like
+    sliding means / smoothing
+
+    >>> mean = lambda seq: float(sum(seq)) / len(seq)
+    >>> list(map(mean, sliding_window(2, [1, 2, 3, 4])))
+    [1.5, 2.5, 3.5]
+    """
+    def __cinit__(self, int n, object seq):
+        cdef int i
+        self.iterseq = iter(seq)
+        self.prev = PyTuple_New(n)
+        for i in range(1, n):
+            seq = next(self.iterseq)
+            Py_INCREF(seq)
+            PyTuple_SET_ITEM(self.prev, i, seq)
+        self.n = n
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef tuple current
+        cdef object item
+        cdef int i
+        current = PyTuple_New(self.n)
+        for i in range(1, self.n):
+            item = self.prev[i]
+            Py_INCREF(item)
+            PyTuple_SET_ITEM(current, i-1, item)
+        item = next(self.iterseq)
+        Py_INCREF(item)
+        PyTuple_SET_ITEM(current, self.n-1, item)
+        self.prev = current
+        return current
 
 
 no_pad = '__no__pad__'
