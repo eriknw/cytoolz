@@ -41,7 +41,7 @@ def merge(*dicts):
 
 
 cdef dict c_merge_with(object func, object dicts):
-    cdef dict result, rv
+    cdef dict result, rv, d
     cdef list seq
     cdef object k, v
     cdef PyObject *obj
@@ -81,7 +81,7 @@ def merge_with(func, *dicts):
     return c_merge_with(func, dicts)
 
 
-cpdef dict valmap(object func, object d):
+cpdef dict valmap(object func, dict d):
     """ Apply function to values of dictionary
 
     >>> bills = {"Alice": [20, 15, 30], "Bob": [10, 35]}
@@ -98,7 +98,7 @@ cpdef dict valmap(object func, object d):
     return rv
 
 
-cpdef dict keymap(object func, object d):
+cpdef dict keymap(object func, dict d):
     """ Apply function to keys of dictionary
 
     >>> bills = {"Alice": [20, 15, 30], "Bob": [10, 35]}
@@ -115,7 +115,7 @@ cpdef dict keymap(object func, object d):
     return rv
 
 
-cpdef dict valfilter(object predicate, object d):
+cpdef dict valfilter(object predicate, dict d):
     """ Filter items in dictionary by value
 
     >>> iseven = lambda x: x % 2 == 0
@@ -135,7 +135,7 @@ cpdef dict valfilter(object predicate, object d):
     return rv
 
 
-cpdef dict keyfilter(object predicate, object d):
+cpdef dict keyfilter(object predicate, dict d):
     """ Filter items in dictionary by key
 
     >>> iseven = lambda x: x % 2 == 0
@@ -155,7 +155,7 @@ cpdef dict keyfilter(object predicate, object d):
     return rv
 
 
-cpdef dict assoc(object d, object key, object value):
+cpdef dict assoc(dict d, object key, object value):
     """
     Return a new dict with new key value pair
 
@@ -172,7 +172,7 @@ cpdef dict assoc(object d, object key, object value):
     return rv
 
 
-cpdef dict update_in(object d, object keys, object func, object default=None):
+cpdef dict update_in(dict d, object keys, object func, object default=None):
     """ Update value in a (potentially) nested dictionary
 
     inputs:
