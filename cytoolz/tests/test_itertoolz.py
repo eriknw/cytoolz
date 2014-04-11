@@ -1,7 +1,7 @@
 import itertools
 from cytoolz.utils import raises
 from functools import partial
-from cytoolz.itertoolz import (remove, groupby,
+from cytoolz.itertoolz import (remove, groupby, merge_sorted,
                                concat, concatv, interleave, unique,
                                identity, isiterable,
                                mapcat, isdistinct, first, second,
@@ -41,7 +41,6 @@ def test_groupby():
     assert groupby(iseven, [1, 2, 3, 4]) == {True: [2, 4], False: [1, 3]}
 
 
-'''
 def test_merge_sorted():
     assert list(merge_sorted([1, 2, 3], [1, 2, 3])) == [1, 1, 2, 2, 3, 3]
     assert list(merge_sorted([1, 3, 5], [2, 4, 6])) == [1, 2, 3, 4, 5, 6]
@@ -56,7 +55,6 @@ def test_merge_sorted():
     assert ''.join(merge_sorted('abc', 'abc', 'abc', key=ord)) == 'aaabbbccc'
     assert ''.join(merge_sorted('cba', 'cba', 'cba',
                                 key=lambda x: -ord(x))) == 'cccbbbaaa'
-'''
 
 
 def test_interleave():

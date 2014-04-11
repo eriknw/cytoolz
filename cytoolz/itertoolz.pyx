@@ -1,4 +1,5 @@
-from cpython.dict cimport PyDict_GetItem, PyDict_New, PyDict_SetItem
+from cpython.dict cimport (PyDict_Contains, PyDict_GetItem, PyDict_New,
+                           PyDict_SetItem)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport (PyList_Append, PyList_Check, PyList_GET_ITEM,
                            PyList_GET_SIZE, PyList_New)
@@ -10,14 +11,13 @@ from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 # Locally defined bindings that differ from `cython.cpython` bindings
 from .cpython cimport PyIter_Next, PyObject_GetItem
 
+from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
 from operator import itemgetter
 from .compatibility import map, zip, zip_longest
 
 
-# commented lines below show what need to be added and where
-__all__ = ['remove', 'accumulate', 'groupby', 'interleave',
-#         ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
+__all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
@@ -121,6 +121,147 @@ cpdef dict groupby(object func, object seq):
         else:
             PyList_Append(<object>obj, item)
     return d
+
+
+cdef class _merge_sorted:
+    def __cinit__(self, seqs):
+        cdef int i
+        cdef object item, it
+        self.pq = PyList_New(0)
+        self.shortcut = None
+
+        for i, item in enumerate(seqs):
+            it = iter(item)
+            try:
+                item = next(it)
+                PyList_Append(self.pq, [item, i, it])
+            except StopIteration:
+                pass
+        i = PyList_GET_SIZE(self.pq)
+        if i == 0:
+            self.shortcut = iter([])
+        elif i == 1:
+            self.shortcut = True
+        else:
+            heapify(self.pq)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef list item
+        cdef object retval, it
+        # Fast when only a single iterator remains
+        if self.shortcut is not None:
+            if self.shortcut is True:
+                item = self.pq[0]
+                self.shortcut = item[2]
+                return item[0]
+            return next(self.shortcut)
+
+        item = self.pq[0]
+        retval = item[0]
+        it = item[2]
+        try:
+            item[0] = next(it)
+            heapreplace(self.pq, item)
+        except StopIteration:
+            heappop(self.pq)
+            if PyList_GET_SIZE(self.pq) == 1:
+                self.shortcut = True
+        return retval
+
+
+# Having `_merge_sorted` and `_merge_sorted_key` separate violates the DRY
+# principle.  The increased performance *barely* justifies this.
+# `_merge_sorted` is always faster (sometimes by only 15%), but it can be
+# more than 3x faster when a single iterable remains.
+#
+# The differences in implementation are that `_merge_sorted_key` calls a key
+# function on each item (of course), and the layout of the lists in the
+# priority queue are different:
+#     `_merge_sorted` uses `[item, itnum, iterator]`
+#     `_merge_sorted_key` uses `[key(item), itnum, item, iterator]`
+
+cdef class _merge_sorted_key:
+    def __cinit__(self, seqs, key):
+        cdef int i
+        cdef object item, it, k
+        self.pq = PyList_New(0)
+        self.key = key
+        self.shortcut = None
+
+        for i, item in enumerate(seqs):
+            it = iter(item)
+            try:
+                item = next(it)
+                k = key(item)
+                PyList_Append(self.pq, [k, i, item, it])
+            except StopIteration:
+                pass
+        i = PyList_GET_SIZE(self.pq)
+        if i == 0:
+            self.shortcut = iter([])
+        elif i == 1:
+            self.shortcut = True
+        else:
+            heapify(self.pq)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef list item
+        cdef object retval, it, k
+        # Fast when only a single iterator remains
+        if self.shortcut is not None:
+            if self.shortcut is True:
+                item = self.pq[0]
+                self.shortcut = item[3]
+                return item[2]
+            retval = next(self.shortcut)
+            return self.key(retval)
+
+        item = self.pq[0]
+        retval = item[2]
+        it = item[3]
+        try:
+            k = next(it)
+            item[2] = k
+            item[0] = self.key(k)
+            heapreplace(self.pq, item)
+        except StopIteration:
+            heappop(self.pq)
+            if PyList_GET_SIZE(self.pq) == 1:
+                self.shortcut = True
+        return retval
+
+
+cdef object c_merge_sorted(object seqs, object key=None):
+    if key is None:
+        return _merge_sorted(seqs)
+    return _merge_sorted_key(seqs, key)
+
+
+def merge_sorted(*seqs, **kwargs):
+    """ Merge and sort a collection of sorted collections
+
+    This works lazily and only keeps one value from each iterable in memory.
+
+    >>> list(merge_sorted([1, 3, 5], [2, 4, 6]))
+    [1, 2, 3, 4, 5, 6]
+
+    >>> ''.join(merge_sorted('abc', 'abc', 'abc'))
+    'aaabbbccc'
+
+    The "key" function used to sort the input may be passed as a keyword.
+
+    >>> list(merge_sorted([2, 3], [1, 3], key=lambda x: x // 3))
+    [2, 1, 3, 3]
+    """
+    if PyDict_Contains(kwargs, 'key'):
+        return c_merge_sorted(seqs, kwargs['key'])
+    return c_merge_sorted(seqs)
 
 
 cdef class interleave:

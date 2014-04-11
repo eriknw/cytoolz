@@ -1,7 +1,7 @@
 from cytoolz.itertoolz cimport (
-    accumulate, cons, count, drop, get, groupby, first, frequencies,
-    interleave, interpose, isdistinct, isiterable, iterate, last, mapcat,
-    nth, partition, partition_all, pluck, reduceby, remove,
+    accumulate, c_merge_sorted, cons, count, drop, get, groupby, first,
+    frequencies, interleave, interpose, isdistinct, isiterable, iterate,
+    last, mapcat, nth, partition, partition_all, pluck, reduceby, remove,
     rest, second, sliding_window, take, take_nth, unique)
 
 

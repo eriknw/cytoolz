@@ -12,6 +12,20 @@ cdef class accumulate:
 cpdef dict groupby(object func, object seq)
 
 
+cdef class _merge_sorted:
+    cdef list pq
+    cdef object shortcut
+
+
+cdef class _merge_sorted_key:
+    cdef list pq
+    cdef object key
+    cdef object shortcut
+
+
+cdef object c_merge_sorted(object seqs, object key=*)
+
+
 cdef class interleave:
     cdef list iters
     cdef list newiters
