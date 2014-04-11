@@ -11,6 +11,7 @@ from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 from .cpython cimport PyIter_Next, PyObject_GetItem
 
 from itertools import chain, islice
+from operator import itemgetter
 from .compatibility import map, zip, zip_longest
 
 
@@ -20,8 +21,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'interleave',
            'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
-           'sliding_window', 'partition', 'partition_all', 'count']
-#          'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
+           'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
 
 
 concatv = chain
@@ -775,6 +775,129 @@ cpdef int count(object seq):
     for _ in seq:
         i += 1
     return i
+
+
+cdef class _pluck_index:
+    def __cinit__(self, object ind, object seqs):
+        self.ind = ind
+        self.iterseqs = iter(seqs)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        val = next(self.iterseqs)
+        return val[self.ind]
+
+
+cdef class _pluck_index_default:
+    def __cinit__(self, object ind, object seqs, object default):
+        self.ind = ind
+        self.iterseqs = iter(seqs)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef PyObject *obj
+        cdef object val
+        val = next(self.iterseqs)
+        obj = PyObject_GetItem(val, self.ind)
+        if obj is NULL:
+            if not PyErr_GivenExceptionMatches(<object>PyErr_Occurred(),
+                                               _get_exceptions):
+                raise <object>PyErr_Occurred()
+            PyErr_Clear()
+            return self.default
+        return <object>obj
+
+
+cdef class _pluck_list:
+    def __cinit__(self, list ind, object seqs):
+        self.ind = ind
+        self.iterseqs = iter(seqs)
+        self.n = PyList_GET_SIZE(ind)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef int i
+        cdef tuple result
+        cdef object val, seq
+        seq = next(self.iterseqs)
+        result = PyTuple_New(self.n)
+        for i, val in enumerate(self.ind):
+            val = seq[val]
+            Py_INCREF(val)
+            PyTuple_SET_ITEM(result, i, val)
+        return result
+
+
+cdef class _pluck_list_default:
+    def __cinit__(self, list ind, object seqs, object default):
+        self.ind = ind
+        self.iterseqs = iter(seqs)
+        self.default = default
+        self.n = PyList_GET_SIZE(ind)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef int i
+        cdef object val, seq
+        cdef tuple result
+        seq = next(self.iterseqs)
+        result = PyTuple_New(self.n)
+        for i, val in enumerate(self.ind):
+            obj = PyObject_GetItem(seq, val)
+            if obj is NULL:
+                if not PyErr_GivenExceptionMatches(<object>PyErr_Occurred(),
+                                                   _get_list_exc):
+                    raise <object>PyErr_Occurred()
+                PyErr_Clear()
+                Py_INCREF(self.default)
+                PyTuple_SET_ITEM(result, i, self.default)
+            else:
+                val = <object>obj
+                Py_INCREF(val)
+                PyTuple_SET_ITEM(result, i, val)
+        return result
+
+
+cpdef object pluck(object ind, object seqs, object default=no_default):
+    """ plucks an element or several elements from each item in a sequence.
+
+    ``pluck`` maps ``itertoolz.get`` over a sequence and returns one or more
+    elements of each item in the sequence.
+
+    This is equivalent to running `map(curried.get(ind), seqs)`
+
+    ``ind`` can be either a single string/index or a sequence of
+    strings/indices.
+    ``seqs`` should be sequence containing sequences or dicts.
+
+    e.g.
+    >>> data = [{'id': 1, 'name': 'Cheese'}, {'id': 2, 'name': 'Pies'}]
+    >>> list(pluck('name', data))
+    ['Cheese', 'Pies']
+    >>> list(pluck([0, 1], [[1, 2, 3], [4, 5, 7]]))
+    [(1, 2), (4, 5)]
+
+    See Also:
+        get
+        map
+    """
+    if PyList_Check(ind):
+        if default is not no_default:
+            return _pluck_list_default(ind, seqs, default)
+        if PyList_GET_SIZE(ind) < 10:
+            return _pluck_list(ind, seqs)
+        return map(itemgetter(*ind), seqs)
+    if default is no_default:
+        return _pluck_index(ind, seqs)
+    return _pluck_index_default(ind, seqs, default)
 
 
 # I find `_consume` convenient for benchmarking.  Perhaps this belongs

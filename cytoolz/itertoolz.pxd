@@ -107,3 +107,30 @@ cdef class partition_all:
 
 
 cpdef int count(object seq)
+
+
+cdef class _pluck_index:
+    cdef object ind
+    cdef object iterseqs
+
+
+cdef class _pluck_index_default:
+    cdef object ind
+    cdef object iterseqs
+    cdef object default
+
+
+cdef class _pluck_list:
+    cdef list ind
+    cdef object iterseqs
+    cdef int n
+
+
+cdef class _pluck_list_default:
+    cdef list ind
+    cdef object iterseqs
+    cdef object default
+    cdef int n
+
+
+cpdef object pluck(object ind, object seqs, object default=*)

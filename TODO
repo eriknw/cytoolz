@@ -1,5 +1,4 @@
 itertoolz:
     merge_sorted
-    pluck
 
 curried
