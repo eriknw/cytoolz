@@ -11,6 +11,8 @@ ext_modules = [
               ["cytoolz/dicttoolz.pyx"]),
     Extension("cytoolz.recipes",
               ["cytoolz/recipes.pyx"]),
+    Extension("cytoolz.curried_exceptions",
+              ["cytoolz/curried_exceptions.pyx"]),
 ]
 
 setup(
