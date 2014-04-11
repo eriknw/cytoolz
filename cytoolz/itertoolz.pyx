@@ -390,6 +390,7 @@ cpdef object rest(object seq):
 
 
 cdef tuple _get_exceptions = (IndexError, KeyError, TypeError)
+cdef tuple _get_list_exc = (IndexError, KeyError)
 
 
 cpdef object get(object ind, object seq, object default=no_default):
@@ -444,6 +445,9 @@ cpdef object get(object ind, object seq, object default=no_default):
         for i, val in enumerate(ind):
             obj = PyObject_GetItem(seq, val)
             if obj is NULL:
+                if not PyErr_GivenExceptionMatches(<object>PyErr_Occurred(),
+                                                   _get_list_exc):
+                    raise <object>PyErr_Occurred()
                 PyErr_Clear()
                 Py_INCREF(default)
                 PyTuple_SET_ITEM(result, i, default)
