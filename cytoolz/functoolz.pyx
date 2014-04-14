@@ -1,3 +1,4 @@
+#cython: embedsignature=True
 import inspect
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
@@ -32,7 +33,8 @@ cdef object c_thread_first(object val, object forms):
 
 
 def thread_first(val, *forms):
-    """ Thread value through a sequence of functions/forms
+    """
+    Thread value through a sequence of functions/forms
 
     >>> def double(x): return 2*x
     >>> def inc(x):    return x + 1
@@ -71,7 +73,8 @@ cdef object c_thread_last(object val, object forms):
 
 
 def thread_last(val, *forms):
-    """ Thread value through a sequence of functions/forms
+    """
+    Thread value through a sequence of functions/forms
 
     >>> def double(x): return 2*x
     >>> def inc(x):    return x + 1
@@ -103,7 +106,8 @@ def thread_last(val, *forms):
 
 
 cpdef object _num_required_args(object func):
-    """ Number of args for func
+    """
+    Number of args for func
 
     >>> def foo(a, b, c=None):
     ...     return a + b + c
@@ -129,7 +133,9 @@ cpdef object _num_required_args(object func):
 
 
 cdef class curry:
-    """ Curry a callable function
+    """ curry(self, func, *args, **kwargs)
+
+    Curry a callable function
 
     Enables partial application of arguments through calling a function with an
     incomplete set of arguments.
@@ -265,7 +271,8 @@ cdef class c_memoize:
 
 
 cpdef object memoize(object func=None, object cache=None, object key=None):
-    """ Cache a function's result for speedy future evaluation
+    """
+    Cache a function's result for speedy future evaluation
 
     Considerations:
         Trades memory for speed.
@@ -307,7 +314,9 @@ cpdef object memoize(object func=None, object cache=None, object key=None):
 
 
 cdef class Compose:
-    """ A composition of functions
+    """ Compose(self, *funcs)
+
+    A composition of functions
 
     See Also:
         compose
@@ -334,7 +343,8 @@ cdef object c_compose(object funcs):
 
 
 def compose(*funcs):
-    """ Compose functions to operate in series.
+    """
+    Compose functions to operate in series.
 
     Returns a function that applies other functions in sequence.
 
@@ -361,7 +371,8 @@ cdef object c_pipe(object data, object funcs):
 
 
 def pipe(data, *funcs):
-    """ Pipe a value through a sequence of functions
+    """
+    Pipe a value through a sequence of functions
 
     I.e. ``pipe(data, f, g, h)`` is equivalent to ``h(g(f(data)))``
 
@@ -383,7 +394,9 @@ def pipe(data, *funcs):
 
 
 cdef class complement:
-    """ Convert a predicate function to its logical complement.
+    """ complement(func)
+
+    Convert a predicate function to its logical complement.
 
     In other words, return a function that, for inputs that normally
     yield True, yields False, and vice-versa.
@@ -441,7 +454,8 @@ def juxt(*funcs):
 
 
 cpdef object do(object func, object x):
-    """ Runs ``func`` on ``x``, returns ``x``
+    """
+    Runs ``func`` on ``x``, returns ``x``
 
     Because the results of ``func`` are not returned, only the side
     effects of ``func`` are relevant.
