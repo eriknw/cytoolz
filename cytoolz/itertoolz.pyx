@@ -398,7 +398,7 @@ cpdef object unique(object seq, object key=identity):
         return _unique_key(seq, key)
 
 
-cpdef bint isiterable(object x):
+cpdef object isiterable(object x):
     """
     Is x iterable?
 
@@ -417,7 +417,7 @@ cpdef bint isiterable(object x):
     return False
 
 
-cpdef bint isdistinct(object seq):
+cpdef object isdistinct(object seq):
     """
     All values in sequence are distinct
 
@@ -932,7 +932,7 @@ cdef class partition_all:
         return result
 
 
-cpdef int count(object seq):
+cpdef object count(object seq):
     """
     Count the number of items in seq
 

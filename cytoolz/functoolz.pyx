@@ -29,6 +29,8 @@ cdef object c_thread_first(object val, object forms):
         elif PyTuple_Check(form):
             func, args = form[0], (val,) + form[1:]
             val = PyObject_CallObject(func, args)
+        else:
+            val = None
     return val
 
 
@@ -69,6 +71,8 @@ cdef object c_thread_last(object val, object forms):
         elif PyTuple_Check(form):
             func, args = form[0], form[1:] + (val,)
             val = PyObject_CallObject(func, args)
+        else:
+            val = None
     return val
 
 
