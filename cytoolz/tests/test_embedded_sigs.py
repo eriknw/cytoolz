@@ -25,8 +25,8 @@ def test_class_sigs():
                              cytoolz_dict)
 
     # full API coverage should be tested elsewhere
-    toolz_dict = keyfilter(cytoolz_dict.has_key, toolz_dict)
-    cytoolz_dict = keyfilter(toolz_dict.has_key, cytoolz_dict)
+    toolz_dict = keyfilter(lambda x: x in cytoolz_dict, toolz_dict)
+    cytoolz_dict = keyfilter(lambda x: x in toolz_dict, cytoolz_dict)
 
     d = merge_with(identity, toolz_dict, cytoolz_dict)
     for key, (toolz_func, cytoolz_func) in d.items():
@@ -48,3 +48,33 @@ def test_class_sigs():
                        '\n\nDocstring in cytoolz is:\n%s'
                        % (key, toolz_sig, cytoolz_func.__doc__))
             assert False, message
+
+
+skip_sigs = ['identity']
+aliases = {'comp': 'compose'}
+
+
+def test_sig_at_beginning():
+    """ Test that the function signature is at the beginning of the docstring
+        and is followed by exactly one blank line.
+    """
+    cytoolz_dict = valfilter(isfrommod('cytoolz'), cytoolz.__dict__)
+    cytoolz_dict = keyfilter(lambda x: x not in skip_sigs, cytoolz_dict)
+
+    for key, val in cytoolz_dict.items():
+        doclines = val.__doc__.splitlines()
+        assert len(doclines) > 2, (
+            'cytoolz.%s docstring too short:\n\n%s' % (key, val.__doc__))
+
+        sig = '%s(' % aliases.get(key, key)
+        assert sig in doclines[0], (
+            'cytoolz.%s docstring missing signature at beginning:\n\n%s'
+            % (key, val.__doc__))
+
+        assert not doclines[1], (
+            'cytoolz.%s docstring missing blank line after signature:\n\n%s'
+            % (key, val.__doc__))
+
+        assert doclines[2], (
+            'cytoolz.%s docstring too many blank lines after signature:\n\n%s'
+            % (key, val.__doc__))

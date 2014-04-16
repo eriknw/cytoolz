@@ -41,8 +41,8 @@ def test_docstrings_uptodate():
     toolz_dict = valfilter(lambda x: getattr(x, '__doc__', ''), toolz_dict)
 
     # full API coverage should be tested elsewhere
-    toolz_dict = keyfilter(cytoolz_dict.has_key, toolz_dict)
-    cytoolz_dict = keyfilter(toolz_dict.has_key, cytoolz_dict)
+    toolz_dict = keyfilter(lambda x: x in cytoolz_dict, toolz_dict)
+    cytoolz_dict = keyfilter(lambda x: x in toolz_dict, cytoolz_dict)
 
     d = merge_with(identity, toolz_dict, cytoolz_dict)
     for key, (toolz_func, cytoolz_func) in d.items():
