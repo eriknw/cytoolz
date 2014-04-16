@@ -1,6 +1,5 @@
-from cpython.dict cimport (PyDict_Check, PyDict_Copy, PyDict_GetItem,
-                           PyDict_Merge, PyDict_New, PyDict_SetItem,
-                           PyDict_Update)
+from cpython.dict cimport (PyDict_Check, PyDict_GetItem, PyDict_Merge,
+                           PyDict_New, PyDict_SetItem, PyDict_Update)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
 from cpython.ref cimport PyObject
@@ -167,7 +166,7 @@ cpdef dict assoc(dict d, object key, object value):
     {'x': 1, 'y': 3}
     """
     cdef dict rv
-    rv = PyDict_Copy(d)
+    rv = d.copy()
     PyDict_SetItem(rv, key, value)
     return rv
 
@@ -210,7 +209,7 @@ cpdef dict update_in(dict d, object keys, object func, object default=None):
     cdef dict rv, inner, dtemp
     cdef PyObject *obj
     prevkey, keys = keys[0], keys[1:]
-    rv = PyDict_Copy(d)
+    rv = d.copy()
     inner = rv
 
     for key in keys:
@@ -220,7 +219,7 @@ cpdef dict update_in(dict d, object keys, object func, object default=None):
             dtemp = d
         else:
             d = <object>obj
-            dtemp = PyDict_Copy(d)
+            dtemp = d.copy()
         PyDict_SetItem(inner, prevkey, dtemp)
         prevkey = key
         inner = dtemp

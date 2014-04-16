@@ -48,10 +48,10 @@ cdef class _unique_identity:
 cpdef object unique(object seq, object key=*)
 
 
-cpdef bint isiterable(object x)
+cpdef object isiterable(object x)
 
 
-cpdef bint isdistinct(object seq)
+cpdef object isdistinct(object seq)
 
 
 cpdef object take(int n, object seq)
@@ -120,7 +120,7 @@ cdef class partition_all:
     cdef object iterseq
 
 
-cpdef int count(object seq)
+cpdef object count(object seq)
 
 
 cdef class _pluck_index:
