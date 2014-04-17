@@ -38,7 +38,7 @@ cdef class remove:
     >>> def iseven(x):
     ...     return x % 2 == 0
     >>> list(remove(iseven, [1, 2, 3, 4]))
-    [2, 3]
+    [1, 3]
     """
     def __cinit__(self, object predicate, object seq):
         self.predicate = predicate
