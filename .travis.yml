@@ -17,7 +17,6 @@ install:
 # commands to run tests
 script:
     - nosetests --with-doctest cytoolz
-    - python cydoctest.py
 
 notifications:
   email: false
