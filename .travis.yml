@@ -7,8 +7,8 @@ python:
 
 before_install:
     - pip install git+https://github.com/pytoolz/toolz.git
-    - pip install cython --use-mirrors
-    - pip install nose --use-mirrors
+    - pip install cython
+    - pip install nose
 
 install:
     - python setup.py build_ext --inplace
