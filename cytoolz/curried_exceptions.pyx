@@ -1,10 +1,12 @@
+#cython: embedsignature=True
 from .dicttoolz cimport c_merge_with
 
 __all__ = ['merge_with']
 
 
 def merge_with(func, *dicts):
-    """ Merge dictionaries and apply function to combined values
+    """
+    Merge dictionaries and apply function to combined values
 
     A key may occur in more than one dict, and all values mapped from the key
     will be passed to the function as a list, such as func([val1, val2, ...]).
