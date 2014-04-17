@@ -94,11 +94,13 @@ def fix_module_doctest(module):
             module.__test__[name] = value.__doc__
 
 
-def testmod(m=None, *args, **kwargs):
+def module_doctest(m, *args, **kwargs):
     """
     Fix a Cython module's doctests, then call doctest.testmod()
 
     All other arguments are passed directly to doctest.testmod().
+
+    Return True on success, False on failure.
     """
-    # fix_module_doctest(m)  # XXX this doesn't work when using `nosetest`
-    doctest.testmod(m, *args, **kwargs)
+    fix_module_doctest(m)
+    return doctest.testmod(m, *args, **kwargs).failed == 0

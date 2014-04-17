@@ -4,11 +4,11 @@ Cython-compatible wrapper for doctest.testmod().
 
 Usage example, assuming a Cython module mymod.pyx is compiled.
 This is run from the command line, passing a command to Python:
-python -c "import cydoctest, mymod; cydoctest.testmod(mymod)"
+python -c "import cydoctest, mymod; cydoctest.module_doctest(mymod)"
 
 (This still won't let a Cython module run its own doctests
 when called with "python mymod.py", but it's pretty close.
-Further options can be passed to testmod() as desired, e.g.
+Further options can be passed to module_doctest() as desired, e.g.
 verbose=True.)
 """
 
@@ -53,14 +53,16 @@ def fix_module_doctest(module):
             module.__test__[name] = value.__doc__
 
 
-def testmod(m=None, *args, **kwargs):
+def module_doctest(m, *args, **kwargs):
     """
-    Fix a Cython module's doctests, then call doctest.testmod()
+    Fix a Cython module's doctests, then call doctest.module_doctest()
 
-    All other arguments are passed directly to doctest.testmod().
+    All other arguments are passed directly to doctest.module_doctest().
+
+    Return True on success, False on failure.
     """
     fix_module_doctest(m)
-    doctest.testmod(m, *args, **kwargs)
+    return doctest.testmod(m, *args, **kwargs).failed == 0
 
 
 if __name__ == '__main__':
@@ -70,8 +72,10 @@ if __name__ == '__main__':
     import cytoolz.itertoolz
     import cytoolz.recipes
 
-    testmod(cytoolz)
-    testmod(cytoolz.dicttoolz)
-    testmod(cytoolz.functoolz)
-    testmod(cytoolz.itertoolz)
-    testmod(cytoolz.recipes)
+    passed = True
+    passed &= module_doctest(cytoolz.dicttoolz)
+    passed &= module_doctest(cytoolz.functoolz)
+    passed &= module_doctest(cytoolz.itertoolz)
+    passed &= module_doctest(cytoolz.recipes)
+    if not passed:
+        exit(1)
