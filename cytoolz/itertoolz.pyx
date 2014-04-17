@@ -1,3 +1,4 @@
+#cython: embedsignature=True
 from cpython.dict cimport (PyDict_Contains, PyDict_GetItem, PyDict_New,
                            PyDict_SetItem)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
@@ -33,7 +34,9 @@ cpdef object identity(object x):
 
 
 cdef class remove:
-    """ Return those items of collection for which predicate(item) is true.
+    """ remove(predicate, seq)
+
+    Return those items of collection for which predicate(item) is true.
 
     >>> def iseven(x):
     ...     return x % 2 == 0
@@ -56,7 +59,9 @@ cdef class remove:
 
 
 cdef class accumulate:
-    """ Repeatedly apply binary function to a sequence, accumulating results
+    """ accumulate(binop, seq)
+
+    Repeatedly apply binary function to a sequence, accumulating results
 
     >>> from operator import add, mul
     >>> list(accumulate(add, [1, 2, 3, 4, 5]))
@@ -93,7 +98,8 @@ cdef class accumulate:
 
 
 cpdef dict groupby(object func, object seq):
-    """ Group a collection by a key function
+    """
+    Group a collection by a key function
 
     >>> names = ['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank']
     >>> groupby(len, names)
@@ -244,7 +250,8 @@ cdef object c_merge_sorted(object seqs, object key=None):
 
 
 def merge_sorted(*seqs, **kwargs):
-    """ Merge and sort a collection of sorted collections
+    """
+    Merge and sort a collection of sorted collections
 
     This works lazily and only keeps one value from each iterable in memory.
 
@@ -265,7 +272,9 @@ def merge_sorted(*seqs, **kwargs):
 
 
 cdef class interleave:
-    """ Interleave a sequence of sequences
+    """ interleave(seqs, pass_exceptions=())
+
+    Interleave a sequence of sequences
 
     >>> list(interleave([[1, 2], [3, 4]]))
     [1, 3, 2, 4]
@@ -370,7 +379,8 @@ cdef class _unique_identity:
 
 
 cpdef object unique(object seq, object key=identity):
-    """ Return only unique elements of a sequence
+    """
+    Return only unique elements of a sequence
 
     >>> tuple(unique((1, 2, 3)))
     (1, 2, 3)
@@ -389,7 +399,8 @@ cpdef object unique(object seq, object key=identity):
 
 
 cpdef object isiterable(object x):
-    """ Is x iterable?
+    """
+    Is x iterable?
 
     >>> isiterable([1, 2, 3])
     True
@@ -407,7 +418,8 @@ cpdef object isiterable(object x):
 
 
 cpdef object isdistinct(object seq):
-    """ All values in sequence are distinct
+    """
+    All values in sequence are distinct
 
     >>> isdistinct([1, 2, 3])
     True
@@ -431,7 +443,8 @@ cpdef object isdistinct(object seq):
 
 
 cpdef object take(int n, object seq):
-    """ The first n elements of a sequence
+    """
+    The first n elements of a sequence
 
     >>> list(take(2, [10, 20, 30, 40, 50]))
     [10, 20]
@@ -440,7 +453,8 @@ cpdef object take(int n, object seq):
 
 
 cpdef object drop(int n, object seq):
-    """ The sequence following the first n elements
+    """
+    The sequence following the first n elements
 
     >>> list(drop(2, [10, 20, 30, 40, 50]))
     [30, 40, 50]
@@ -461,7 +475,8 @@ cpdef object drop(int n, object seq):
 
 
 cpdef object take_nth(int n, object seq):
-    """ Every nth item in seq
+    """
+    Every nth item in seq
 
     >>> list(take_nth(2, [10, 20, 30, 40, 50]))
     [10, 30, 50]
@@ -470,7 +485,8 @@ cpdef object take_nth(int n, object seq):
 
 
 cpdef object first(object seq):
-    """ The first element in a sequence
+    """
+    The first element in a sequence
 
     >>> first('ABC')
     'A'
@@ -479,7 +495,8 @@ cpdef object first(object seq):
 
 
 cpdef object second(object seq):
-    """ The second element in a sequence
+    """
+    The second element in a sequence
 
     >>> second('ABC')
     'B'
@@ -490,7 +507,8 @@ cpdef object second(object seq):
 
 
 cpdef object nth(int n, object seq):
-    """ The nth element in a sequence
+    """
+    The nth element in a sequence
 
     >>> nth(1, 'ABC')
     'B'
@@ -508,7 +526,8 @@ no_default = '__no__default__'
 
 
 cpdef object last(object seq):
-    """ The last element in a sequence
+    """
+    The last element in a sequence
 
     >>> last('ABC')
     'C'
@@ -535,7 +554,8 @@ cdef tuple _get_list_exc = (IndexError, KeyError)
 
 
 cpdef object get(object ind, object seq, object default=no_default):
-    """ Get element in a sequence or dict
+    """
+    Get element in a sequence or dict
 
     Provides standard indexing
 
@@ -611,7 +631,8 @@ cpdef object get(object ind, object seq, object default=no_default):
 
 
 cpdef object mapcat(object func, object seqs):
-    """ Apply func to each sequence in seqs, concatenating results.
+    """
+    Apply func to each sequence in seqs, concatenating results.
 
     >>> list(mapcat(lambda s: [c.upper() for c in s],
     ...             [["a", "b"], ["c", "d", "e"]]))
@@ -621,7 +642,8 @@ cpdef object mapcat(object func, object seqs):
 
 
 cpdef object cons(object el, object seq):
-    """ Add el to beginning of (possibly infinite) sequence seq.
+    """
+    Add el to beginning of (possibly infinite) sequence seq.
 
     >>> list(cons(1, [2, 3]))
     [1, 2, 3]
@@ -630,7 +652,9 @@ cpdef object cons(object el, object seq):
 
 
 cdef class interpose:
-    """ Introduce element between each pair of elements in seq
+    """ interpose(el, seq)
+
+    Introduce element between each pair of elements in seq
 
     >>> list(interpose("a", [1, 2, 3]))
     [1, 'a', 2, 'a', 3]
@@ -658,7 +682,8 @@ cdef class interpose:
 
 
 cpdef dict frequencies(object seq):
-    """ Find number of occurrences of each value in seq
+    """
+    Find number of occurrences of each value in seq
 
     >>> frequencies(['cat', 'cat', 'ox', 'pig', 'pig', 'cat'])  #doctest: +SKIP
     {'cat': 3, 'ox': 1, 'pig': 2}
@@ -697,7 +722,8 @@ cpdef dict frequencies(object seq):
 
 
 cpdef dict reduceby(object key, object binop, object seq, object init):
-    """ Perform a simultaneous groupby and reduction
+    """
+    Perform a simultaneous groupby and reduction
 
     The computation:
 
@@ -749,7 +775,9 @@ cpdef dict reduceby(object key, object binop, object seq, object init):
 
 
 cdef class iterate:
-    """ Repeatedly apply a function func onto an original input
+    """ iterate(func, x)
+
+    Repeatedly apply a function func onto an original input
 
     Yields x, then func(x), then func(func(x)), then func(func(func(x))), etc..
 
@@ -791,7 +819,9 @@ cdef class iterate:
 
 
 cdef class sliding_window:
-    """ A sequence of overlapping subsequences
+    """ sliding_window(n, seq)
+
+    A sequence of overlapping subsequences
 
     >>> list(sliding_window(2, [1, 2, 3, 4]))
     [(1, 2), (2, 3), (3, 4)]
@@ -836,7 +866,8 @@ no_pad = '__no__pad__'
 
 
 cpdef object partition(int n, object seq, object pad=no_pad):
-    """ Partition sequence into tuples of length n
+    """
+    Partition sequence into tuples of length n
 
     >>> list(partition(2, [1, 2, 3, 4]))
     [(1, 2), (3, 4)]
@@ -861,7 +892,9 @@ cpdef object partition(int n, object seq, object pad=no_pad):
 
 
 cdef class partition_all:
-    """ Partition all elements of sequence into tuples of length at most n
+    """ partition_all(n, seq)
+
+    Partition all elements of sequence into tuples of length at most n
 
     The final tuple may be shorter to accommodate extra elements.
 
@@ -900,7 +933,8 @@ cdef class partition_all:
 
 
 cpdef object count(object seq):
-    """ Count the number of items in seq
+    """
+    Count the number of items in seq
 
     Like the builtin ``len`` but works on lazy sequencies.
 
@@ -1008,7 +1042,8 @@ cdef class _pluck_list_default:
 
 
 cpdef object pluck(object ind, object seqs, object default=no_default):
-    """ plucks an element or several elements from each item in a sequence.
+    """
+    plucks an element or several elements from each item in a sequence.
 
     ``pluck`` maps ``itertoolz.get`` over a sequence and returns one or more
     elements of each item in the sequence.
@@ -1045,6 +1080,7 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
 # elsewhere, so it is private (leading underscore) and hidden away for now.
 
 cpdef object _consume(object seq):
-    """ Efficiently consume an iterable """
+    """
+    Efficiently consume an iterable """
     for _ in seq:
         pass

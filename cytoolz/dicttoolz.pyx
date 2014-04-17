@@ -1,3 +1,4 @@
+#cython: embedsignature=True
 from cpython.dict cimport (PyDict_Check, PyDict_GetItem, PyDict_Merge,
                            PyDict_New, PyDict_SetItem, PyDict_Update)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
@@ -21,7 +22,8 @@ cdef dict c_merge(object dicts):
 
 
 def merge(*dicts):
-    """ Merge a collection of dictionaries
+    """
+    Merge a collection of dictionaries
 
     >>> merge({1: 'one'}, {2: 'two'})
     {1: 'one', 2: 'two'}
@@ -61,7 +63,8 @@ cdef dict c_merge_with(object func, object dicts):
 
 
 def merge_with(func, *dicts):
-    """ Merge dictionaries and apply function to combined values
+    """
+    Merge dictionaries and apply function to combined values
 
     A key may occur in more than one dict, and all values mapped from the key
     will be passed to the function as a list, such as func([val1, val2, ...]).
@@ -81,7 +84,8 @@ def merge_with(func, *dicts):
 
 
 cpdef dict valmap(object func, dict d):
-    """ Apply function to values of dictionary
+    """
+    Apply function to values of dictionary
 
     >>> bills = {"Alice": [20, 15, 30], "Bob": [10, 35]}
     >>> valmap(sum, bills)  # doctest: +SKIP
@@ -98,7 +102,8 @@ cpdef dict valmap(object func, dict d):
 
 
 cpdef dict keymap(object func, dict d):
-    """ Apply function to keys of dictionary
+    """
+    Apply function to keys of dictionary
 
     >>> bills = {"Alice": [20, 15, 30], "Bob": [10, 35]}
     >>> keymap(str.lower, bills)  # doctest: +SKIP
@@ -115,7 +120,8 @@ cpdef dict keymap(object func, dict d):
 
 
 cpdef dict valfilter(object predicate, dict d):
-    """ Filter items in dictionary by value
+    """
+    Filter items in dictionary by value
 
     >>> iseven = lambda x: x % 2 == 0
     >>> d = {1: 2, 2: 3, 3: 4, 4: 5}
@@ -135,7 +141,8 @@ cpdef dict valfilter(object predicate, dict d):
 
 
 cpdef dict keyfilter(object predicate, dict d):
-    """ Filter items in dictionary by key
+    """
+    Filter items in dictionary by key
 
     >>> iseven = lambda x: x % 2 == 0
     >>> d = {1: 2, 2: 3, 3: 4, 4: 5}
@@ -172,7 +179,8 @@ cpdef dict assoc(dict d, object key, object value):
 
 
 cpdef dict update_in(dict d, object keys, object func, object default=None):
-    """ Update value in a (potentially) nested dictionary
+    """
+    Update value in a (potentially) nested dictionary
 
     inputs:
     d - dictionary on which to operate
