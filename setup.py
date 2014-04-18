@@ -19,7 +19,8 @@ from distutils.core import setup
 from distutils.extension import Extension
 
 info = {}
-execfile(os.path.join('cytoolz', '_version.py'), info)
+filename = os.path.join('cytoolz', '_version.py')
+exec(compile(open(filename, "rb").read(), filename, 'exec'), info)
 VERSION = info['__version__']
 
 try:
