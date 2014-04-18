@@ -17,4 +17,4 @@ sorted = sorted
 # Aliases
 comp = compose
 
-__version__ = '0.0.1'  # In alpha.  Should eventually match `toolz.__version__`
+__version__ = '0.5.3dev'
