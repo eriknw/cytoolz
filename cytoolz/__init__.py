@@ -17,4 +17,4 @@ sorted = sorted
 # Aliases
 comp = compose
 
-__version__ = '0.5.3dev'
+from ._version import __version__

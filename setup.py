@@ -13,11 +13,14 @@ For convenience, developmental versions (with 'dev' in the version number)
 automatically use Cython unless disabled via a command line argument.
 
 """
+import os.path
 import sys
 from distutils.core import setup
 from distutils.extension import Extension
 
-VERSION = '0.5.3dev'
+info = {}
+execfile(os.path.join('cytoolz', '_version.py'), info)
+VERSION = info['__version__']
 
 try:
     from Cython.Distutils import build_ext
