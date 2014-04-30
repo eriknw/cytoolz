@@ -17,4 +17,4 @@ sorted = sorted
 # Aliases
 comp = compose
 
-from ._version import __version__
+from ._version import __version__, __toolz_version__
