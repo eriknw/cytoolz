@@ -69,14 +69,15 @@ if __name__ == '__main__':
                      'High performance functional utilities'),
         cmdclass=cmdclass,
         ext_modules=ext_modules,
-        long_description=(open('README.rst').read() if exists('README.rst')
+        long_description=(open('README.rst').read()
+                          if os.path.exists('README.rst')
                           else ''),
         url='https://github.com/pytoolz/cytoolz',
         author='https://raw.github.com/pytoolz/cytoolz/master/AUTHORS.md',
         author_email='erik.n.welch@gmail.com',
         maintainer='Erik Welch',
         maintainer_email='erik.n.welch@gmail.com',
-        licence = 'BSD',
+        license = 'BSD',
         packages=['cytoolz'],
         package_data={'cytoolz': ['*.pxd']},
         # include_package_data = True,
@@ -105,5 +106,5 @@ if __name__ == '__main__':
             'Topic :: Software Development :: Libraries :: Python Modules',
             'Topic :: Utilities',
         ],
-        zip_safe=False
+        # zip_safe=False
     )
