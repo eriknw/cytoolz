@@ -1,1 +1,2 @@
-__version__ = '0.5.3dev'
+__version__ = '0.6.0'
+__toolz_version__ = '0.6.0'
