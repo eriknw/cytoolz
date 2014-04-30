@@ -1,10 +1,10 @@
 CyToolz
 =======
 
-|Build Status| |Coverage Status| |Downloads|
+|Build Status| |Version Status| |Downloads|
 
 Cython implementation of the
-|literal toolz|_ `package, <https://pypi.python.org/pypi/toolz/>` which
+|literal toolz|_ `package, <https://pypi.python.org/pypi/toolz/>`__ which
 provides high performance utility functions for iterables, functions,
 and dictionaries.
 
