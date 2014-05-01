@@ -58,7 +58,7 @@ Contributions Welcome
 ``toolz`` (and ``cytoolz``) aims to be a repository for utility functions,
 particularly those that come from the functional programming and list
 processing traditions. We welcome contributions that fall within this scope
-ang encourage users to scrape their ``util.py`` files for functions that are
+and encourage users to scrape their ``util.py`` files for functions that are
 broadly useful.
 
 Please take a look at our issue pages for

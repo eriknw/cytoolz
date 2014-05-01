@@ -81,7 +81,7 @@ if __name__ == '__main__':
         packages=['cytoolz'],
         package_data={'cytoolz': ['*.pxd']},
         # include_package_data = True,
-        keywords=('functional utility itertools functools iterator generator'
+        keywords=('functional utility itertools functools iterator generator '
                   'curry memoize lazy streaming bigdata cython toolz cytoolz'),
         classifiers = [
             'Development Status :: 4 - Beta',
