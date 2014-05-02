@@ -1,3 +1,5 @@
+*.c
+*.html
 *.pyc
 *.swp
 *.so

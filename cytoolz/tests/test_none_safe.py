@@ -53,15 +53,13 @@ def test_dicttoolz():
     tested.append('get_in')
 
     assert raises(TypeError, lambda: keyfilter(None, {1: 2}))
-    assert raises((TypeError, AttributeError),
-                  lambda: keyfilter(identity, None))
+    assert raises(TypeError, lambda: keyfilter(identity, None))
     tested.append('keyfilter')
 
     # XXX
     assert (raises(TypeError, lambda: keymap(None, {1: 2})) or
             keymap(None, {1: 2}) == {(1,): 2})
-    assert raises((TypeError, AttributeError),
-                  lambda: keymap(identity, None))
+    assert raises(TypeError, lambda: keymap(identity, None))
     tested.append('keymap')
 
     assert raises(TypeError, lambda: merge(None))
@@ -81,15 +79,13 @@ def test_dicttoolz():
     tested.append('update_in')
 
     assert raises(TypeError, lambda: valfilter(None, {1: 2}))
-    assert raises((TypeError, AttributeError),
-                  lambda: valfilter(identity, None))
+    assert raises(TypeError, lambda: valfilter(identity, None))
     tested.append('valfilter')
 
     # XXX
     assert (raises(TypeError, lambda: valmap(None, {1: 2})) or
             valmap(None, {1: 2}) == {1: (2,)})
-    assert raises((TypeError, AttributeError),
-                  lambda: valmap(identity, None))
+    assert raises(TypeError, lambda: valmap(identity, None))
     tested.append('valmap')
 
     s1 = set(tested)
