@@ -1055,6 +1055,7 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
     ``seqs`` should be sequence containing sequences or dicts.
 
     e.g.
+
     >>> data = [{'id': 1, 'name': 'Cheese'}, {'id': 2, 'name': 'Pies'}]
     >>> list(pluck('name', data))
     ['Cheese', 'Pies']
