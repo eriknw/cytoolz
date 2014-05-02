@@ -1,5 +1,6 @@
 import doctest
 import inspect
+import nose.tools
 import os.path
 import cytoolz
 
@@ -104,3 +105,10 @@ def module_doctest(m, *args, **kwargs):
     """
     fix_module_doctest(m)
     return doctest.testmod(m, *args, **kwargs).failed == 0
+
+
+# Decorator used to skip tests for developmental versions of CyToolz
+if 'dev' in cytoolz.__version__:
+    dev_skip_test = nose.tools.nottest
+else:
+    dev_skip_test = nose.tools.istest

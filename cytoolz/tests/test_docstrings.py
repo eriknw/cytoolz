@@ -3,7 +3,7 @@ import cytoolz
 import toolz
 
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
-from cytoolz.utils import raises
+from cytoolz.utils import raises, dev_skip_test
 
 
 # `cytoolz` functions for which "# doctest: +SKIP" were added.
@@ -30,6 +30,7 @@ def convertdoc(doc):
     return doc
 
 
+@dev_skip_test
 def test_docstrings_uptodate():
     differ = difflib.Differ()
 
