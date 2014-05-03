@@ -1,4 +1,5 @@
 #cython: embedsignature=True
+from cpython.dict cimport PyDict_Check
 from .dicttoolz cimport c_merge_with
 
 __all__ = ['merge_with']
@@ -22,4 +23,7 @@ def merge_with(func, *dicts):
     """
     if len(dicts) == 0:
         raise TypeError
+    if len(dicts) == 1 and not PyDict_Check(dicts[0]):
+        dicts = dicts[0]
+
     return c_merge_with(func, dicts)
