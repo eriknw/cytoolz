@@ -5,21 +5,11 @@ python:
     - "3.2"
     - "3.3"
 
-env:
-    - WITH_CYTHON=true
-    - WITH_CYTHON=false
-
 before_install:
     - pip install git+https://github.com/pytoolz/toolz.git
-    - pip install cython
 
 install:
-    # *.c files aren't in the repo, so we must always create them
-    - python setup.py build_ext --inplace --with-cython
-    - if [[ $WITH_CYTHON == 'false' ]]; then
-    -     rm cytoolz/*.so
-    -     python setup.py build_ext --inplace --without-cython
-    - fi
+    - python setup.py build_ext --inplace --without-cython
 
 # commands to run tests
 script:
