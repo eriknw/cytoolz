@@ -439,7 +439,7 @@ cpdef object isdistinct(object seq):
         return len(seq) == len(set(seq))
 
 
-cpdef object take(int n, object seq):
+cpdef object take(Py_ssize_t n, object seq):
     """
     The first n elements of a sequence
 
@@ -449,7 +449,7 @@ cpdef object take(int n, object seq):
     return islice(seq, n)
 
 
-cpdef object drop(int n, object seq):
+cpdef object drop(Py_ssize_t n, object seq):
     """
     The sequence following the first n elements
 
@@ -458,20 +458,18 @@ cpdef object drop(int n, object seq):
     """
     if n < 0:
         raise ValueError('n argument for drop() must be non-negative')
-    cdef int i
+    cdef Py_ssize_t i
     cdef object iter_seq
-    i = 0
     iter_seq = iter(seq)
     try:
-        while i < n:
-            i += 1
+        for i in range(n):
             next(iter_seq)
     except StopIteration:
         pass
     return iter_seq
 
 
-cpdef object take_nth(int n, object seq):
+cpdef object take_nth(Py_ssize_t n, object seq):
     """
     Every nth item in seq
 
@@ -503,7 +501,7 @@ cpdef object second(object seq):
     return next(seq)
 
 
-cpdef object nth(int n, object seq):
+cpdef object nth(Py_ssize_t n, object seq):
     """
     The nth element in a sequence
 
@@ -858,7 +856,7 @@ cdef class sliding_window:
 no_pad = '__no__pad__'
 
 
-cpdef object partition(int n, object seq, object pad=no_pad):
+cpdef object partition(Py_ssize_t n, object seq, object pad=no_pad):
     """
     Partition sequence into tuples of length n
 

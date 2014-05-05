@@ -30,8 +30,8 @@ cdef class interleave:
     cdef list iters
     cdef list newiters
     cdef tuple pass_exceptions
-    cdef int i
-    cdef int n
+    cdef Py_ssize_t i
+    cdef Py_ssize_t n
 
 
 cdef class _unique_key:
@@ -54,13 +54,13 @@ cpdef object isiterable(object x)
 cpdef object isdistinct(object seq)
 
 
-cpdef object take(int n, object seq)
+cpdef object take(Py_ssize_t n, object seq)
 
 
-cpdef object drop(int n, object seq)
+cpdef object drop(Py_ssize_t n, object seq)
 
 
-cpdef object take_nth(int n, object seq)
+cpdef object take_nth(Py_ssize_t n, object seq)
 
 
 cpdef object first(object seq)
@@ -69,7 +69,7 @@ cpdef object first(object seq)
 cpdef object second(object seq)
 
 
-cpdef object nth(int n, object seq)
+cpdef object nth(Py_ssize_t n, object seq)
 
 
 cpdef object last(object seq)
@@ -109,14 +109,14 @@ cdef class iterate:
 cdef class sliding_window:
     cdef object iterseq
     cdef tuple prev
-    cdef int n
+    cdef Py_ssize_t n
 
 
-cpdef object partition(int n, object seq, object pad=*)
+cpdef object partition(Py_ssize_t n, object seq, object pad=*)
 
 
 cdef class partition_all:
-    cdef int n
+    cdef Py_ssize_t n
     cdef object iterseq
 
 
@@ -137,14 +137,14 @@ cdef class _pluck_index_default:
 cdef class _pluck_list:
     cdef list ind
     cdef object iterseqs
-    cdef int n
+    cdef Py_ssize_t n
 
 
 cdef class _pluck_list_default:
     cdef list ind
     cdef object iterseqs
     cdef object default
-    cdef int n
+    cdef Py_ssize_t n
 
 
 cpdef object pluck(object ind, object seqs, object default=*)
