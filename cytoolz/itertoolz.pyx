@@ -1,10 +1,9 @@
 #cython: embedsignature=True
-from cpython.dict cimport (PyDict_Contains, PyDict_GetItem, PyDict_New,
-                           PyDict_SetItem)
-from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_GivenExceptionMatches, PyErr_Occurred
-from cpython.list cimport (PyList_Append, PyList_Check, PyList_GET_ITEM,
-                           PyList_GET_SIZE, PyList_New)
-from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF
+from cpython.dict cimport PyDict_GetItem
+from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
+                          PyErr_GivenExceptionMatches, PyErr_Occurred)
+from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
+from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
@@ -120,7 +119,7 @@ cpdef dict groupby(object func, object seq):
         key = func(item)
         obj = PyDict_GetItem(d, key)
         if obj is NULL:
-            PyDict_SetItem(d, key, [item])
+            d[key] = [item]
         else:
             PyList_Append(<object>obj, item)
     return d
@@ -263,7 +262,7 @@ def merge_sorted(*seqs, **kwargs):
     >>> list(merge_sorted([2, 3], [1, 3], key=lambda x: x // 3))
     [2, 1, 3, 3]
     """
-    if PyDict_Contains(kwargs, 'key'):
+    if 'key' in kwargs:
         return c_merge_sorted(seqs, kwargs['key'])
     return c_merge_sorted(seqs)
 
@@ -284,9 +283,7 @@ cdef class interleave:
     Returns a lazy iterator
     """
     def __cinit__(self, seqs, pass_exceptions=()):
-        self.iters = []
-        for seq in seqs:
-            PyList_Append(self.iters, iter(seq))
+        self.iters = [iter(seq) for seq in seqs]
         self.newiters = []
         self.pass_exceptions = tuple(pass_exceptions)
         self.i = 0
@@ -334,7 +331,7 @@ cdef class interleave:
 
         PyList_Append(self.newiters, val)
         val = <object>obj
-        Py_DECREF(val)
+        Py_XDECREF(obj)
         return val
 
 
@@ -433,7 +430,7 @@ cpdef object isdistinct(object seq):
         for item in seq:
             if PySet_Contains(seen, item):
                 return False
-            PySet_Add(seen, item)
+            seen.add(item)
         return True
     else:
         return len(seq) == len(set(seq))
@@ -588,7 +585,7 @@ cpdef object get(object ind, object seq, object default=no_default):
     cdef object val
     cdef tuple result
     cdef PyObject *obj
-    if PyList_Check(ind):
+    if isinstance(ind, list):
         i = PyList_GET_SIZE(ind)
         result = PyTuple_New(i)
         # List of indices, no default
@@ -694,23 +691,23 @@ cpdef dict frequencies(object seq):
     for item in seq:
         obj = PyDict_GetItem(d, item)
         if obj is NULL:
-            PyDict_SetItem(d, item, 1)
+            d[item] = 1
         else:
             val = <object>obj
-            PyDict_SetItem(d, item, val + 1)
+            d[item] = val + 1
     return d
 
 
 ''' Alternative implementation of `frequencies`
 cpdef dict frequencies(object seq):
     cdef dict d = {}
-    cdef int val
+    cdef Py_ssize_t val
     for item in seq:
-        if PyDict_Contains(d, item):
-            val = PyObject_GetItem(d, item)
-            PyDict_SetItem(d, item, val + 1)
+        if item in d:
+            val = d[item]
+            d[item] = val + 1
         else:
-            PyDict_SetItem(d, item, 1)
+            d[item] = 1
     return d
 '''
 
@@ -763,7 +760,7 @@ cpdef dict reduceby(object key, object binop, object seq, object init):
         else:
             val = <object>obj
             val = binop(val, item)
-        PyDict_SetItem(d, k, val)
+        d[k] = val
     return d
 
 
@@ -917,12 +914,11 @@ cdef class partition_all:
             PyTuple_SET_ITEM(result, i, item)
             i += 1
             if i == self.n:
-                break
+                return result
+        # iterable exhausted before filling the tuple
         if i == 0:
             raise StopIteration
-        if i != self.n:
-            return PyTuple_GetSlice(result, 0, i)
-        return result
+        return PyTuple_GetSlice(result, 0, i)
 
 
 cpdef object count(object seq):
@@ -938,7 +934,6 @@ cpdef object count(object seq):
     """
     if iter(seq) is not seq and hasattr(seq, '__len__'):
         return len(seq)
-    cdef object _
     cdef Py_ssize_t i = 0
     for _ in seq:
         i += 1
@@ -1057,7 +1052,7 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
         get
         map
     """
-    if PyList_Check(ind):
+    if isinstance(ind, list):
         if default is not no_default:
             return _pluck_list_default(ind, seqs, default)
         if PyList_GET_SIZE(ind) < 10:
