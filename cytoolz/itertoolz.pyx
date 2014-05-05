@@ -1,7 +1,7 @@
 #cython: embedsignature=True
 from cpython.dict cimport (PyDict_Contains, PyDict_GetItem, PyDict_New,
                            PyDict_SetItem)
-from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
+from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport (PyList_Append, PyList_Check, PyList_GET_ITEM,
                            PyList_GET_SIZE, PyList_New)
 from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF
@@ -112,18 +112,15 @@ cpdef dict groupby(object func, object seq):
     See Also:
         ``countby``
     """
-    cdef dict d
+    cdef dict d = {}
     cdef list vals
     cdef PyObject *obj
     cdef object item, key
-    d = PyDict_New()
     for item in seq:
         key = func(item)
         obj = PyDict_GetItem(d, key)
         if obj is NULL:
-            vals = PyList_New(0)
-            PyList_Append(vals, item)
-            PyDict_SetItem(d, key, vals)
+            PyDict_SetItem(d, key, [item])
         else:
             PyList_Append(<object>obj, item)
     return d
@@ -131,9 +128,9 @@ cpdef dict groupby(object func, object seq):
 
 cdef class _merge_sorted:
     def __cinit__(self, seqs):
-        cdef int i
+        cdef Py_ssize_t i
         cdef object item, it
-        self.pq = PyList_New(0)
+        self.pq = []
         self.shortcut = None
 
         for i, item in enumerate(seqs):
@@ -191,9 +188,9 @@ cdef class _merge_sorted:
 
 cdef class _merge_sorted_key:
     def __cinit__(self, seqs, key):
-        cdef int i
+        cdef Py_ssize_t i
         cdef object item, it, k
-        self.pq = PyList_New(0)
+        self.pq = []
         self.key = key
         self.shortcut = None
 
@@ -287,10 +284,10 @@ cdef class interleave:
     Returns a lazy iterator
     """
     def __cinit__(self, seqs, pass_exceptions=()):
-        self.iters = PyList_New(0)
+        self.iters = []
         for seq in seqs:
             PyList_Append(self.iters, iter(seq))
-        self.newiters = PyList_New(0)
+        self.newiters = []
         self.pass_exceptions = tuple(pass_exceptions)
         self.i = 0
         self.n = PyList_GET_SIZE(self.iters)
@@ -311,7 +308,7 @@ cdef class interleave:
             if self.n == 0:
                 raise StopIteration
             self.iters = self.newiters
-            self.newiters = PyList_New(0)
+            self.newiters = []
         val = <object>PyList_GET_ITEM(self.iters, self.i)
         self.i += 1
         obj = PyIter_Next(val)
@@ -330,7 +327,7 @@ cdef class interleave:
                 if self.n == 0:
                     raise StopIteration
                 self.iters = self.newiters
-                self.newiters = PyList_New(0)
+                self.newiters = []
             val = <object>PyList_GET_ITEM(self.iters, self.i)
             self.i += 1
             obj = PyIter_Next(val)
@@ -587,7 +584,7 @@ cpdef object get(object ind, object seq, object default=no_default):
     See Also:
         pluck
     """
-    cdef int i
+    cdef Py_ssize_t i
     cdef object val
     cdef tuple result
     cdef PyObject *obj
@@ -606,8 +603,7 @@ cpdef object get(object ind, object seq, object default=no_default):
         for i, val in enumerate(ind):
             obj = PyObject_GetItem(seq, val)
             if obj is NULL:
-                if not PyErr_GivenExceptionMatches(<object>PyErr_Occurred(),
-                                                   _get_list_exc):
+                if not PyErr_ExceptionMatches(_get_list_exc):
                     raise <object>PyErr_Occurred()
                 PyErr_Clear()
                 Py_INCREF(default)
@@ -692,10 +688,9 @@ cpdef dict frequencies(object seq):
         countby
         groupby
     """
-    cdef dict d
+    cdef dict d = {}
     cdef PyObject *obj
-    cdef int val
-    d = PyDict_New()
+    cdef Py_ssize_t val
     for item in seq:
         obj = PyDict_GetItem(d, item)
         if obj is NULL:
@@ -708,9 +703,8 @@ cpdef dict frequencies(object seq):
 
 ''' Alternative implementation of `frequencies`
 cpdef dict frequencies(object seq):
-    cdef dict d
+    cdef dict d = {}
     cdef int val
-    d = PyDict_New()
     for item in seq:
         if PyDict_Contains(d, item):
             val = PyObject_GetItem(d, item)
@@ -758,10 +752,9 @@ cpdef dict reduceby(object key, object binop, object seq, object init):
     ...          projects, 0)
     {'CA': 1200000, 'IL': 2100000}
     """
-    cdef dict d
+    cdef dict d = {}
     cdef object item, k, val
     cdef PyObject *obj
-    d = PyDict_New()
     for item in seq:
         k = key(item)
         obj = PyDict_GetItem(d, k)
@@ -833,8 +826,8 @@ cdef class sliding_window:
     >>> list(map(mean, sliding_window(2, [1, 2, 3, 4])))
     [1.5, 2.5, 3.5]
     """
-    def __cinit__(self, int n, object seq):
-        cdef int i
+    def __cinit__(self, Py_ssize_t n, object seq):
+        cdef Py_ssize_t i
         self.iterseq = iter(seq)
         self.prev = PyTuple_New(n)
         for i in range(1, n):
@@ -849,7 +842,7 @@ cdef class sliding_window:
     def __next__(self):
         cdef tuple current
         cdef object item
-        cdef int i
+        cdef Py_ssize_t i
         current = PyTuple_New(self.n)
         for i in range(1, self.n):
             item = self.prev[i]
@@ -907,7 +900,7 @@ cdef class partition_all:
     See Also:
         partition
     """
-    def __cinit__(self, int n, object seq):
+    def __cinit__(self, Py_ssize_t n, object seq):
         self.n = n
         self.iterseq = iter(seq)
 
@@ -917,7 +910,7 @@ cdef class partition_all:
     def __next__(self):
         cdef tuple result
         cdef object item
-        cdef int i = 0
+        cdef Py_ssize_t i = 0
         result = PyTuple_New(self.n)
         for item in self.iterseq:
             Py_INCREF(item)
@@ -946,7 +939,7 @@ cpdef object count(object seq):
     if iter(seq) is not seq and hasattr(seq, '__len__'):
         return len(seq)
     cdef object _
-    cdef int i = 0
+    cdef Py_ssize_t i = 0
     for _ in seq:
         i += 1
     return i
@@ -979,8 +972,7 @@ cdef class _pluck_index_default:
         val = next(self.iterseqs)
         obj = PyObject_GetItem(val, self.ind)
         if obj is NULL:
-            if not PyErr_GivenExceptionMatches(<object>PyErr_Occurred(),
-                                               _get_exceptions):
+            if not PyErr_ExceptionMatches(_get_exceptions):
                 raise <object>PyErr_Occurred()
             PyErr_Clear()
             return self.default
@@ -988,16 +980,16 @@ cdef class _pluck_index_default:
 
 
 cdef class _pluck_list:
-    def __cinit__(self, list ind, object seqs):
+    def __cinit__(self, list ind not None, object seqs):
         self.ind = ind
         self.iterseqs = iter(seqs)
-        self.n = PyList_GET_SIZE(ind)
+        self.n = len(ind)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef int i
+        cdef Py_ssize_t i
         cdef tuple result
         cdef object val, seq
         seq = next(self.iterseqs)
@@ -1010,17 +1002,17 @@ cdef class _pluck_list:
 
 
 cdef class _pluck_list_default:
-    def __cinit__(self, list ind, object seqs, object default):
+    def __cinit__(self, list ind not None, object seqs, object default):
         self.ind = ind
         self.iterseqs = iter(seqs)
         self.default = default
-        self.n = PyList_GET_SIZE(ind)
+        self.n = len(ind)
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef int i
+        cdef Py_ssize_t i
         cdef object val, seq
         cdef tuple result
         seq = next(self.iterseqs)
@@ -1028,8 +1020,7 @@ cdef class _pluck_list_default:
         for i, val in enumerate(self.ind):
             obj = PyObject_GetItem(seq, val)
             if obj is NULL:
-                if not PyErr_GivenExceptionMatches(<object>PyErr_Occurred(),
-                                                   _get_list_exc):
+                if not PyErr_ExceptionMatches(_get_list_exc):
                     raise <object>PyErr_Occurred()
                 PyErr_Clear()
                 Py_INCREF(self.default)
@@ -1037,7 +1028,7 @@ cdef class _pluck_list_default:
             else:
                 val = <object>obj
                 Py_INCREF(val)
-                PyTuple_SET_ITEM(result, i, val)
+                PyTuple_SET_ITEM(result, i, val)  # TODO: redefine with "PyObject* val" and avoid cast
         return result
 
 
