@@ -24,7 +24,7 @@ exec(compile(open(filename, "rb").read(), filename, 'exec'), info)
 VERSION = info['__version__']
 
 try:
-    from Cython.Distutils import build_ext
+    from Cython.Build import cythonize
     has_cython = True
 except ImportError:
     has_cython = False
@@ -50,10 +50,8 @@ if use_cython and not has_cython:
 
 if use_cython:
     suffix = '.pyx'
-    cmdclass = {'build_ext': build_ext}
 else:
     suffix = '.c'
-    cmdclass = {}
 
 ext_modules = []
 for modname in ['dicttoolz', 'functoolz', 'itertoolz',
@@ -61,13 +59,16 @@ for modname in ['dicttoolz', 'functoolz', 'itertoolz',
     ext_modules.append(Extension('cytoolz.' + modname,
                                  ['cytoolz/' + modname + suffix]))
 
+if use_cython:
+    ext_modules = cythonize(ext_modules)
+
+
 if __name__ == '__main__':
     setup(
         name='cytoolz',
         version=VERSION,
         description=('Cython implementation of Toolz: '
                      'High performance functional utilities'),
-        cmdclass=cmdclass,
         ext_modules=ext_modules,
         long_description=(open('README.rst').read()
                           if os.path.exists('README.rst')
