@@ -4,6 +4,7 @@ import toolz
 
 from types import BuiltinFunctionType
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
+from dev_skip_test import dev_skip_test
 
 
 @curry
@@ -12,6 +13,7 @@ def isfrommod(modname, func):
     return modname in mod
 
 
+@dev_skip_test
 def test_class_sigs():
     """ Test that all ``cdef class`` extension types in ``cytoolz`` have
         correctly embedded the function signature as done in ``toolz``.
@@ -54,6 +56,7 @@ skip_sigs = ['identity']
 aliases = {'comp': 'compose'}
 
 
+@dev_skip_test
 def test_sig_at_beginning():
     """ Test that the function signature is at the beginning of the docstring
         and is followed by exactly one blank line.
