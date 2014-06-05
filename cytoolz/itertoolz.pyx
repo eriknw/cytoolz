@@ -1061,6 +1061,141 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
     return _pluck_index_default(ind, seqs, default)
 
 
+def getter(index):
+    if isinstance(index, list):
+        if len(index) == 1:
+            index = index[0]
+            return lambda x: (x[index],)
+        else:
+            return itemgetter(*index)
+    else:
+        return itemgetter(index)
+
+
+cdef class join:
+    """ Join two sequences on common attributes
+
+    This is a semi-streaming operation.  The LEFT sequence is fully evaluated
+    and placed into memory.  The RIGHT sequence is evaluated lazily and so can
+    be arbitrarily large.
+
+    >>> friends = [('Alice', 'Edith'),
+    ...            ('Alice', 'Zhao'),
+    ...            ('Edith', 'Alice'),
+    ...            ('Zhao', 'Alice'),
+    ...            ('Zhao', 'Edith')]
+
+    >>> cities = [('Alice', 'NYC'),
+    ...           ('Alice', 'Chicago'),
+    ...           ('Dan', 'Syndey'),
+    ...           ('Edith', 'Paris'),
+    ...           ('Edith', 'Berlin'),
+    ...           ('Zhao', 'Shanghai')]
+
+    >>> # Vacation opportunities
+    >>> # In what cities do people have friends?
+    >>> result = join(second, friends,
+    ...               first, cities)
+    >>> for ((a, b), (c, d)) in sorted(unique(result)):
+    ...     print((a, d))
+    ('Alice', 'Berlin')
+    ('Alice', 'Paris')
+    ('Alice', 'Shanghai')
+    ('Edith', 'Chicago')
+    ('Edith', 'NYC')
+    ('Zhao', 'Chicago')
+    ('Zhao', 'NYC')
+    ('Zhao', 'Berlin')
+    ('Zhao', 'Paris')
+
+    Specify outer joins with keyword arguments ``left_default`` and/or
+    ``right_default``.  Here is a full outer join in which unmatched elements
+    are paired with None.
+
+    >>> identity = lambda x: x
+    >>> list(join(identity, [1, 2, 3],
+    ...           identity, [2, 3, 4],
+    ...           left_default=None, right_default=None))
+    [(2, 2), (3, 3), (None, 4), (1, None)]
+
+    Usually the key arguments are callables to be applied to the sequences.  If
+    the keys are not obviously callable then it is assumed that indexing was
+    intended, e.g. the following is a legal change
+
+    >>> # result = join(second, friends, first, cities)
+    >>> result = join(1, friends, 0, cities)  # doctest: +SKIP
+    """
+    def __init__(self,
+                 object leftkey, object leftseq,
+                 object rightkey, object rightseq,
+                 object left_default=no_default,
+                 object right_default=no_default):
+        if not callable(leftkey):
+            leftkey = getter(leftkey)
+        if not callable(rightkey):
+            rightkey = getter(rightkey)
+
+        self.left_default = left_default
+        self.right_default = right_default
+
+        self.leftkey = leftkey
+        self.rightkey = rightkey
+        self.rightseq = iter(rightseq)
+
+        self.d = groupby(leftkey, leftseq)
+        self.seen_keys = set()
+        self.matches = iter(())
+        self.right = None
+
+        self.is_rightseq_exhausted = False
+
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if not self.is_rightseq_exhausted:
+            try:
+                match = next(self.matches)
+                return (match, self.right)
+            except StopIteration:  # iterator of matches exhausted
+                try:
+                    item = next(self.rightseq)  # get a new item
+                except StopIteration:  # no items, switch to outer join
+                    self.is_rightseq_exhausted = True
+                    if self.right_default is not no_default:
+                        self.d_items = iter(self.d.items())
+                        self.matches = iter(())
+                        return next(self)
+                    else:
+                        raise
+
+                key = self.rightkey(item)
+                self.seen_keys.add(key)
+
+                try:
+                    self.matches = iter(self.d[key])  # get left matches
+                except KeyError:
+                    if self.left_default is not no_default:
+                        return (self.left_default, item)  # outer join
+
+                self.right = item
+                return next(self)
+
+        else:  # we've exhausted the right sequence, lets iterate over unseen
+               # items on the left
+            try:
+                match = next(self.matches)
+                return (match, self.right_default)
+            except StopIteration:
+                key, matches = next(self.d_items)
+                while(key in self.seen_keys and matches):
+                    key, matches = next(self.d_items)
+                self.key = key
+                self.matches = iter(matches)
+                return next(self)
+
+
 # I find `_consume` convenient for benchmarking.  Perhaps this belongs
 # elsewhere, so it is private (leading underscore) and hidden away for now.
 
