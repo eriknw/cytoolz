@@ -1071,8 +1071,10 @@ def getter(index):
     else:
         return itemgetter(index)
 
-
-cdef class join:
+cpdef object join(object leftkey, object leftseq,
+                  object rightkey, object rightseq,
+                  object left_default=no_default,
+                  object right_default=no_default):
     """ Join two sequences on common attributes
 
     This is a semi-streaming operation.  The LEFT sequence is fully evaluated
@@ -1125,6 +1127,20 @@ cdef class join:
     >>> # result = join(second, friends, first, cities)
     >>> result = join(1, friends, 0, cities)  # doctest: +SKIP
     """
+    if left_default == no_default and right_default == no_default:
+        return _inner_join(leftkey, leftseq, rightkey, rightseq,
+                           left_default, right_default)
+    elif left_default != no_default and right_default == no_default:
+        return _right_outer_join(leftkey, leftseq, rightkey, rightseq,
+                                 left_default, right_default)
+    elif left_default == no_default and right_default != no_default:
+        return _left_outer_join(leftkey, leftseq, rightkey, rightseq,
+                                left_default, right_default)
+    else:
+        return _outer_join(leftkey, leftseq, rightkey, rightseq,
+                           left_default, right_default)
+
+cdef class _join:
     def __init__(self,
                  object leftkey, object leftseq,
                  object rightkey, object rightseq,
@@ -1172,7 +1188,6 @@ cdef class join:
 
                 key = self.rightkey(item)
                 self.seen_keys.add(key)
-
                 try:
                     self.matches = iter(self.d[key])  # get left matches
                 except KeyError:
@@ -1194,6 +1209,124 @@ cdef class join:
                 self.key = key
                 self.matches = iter(matches)
                 return next(self)
+
+
+cdef class _right_outer_join(_join):
+    def __iter__(self):
+        self.matches = ()
+        return self
+
+    def __next__(self):
+        cdef PyObject *obj
+        if self.i == len(self.matches):
+            self.right = next(self.rightseq)
+            key = self.rightkey(self.right)
+            obj = PyDict_GetItem(self.d, key)
+            if obj is NULL:
+                return (self.left_default, self.right)
+            self.matches = <object>obj
+            self.i = 0
+        match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+        self.i += 1
+        return (match, self.right)
+
+
+cdef class _outer_join(_join):
+    def __iter__(self):
+        self.matches = ()
+        return self
+
+    def __next__(self):
+        cdef PyObject *obj
+        if not self.is_rightseq_exhausted:
+            if self.i == len(self.matches):
+                try:
+                    self.right = next(self.rightseq)
+                except StopIteration:
+                    self.is_rightseq_exhausted = True
+                    self.keys = iter(self.d)
+                    return next(self)
+                key = self.rightkey(self.right)
+                self.seen_keys.add(key)
+                obj = PyDict_GetItem(self.d, key)
+                if obj is NULL:
+                    return (self.left_default, self.right)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right)
+
+        else:
+            if self.i == len(self.matches):
+                key = next(self.keys)
+                while key in self.seen_keys:
+                    key = next(self.keys)
+                obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right_default)
+
+
+
+cdef class _left_outer_join(_join):
+    def __iter__(self):
+        self.matches = ()
+        return self
+
+    def __next__(self):
+        cdef PyObject *obj
+        if not self.is_rightseq_exhausted:
+            if self.i == len(self.matches):
+                obj = NULL
+                while obj is NULL:
+                    try:
+                        self.right = next(self.rightseq)
+                    except StopIteration:
+                        self.is_rightseq_exhausted = True
+                        self.keys = iter(self.d)
+                        return next(self)
+                    key = self.rightkey(self.right)
+                    self.seen_keys.add(key)
+                    obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right)
+
+        else:
+            if self.i == len(self.matches):
+                key = next(self.keys)
+                while key in self.seen_keys:
+                    key = next(self.keys)
+                obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right_default)
+
+
+cdef class _inner_join(_join):
+    def __iter__(self):
+        self.matches = ()
+        return self
+
+    def __next__(self):
+        cdef PyObject *obj = NULL
+        if self.i == len(self.matches):
+            while obj is NULL:
+                self.right = next(self.rightseq)
+                key = self.rightkey(self.right)
+                obj = PyDict_GetItem(self.d, key)
+            self.matches = <object>obj
+            self.i = 0
+        match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+        self.i += 1
+        return (match, self.right)
 
 
 # I find `_consume` convenient for benchmarking.  Perhaps this belongs
