@@ -1298,10 +1298,6 @@ cdef class _left_outer_join(_join):
 
 
 cdef class _inner_join(_join):
-    def __iter__(self):
-        self.matches = ()
-        return self
-
     def __next__(self):
         cdef PyObject *obj = NULL
         if self.i == len(self.matches):
