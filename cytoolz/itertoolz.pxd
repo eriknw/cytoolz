@@ -170,17 +170,17 @@ cdef class _join:
     cdef object is_rightseq_exhausted
     cdef object left_default
     cdef object right_default
+    cdef int i
+    cdef object keys
 
 cdef class _inner_join(_join):
-    cdef int i
+    pass
 
 cdef class _right_outer_join(_join):
-    cdef int i
+    pass
 
 cdef class _left_outer_join(_join):
-    cdef int i
-    cdef object keys
+    pass
 
 cdef class _outer_join(_join):
-    cdef int i
-    cdef object keys
+    pass

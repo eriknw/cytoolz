@@ -1127,6 +1127,8 @@ cpdef object join(object leftkey, object leftseq,
     >>> # result = join(second, friends, first, cities)
     >>> result = join(1, friends, 0, cities)  # doctest: +SKIP
     """
+    return _join(leftkey, leftseq, rightkey, rightseq,
+                 left_default, right_default)
     if left_default == no_default and right_default == no_default:
         return _inner_join(leftkey, leftseq, rightkey, rightseq,
                            left_default, right_default)
@@ -1160,7 +1162,7 @@ cdef class _join:
 
         self.d = groupby(leftkey, leftseq)
         self.seen_keys = set()
-        self.matches = iter(())
+        self.matches = ()
         self.right = None
 
         self.is_rightseq_exhausted = False
@@ -1170,52 +1172,45 @@ cdef class _join:
         return self
 
     def __next__(self):
+        cdef PyObject *obj
         if not self.is_rightseq_exhausted:
-            try:
-                match = next(self.matches)
-                return (match, self.right)
-            except StopIteration:  # iterator of matches exhausted
+            if self.i == len(self.matches):
                 try:
-                    item = next(self.rightseq)  # get a new item
-                except StopIteration:  # no items, switch to outer join
-                    self.is_rightseq_exhausted = True
-                    if self.right_default is not no_default:
-                        self.d_items = iter(self.d.items())
-                        self.matches = iter(())
-                        return next(self)
-                    else:
+                    self.right = next(self.rightseq)
+                except StopIteration:
+                    if self.right_default is no_default:
                         raise
-
-                key = self.rightkey(item)
+                    self.is_rightseq_exhausted = True
+                    self.keys = iter(self.d)
+                    return next(self)
+                key = self.rightkey(self.right)
                 self.seen_keys.add(key)
-                try:
-                    self.matches = iter(self.d[key])  # get left matches
-                except KeyError:
+                obj = PyDict_GetItem(self.d, key)
+                if obj is NULL:
                     if self.left_default is not no_default:
-                        return (self.left_default, item)  # outer join
+                        return (self.left_default, self.right)
+                    else:
+                        return next(self)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right)
 
-                self.right = item
-                return next(self)
-
-        else:  # we've exhausted the right sequence, lets iterate over unseen
-               # items on the left
-            try:
-                match = next(self.matches)
-                return (match, self.right_default)
-            except StopIteration:
-                key, matches = next(self.d_items)
-                while(key in self.seen_keys and matches):
-                    key, matches = next(self.d_items)
-                self.key = key
-                self.matches = iter(matches)
-                return next(self)
+        elif self.right_default is not no_default:
+            if self.i == len(self.matches):
+                key = next(self.keys)
+                while key in self.seen_keys:
+                    key = next(self.keys)
+                obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right_default)
 
 
 cdef class _right_outer_join(_join):
-    def __iter__(self):
-        self.matches = ()
-        return self
-
     def __next__(self):
         cdef PyObject *obj
         if self.i == len(self.matches):
@@ -1232,10 +1227,6 @@ cdef class _right_outer_join(_join):
 
 
 cdef class _outer_join(_join):
-    def __iter__(self):
-        self.matches = ()
-        return self
-
     def __next__(self):
         cdef PyObject *obj
         if not self.is_rightseq_exhausted:
@@ -1272,10 +1263,6 @@ cdef class _outer_join(_join):
 
 
 cdef class _left_outer_join(_join):
-    def __iter__(self):
-        self.matches = ()
-        return self
-
     def __next__(self):
         cdef PyObject *obj
         if not self.is_rightseq_exhausted:
