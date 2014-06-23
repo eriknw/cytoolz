@@ -9,7 +9,7 @@ from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PyObject_Call as CyObject_Call
+from .cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
@@ -211,7 +211,7 @@ cdef class curry:
         if self.keywords is not None:
             PyDict_Merge(kwargs, self.keywords, False)
 
-        obj = CyObject_Call(self.func, args, kwargs)
+        obj = PtrObject_Call(self.func, args, kwargs)
         if obj is not NULL:
             val = <object>obj
             return val

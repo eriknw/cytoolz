@@ -7,7 +7,7 @@ from cpython.list cimport PyList_Append, PyList_New
 from cpython.ref cimport PyObject
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PyObject_GetItem
+from .cpython cimport PtrObject_GetItem
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'valfilter', 'keyfilter',
@@ -316,7 +316,7 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
     cdef object item
     cdef PyObject *obj
     for item in keys:
-        obj = PyObject_GetItem(coll, item)
+        obj = PtrObject_GetItem(coll, item)
         if obj is NULL:
             item = <object>PyErr_Occurred()
             if no_default or not PyErr_GivenExceptionMatches(item, _get_in_exceptions):
