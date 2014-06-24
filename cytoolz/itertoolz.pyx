@@ -96,7 +96,6 @@ cdef class accumulate:
         return self.result
 
 
-
 cpdef dict groupby(object func, object seq):
     """
     Group a collection by a key function
@@ -1063,13 +1062,3 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
     if default is no_default:
         return _pluck_index(ind, seqs)
     return _pluck_index_default(ind, seqs, default)
-
-
-# I find `_consume` convenient for benchmarking.  Perhaps this belongs
-# elsewhere, so it is private (leading underscore) and hidden away for now.
-
-cpdef object _consume(object seq):
-    """
-    Efficiently consume an iterable """
-    for _ in seq:
-        pass
