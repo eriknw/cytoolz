@@ -225,6 +225,12 @@ cdef class curry:
                 return curry(self.func, *args, **kwargs)
         raise val
 
+    def __reduce__(self):
+        return (curry, (self.func,), (self.args, self.keywords))
+
+    def __setstate__(self, state):
+        self.args, self.keywords = state
+
 
 cdef class c_memoize:
     property __doc__:
@@ -336,6 +342,12 @@ cdef class Compose:
             ret = func(ret)
         return ret
 
+    def __reduce__(self):
+        return (Compose, (self.firstfunc,), self.funcs)
+
+    def __setstate__(self, state):
+        self.funcs = state
+
 
 cdef object c_compose(object funcs):
     if not funcs:
@@ -418,6 +430,9 @@ cdef class complement:
     def __call__(self, *args, **kwargs):
         return not PyObject_Call(self.func, args, kwargs)  # use PyObject_Not?
 
+    def __reduce__(self):
+        return (complement, (self.func,))
+
 
 cdef class _juxt_inner:
     def __cinit__(self, funcs):
@@ -425,9 +440,12 @@ cdef class _juxt_inner:
 
     def __call__(self, *args, **kwargs):
         if kwargs:
-            return (PyObject_Call(func, args, kwargs) for func in self.funcs)
+            return tuple(PyObject_Call(func, args, kwargs) for func in self.funcs)
         else:
-            return (PyObject_CallObject(func, args) for func in self.funcs)
+            return tuple(PyObject_CallObject(func, args) for func in self.funcs)
+
+    def __reduce__(self):
+        return (_juxt_inner, (self.funcs,))
 
 
 cdef object c_juxt(object funcs):

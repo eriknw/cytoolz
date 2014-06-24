@@ -40,7 +40,7 @@ cdef class complement:
 
 
 cdef class _juxt_inner:
-    cdef tuple funcs
+    cdef public tuple funcs
 
 
 cdef object c_juxt(object funcs)
