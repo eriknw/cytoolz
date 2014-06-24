@@ -2,8 +2,8 @@
 import inspect
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
-from cpython.object cimport (PyCallable_Check, PyObject_Call,
-                             PyObject_CallObject, PyObject_RichCompare)
+from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
+                             PyObject_RichCompare, Py_EQ, Py_NE)
 from cpython.ref cimport PyObject
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
@@ -203,9 +203,9 @@ cdef class curry:
     def __richcmp__(self, other, int op):
         is_equal = (isinstance(other, curry) and self.func == other.func and
                 self.args == other.args and self.keywords == other.keywords)
-        if op == 2:  # ==
+        if op == Py_EQ:
             return is_equal
-        if op == 3:  # !=
+        if op == Py_NE:
             return not is_equal
         return PyObject_RichCompare(id(self), id(other), op)
 
