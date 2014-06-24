@@ -16,7 +16,6 @@ def test_merge_with():
     assert merge_with(sum)({1: 1}, {1: 2}) == {1: 3}
 
 
-# XXX: backport to toolz
 def test_merge_with_list():
     assert merge_with(sum, [{'a': 1}, {'a': 2}]) == {'a': 3}
 

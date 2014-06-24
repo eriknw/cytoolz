@@ -97,7 +97,7 @@ cdef class interpose:
 cpdef dict frequencies(object seq)
 
 
-cpdef dict reduceby(object key, object binop, object seq, object init)
+cpdef dict reduceby(object key, object binop, object seq, object init=*)
 
 
 cdef class iterate:

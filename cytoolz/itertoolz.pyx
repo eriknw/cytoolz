@@ -96,6 +96,7 @@ cdef class accumulate:
         return self.result
 
 
+
 cpdef dict groupby(object func, object seq):
     """
     Group a collection by a key function
@@ -710,7 +711,7 @@ cpdef dict frequencies(object seq):
 '''
 
 
-cpdef dict reduceby(object key, object binop, object seq, object init):
+cpdef dict reduceby(object key, object binop, object seq, object init=no_default):
     """
     Perform a simultaneous groupby and reduction
 
@@ -754,7 +755,10 @@ cpdef dict reduceby(object key, object binop, object seq, object init):
         k = key(item)
         obj = PyDict_GetItem(d, k)
         if obj is NULL:
-            val = binop(init, item)
+            if init is no_default:
+                val = item
+            else:
+                val = binop(init, item)
         else:
             val = <object>obj
             val = binop(val, item)
