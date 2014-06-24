@@ -1,6 +1,6 @@
 from cytoolz.utils import raises
 from cytoolz.dicttoolz import (merge, merge_with, valmap, keymap, update_in,
-                               assoc, keyfilter, valfilter)
+                             assoc, keyfilter, valfilter)
 
 
 inc = lambda x: x + 1
@@ -85,4 +85,3 @@ def test_update_in():
     oldd = d
     update_in(d, ['x'], inc)
     assert d is oldd
-

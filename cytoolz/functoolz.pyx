@@ -2,7 +2,8 @@
 import inspect
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
-from cpython.object cimport PyCallable_Check, PyObject_Call, PyObject_CallObject
+from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
+                             PyObject_RichCompare, Py_EQ, Py_NE)
 from cpython.ref cimport PyObject
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
@@ -166,14 +167,6 @@ cdef class curry:
         cytoolz.curried - namespace of curried functions
                         http://toolz.readthedocs.org/en/latest/curry.html
     """
-    property __doc__:
-        def __get__(self):
-            return self.func.__doc__
-
-    property __name__:
-        def __get__(self):
-            return self.func.__name__
-
     def __cinit__(self, func, *args, **kwargs):
         if not PyCallable_Check(func):
             raise TypeError("Input must be callable")
@@ -193,12 +186,28 @@ cdef class curry:
         self.func = func
         self.args = args
         self.keywords = kwargs if kwargs else None
+        self.__doc__ = getattr(func, '__doc__', None)
+        self.__name__ = getattr(func, '__name__', '<curry>')
 
     def __str__(self):
         return str(self.func)
 
     def __repr__(self):
         return repr(self.func)
+
+    def __hash__(self):
+        return hash((self.func, self.args,
+                     frozenset(self.keywords.items()) if self.keywords
+                     else None))
+
+    def __richcmp__(self, other, int op):
+        is_equal = (isinstance(other, curry) and self.func == other.func and
+                self.args == other.args and self.keywords == other.keywords)
+        if op == Py_EQ:
+            return is_equal
+        if op == Py_NE:
+            return not is_equal
+        return PyObject_RichCompare(id(self), id(other), op)
 
     def __call__(self, *args, **kwargs):
         cdef PyObject *obj
@@ -436,7 +445,7 @@ cdef class complement:
 
 cdef class _juxt_inner:
     def __cinit__(self, funcs):
-        self.funcs = funcs
+        self.funcs = tuple(funcs)
 
     def __call__(self, *args, **kwargs):
         if kwargs:
@@ -470,9 +479,8 @@ def juxt(*funcs):
     [11, 20]
     """
     if len(funcs) == 1 and not PyCallable_Check(funcs[0]):
-        funcs = tuple(funcs[0])
+        funcs = funcs[0]
     return c_juxt(funcs)
-
 
 
 cpdef object do(object func, object x):
