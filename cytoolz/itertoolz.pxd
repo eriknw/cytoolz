@@ -148,3 +148,39 @@ cdef class _pluck_list_default:
 
 
 cpdef object pluck(object ind, object seqs, object default=*)
+
+cpdef object join(object leftkey, object leftseq,
+                  object rightkey, object rightseq,
+                  object left_default=*,
+                  object right_default=*)
+
+cdef class _join:
+    cdef Py_ssize_t n
+    cdef object iterseq
+    cdef object leftkey
+    cdef object leftseq
+    cdef object rightkey
+    cdef object rightseq
+    cdef object matches
+    cdef object right
+    cdef object key
+    cdef object d
+    cdef object d_items
+    cdef object seen_keys
+    cdef object is_rightseq_exhausted
+    cdef object left_default
+    cdef object right_default
+    cdef int i
+    cdef object keys
+
+cdef class _inner_join(_join):
+    pass
+
+cdef class _right_outer_join(_join):
+    pass
+
+cdef class _left_outer_join(_join):
+    pass
+
+cdef class _outer_join(_join):
+    pass

@@ -1062,3 +1062,264 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
     if default is no_default:
         return _pluck_index(ind, seqs)
     return _pluck_index_default(ind, seqs, default)
+
+
+def getter(index):
+    if isinstance(index, list):
+        if len(index) == 1:
+            index = index[0]
+            return lambda x: (x[index],)
+        else:
+            return itemgetter(*index)
+    else:
+        return itemgetter(index)
+
+cpdef object join(object leftkey, object leftseq,
+                  object rightkey, object rightseq,
+                  object left_default=no_default,
+                  object right_default=no_default):
+    """ Join two sequences on common attributes
+
+    This is a semi-streaming operation.  The LEFT sequence is fully evaluated
+    and placed into memory.  The RIGHT sequence is evaluated lazily and so can
+    be arbitrarily large.
+
+    >>> friends = [('Alice', 'Edith'),
+    ...            ('Alice', 'Zhao'),
+    ...            ('Edith', 'Alice'),
+    ...            ('Zhao', 'Alice'),
+    ...            ('Zhao', 'Edith')]
+
+    >>> cities = [('Alice', 'NYC'),
+    ...           ('Alice', 'Chicago'),
+    ...           ('Dan', 'Syndey'),
+    ...           ('Edith', 'Paris'),
+    ...           ('Edith', 'Berlin'),
+    ...           ('Zhao', 'Shanghai')]
+
+    >>> # Vacation opportunities
+    >>> # In what cities do people have friends?
+    >>> result = join(second, friends,
+    ...               first, cities)
+    >>> for ((a, b), (c, d)) in sorted(unique(result)):
+    ...     print((a, d))
+    ('Alice', 'Berlin')
+    ('Alice', 'Paris')
+    ('Alice', 'Shanghai')
+    ('Edith', 'Chicago')
+    ('Edith', 'NYC')
+    ('Zhao', 'Chicago')
+    ('Zhao', 'NYC')
+    ('Zhao', 'Berlin')
+    ('Zhao', 'Paris')
+
+    Specify outer joins with keyword arguments ``left_default`` and/or
+    ``right_default``.  Here is a full outer join in which unmatched elements
+    are paired with None.
+
+    >>> identity = lambda x: x
+    >>> list(join(identity, [1, 2, 3],
+    ...           identity, [2, 3, 4],
+    ...           left_default=None, right_default=None))
+    [(2, 2), (3, 3), (None, 4), (1, None)]
+
+    Usually the key arguments are callables to be applied to the sequences.  If
+    the keys are not obviously callable then it is assumed that indexing was
+    intended, e.g. the following is a legal change
+
+    >>> # result = join(second, friends, first, cities)
+    >>> result = join(1, friends, 0, cities)  # doctest: +SKIP
+    """
+    return _join(leftkey, leftseq, rightkey, rightseq,
+                 left_default, right_default)
+    if left_default == no_default and right_default == no_default:
+        return _inner_join(leftkey, leftseq, rightkey, rightseq,
+                           left_default, right_default)
+    elif left_default != no_default and right_default == no_default:
+        return _right_outer_join(leftkey, leftseq, rightkey, rightseq,
+                                 left_default, right_default)
+    elif left_default == no_default and right_default != no_default:
+        return _left_outer_join(leftkey, leftseq, rightkey, rightseq,
+                                left_default, right_default)
+    else:
+        return _outer_join(leftkey, leftseq, rightkey, rightseq,
+                           left_default, right_default)
+
+cdef class _join:
+    def __init__(self,
+                 object leftkey, object leftseq,
+                 object rightkey, object rightseq,
+                 object left_default=no_default,
+                 object right_default=no_default):
+        if not callable(leftkey):
+            leftkey = getter(leftkey)
+        if not callable(rightkey):
+            rightkey = getter(rightkey)
+
+        self.left_default = left_default
+        self.right_default = right_default
+
+        self.leftkey = leftkey
+        self.rightkey = rightkey
+        self.rightseq = iter(rightseq)
+
+        self.d = groupby(leftkey, leftseq)
+        self.seen_keys = set()
+        self.matches = ()
+        self.right = None
+
+        self.is_rightseq_exhausted = False
+
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef PyObject *obj
+        if not self.is_rightseq_exhausted:
+            if self.i == len(self.matches):
+                try:
+                    self.right = next(self.rightseq)
+                except StopIteration:
+                    if self.right_default is no_default:
+                        raise
+                    self.is_rightseq_exhausted = True
+                    self.keys = iter(self.d)
+                    return next(self)
+                key = self.rightkey(self.right)
+                self.seen_keys.add(key)
+                obj = PyDict_GetItem(self.d, key)
+                if obj is NULL:
+                    if self.left_default is not no_default:
+                        return (self.left_default, self.right)
+                    else:
+                        return next(self)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right)
+
+        elif self.right_default is not no_default:
+            if self.i == len(self.matches):
+                key = next(self.keys)
+                while key in self.seen_keys:
+                    key = next(self.keys)
+                obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right_default)
+
+
+cdef class _right_outer_join(_join):
+    def __next__(self):
+        cdef PyObject *obj
+        if self.i == len(self.matches):
+            self.right = next(self.rightseq)
+            key = self.rightkey(self.right)
+            obj = PyDict_GetItem(self.d, key)
+            if obj is NULL:
+                return (self.left_default, self.right)
+            self.matches = <object>obj
+            self.i = 0
+        match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+        self.i += 1
+        return (match, self.right)
+
+
+cdef class _outer_join(_join):
+    def __next__(self):
+        cdef PyObject *obj
+        if not self.is_rightseq_exhausted:
+            if self.i == len(self.matches):
+                try:
+                    self.right = next(self.rightseq)
+                except StopIteration:
+                    self.is_rightseq_exhausted = True
+                    self.keys = iter(self.d)
+                    return next(self)
+                key = self.rightkey(self.right)
+                self.seen_keys.add(key)
+                obj = PyDict_GetItem(self.d, key)
+                if obj is NULL:
+                    return (self.left_default, self.right)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right)
+
+        else:
+            if self.i == len(self.matches):
+                key = next(self.keys)
+                while key in self.seen_keys:
+                    key = next(self.keys)
+                obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right_default)
+
+
+
+cdef class _left_outer_join(_join):
+    def __next__(self):
+        cdef PyObject *obj
+        if not self.is_rightseq_exhausted:
+            if self.i == len(self.matches):
+                obj = NULL
+                while obj is NULL:
+                    try:
+                        self.right = next(self.rightseq)
+                    except StopIteration:
+                        self.is_rightseq_exhausted = True
+                        self.keys = iter(self.d)
+                        return next(self)
+                    key = self.rightkey(self.right)
+                    self.seen_keys.add(key)
+                    obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right)
+
+        else:
+            if self.i == len(self.matches):
+                key = next(self.keys)
+                while key in self.seen_keys:
+                    key = next(self.keys)
+                obj = PyDict_GetItem(self.d, key)
+                self.matches = <object>obj
+                self.i = 0
+            match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+            self.i += 1
+            return (match, self.right_default)
+
+
+cdef class _inner_join(_join):
+    def __next__(self):
+        cdef PyObject *obj = NULL
+        if self.i == len(self.matches):
+            while obj is NULL:
+                self.right = next(self.rightseq)
+                key = self.rightkey(self.right)
+                obj = PyDict_GetItem(self.d, key)
+            self.matches = <object>obj
+            self.i = 0
+        match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
+        self.i += 1
+        return (match, self.right)
+
+
+# I find `_consume` convenient for benchmarking.  Perhaps this belongs
+# elsewhere, so it is private (leading underscore) and hidden away for now.
+
+cpdef object _consume(object seq):
+    """
+    Efficiently consume an iterable """
+    for _ in seq:
+        pass
