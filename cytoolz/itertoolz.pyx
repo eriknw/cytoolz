@@ -9,7 +9,7 @@ from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PyIter_Next, PyObject_GetItem
+from .cpython cimport PtrIter_Next, PtrObject_GetItem
 
 from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
@@ -308,7 +308,7 @@ cdef class interleave:
             self.newiters = []
         val = <object>PyList_GET_ITEM(self.iters, self.i)
         self.i += 1
-        obj = PyIter_Next(val)
+        obj = PtrIter_Next(val)
 
         while obj is NULL:
             obj = PyErr_Occurred()
@@ -327,7 +327,7 @@ cdef class interleave:
                 self.newiters = []
             val = <object>PyList_GET_ITEM(self.iters, self.i)
             self.i += 1
-            obj = PyIter_Next(val)
+            obj = PtrIter_Next(val)
 
         PyList_Append(self.newiters, val)
         val = <object>obj
@@ -596,7 +596,7 @@ cpdef object get(object ind, object seq, object default=no_default):
 
         # List of indices with default
         for i, val in enumerate(ind):
-            obj = PyObject_GetItem(seq, val)
+            obj = PtrObject_GetItem(seq, val)
             if obj is NULL:
                 if not PyErr_ExceptionMatches(_get_list_exc):
                     raise <object>PyErr_Occurred()
@@ -609,7 +609,7 @@ cpdef object get(object ind, object seq, object default=no_default):
                 PyTuple_SET_ITEM(result, i, val)
         return result
 
-    obj = PyObject_GetItem(seq, ind)
+    obj = PtrObject_GetItem(seq, ind)
     if obj is NULL:
         val = <object>PyErr_Occurred()
         if default is no_default:
@@ -710,7 +710,7 @@ cpdef dict frequencies(object seq):
 '''
 
 
-cpdef dict reduceby(object key, object binop, object seq, object init):
+cpdef dict reduceby(object key, object binop, object seq, object init=no_default):
     """
     Perform a simultaneous groupby and reduction
 
@@ -754,7 +754,10 @@ cpdef dict reduceby(object key, object binop, object seq, object init):
         k = key(item)
         obj = PyDict_GetItem(d, k)
         if obj is NULL:
-            val = binop(init, item)
+            if init is no_default:
+                val = item
+            else:
+                val = binop(init, item)
         else:
             val = <object>obj
             val = binop(val, item)
@@ -963,7 +966,7 @@ cdef class _pluck_index_default:
         cdef PyObject *obj
         cdef object val
         val = next(self.iterseqs)
-        obj = PyObject_GetItem(val, self.ind)
+        obj = PtrObject_GetItem(val, self.ind)
         if obj is NULL:
             if not PyErr_ExceptionMatches(_get_exceptions):
                 raise <object>PyErr_Occurred()
@@ -1011,7 +1014,7 @@ cdef class _pluck_list_default:
         seq = next(self.iterseqs)
         result = PyTuple_New(self.n)
         for i, val in enumerate(self.ind):
-            obj = PyObject_GetItem(seq, val)
+            obj = PtrObject_GetItem(seq, val)
             if obj is NULL:
                 if not PyErr_ExceptionMatches(_get_list_exc):
                     raise <object>PyErr_Occurred()

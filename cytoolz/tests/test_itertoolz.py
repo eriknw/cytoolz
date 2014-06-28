@@ -3,17 +3,20 @@ from itertools import starmap
 from cytoolz.utils import raises
 from functools import partial
 from cytoolz.itertoolz import (remove, groupby, merge_sorted,
-                               concat, concatv, interleave, unique,
-                               identity, isiterable,
-                               mapcat, isdistinct, first, second,
-                               nth, take, drop, interpose, get,
-                               rest, last, cons, frequencies,
-                               reduceby, iterate, accumulate,
-                               sliding_window, count, partition,
-                               partition_all, take_nth, pluck, join)
-
+                             concat, concatv, interleave, unique,
+                             isiterable,
+                             mapcat, isdistinct, first, second,
+                             nth, take, drop, interpose, get,
+                             rest, last, cons, frequencies,
+                             reduceby, iterate, accumulate,
+                             sliding_window, count, partition,
+                             partition_all, take_nth, pluck, join)
 from cytoolz.compatibility import range, filter
 from operator import add, mul
+
+
+def identity(x):
+    return x
 
 
 def iseven(x):
@@ -56,6 +59,7 @@ def test_merge_sorted():
     assert ''.join(merge_sorted('abc', 'abc', 'abc', key=ord)) == 'aaabbbccc'
     assert ''.join(merge_sorted('cba', 'cba', 'cba',
                                 key=lambda x: -ord(x))) == 'cccbbbaaa'
+    assert list(merge_sorted([1], [2, 3, 4], key=identity)) == [1, 2, 3, 4]
 
 
 def test_interleave():
@@ -141,9 +145,12 @@ def test_get():
     assert get({}, [1, 2, 3], default='bar') == 'bar'
     assert get([0, 2], 'AB', 'C') == ('A', 'C')
 
+    assert get([0], 'AB') == ('A',)
+
     assert raises(IndexError, lambda: get(10, 'ABC'))
     assert raises(KeyError, lambda: get(10, {'a': 1}))
     assert raises(TypeError, lambda: get({}, [1, 2, 3]))
+    assert raises(TypeError, lambda: get([1, 2, 3], 1, None))
 
 
 def test_mapcat():
@@ -205,6 +212,10 @@ def test_reduceby():
                     projects, 0) == {'CA': 1200000, 'IL': 2100000}
 
 
+def test_reduce_by_init():
+    assert reduceby(iseven, add, [1, 2, 3, 4]) == {True: 2 + 4, False: 1 + 3}
+
+
 def test_iterate():
     assert list(itertools.islice(iterate(inc, 0), 0, 5)) == [0, 1, 2, 3, 4]
     assert list(take(4, iterate(double, 1))) == [1, 2, 4, 8]
@@ -260,6 +271,7 @@ def test_pluck():
     assert list(pluck('id', data)) == [1, 2]
     assert list(pluck('price', data, None)) == [None, 1]
     assert list(pluck(['id', 'name'], data)) == [(1, 'cheese'), (2, 'pies')]
+    assert list(pluck(['name'], data)) == [('cheese',), ('pies',)]
     assert list(pluck(['price', 'other'], data, None)) == [(None, None),
                                                            (1, None)]
 

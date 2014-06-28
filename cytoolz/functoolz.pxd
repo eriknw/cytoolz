@@ -11,7 +11,8 @@ cdef class curry:
     cdef readonly object func
     cdef readonly tuple args
     cdef readonly dict keywords
-
+    cdef public object __doc__
+    cdef public object __name__
 
 cdef class c_memoize:
     cdef object func
@@ -40,7 +41,7 @@ cdef class complement:
 
 
 cdef class _juxt_inner:
-    cdef tuple funcs
+    cdef public tuple funcs
 
 
 cdef object c_juxt(object funcs)

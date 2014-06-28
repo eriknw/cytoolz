@@ -1,7 +1,11 @@
+#cython: embedsignature=True
 import doctest
 import inspect
 import os.path
 import cytoolz
+
+
+__all__ = ['raises', 'no_default', 'include_dirs', 'consume', 'module_doctest']
 
 
 def raises(err, lamda):
@@ -45,6 +49,13 @@ def include_dirs():
     return os.path.split(cytoolz.__path__[0])
 
 
+cpdef object consume(object seq):
+    """
+    Efficiently consume an iterable """
+    for _ in seq:
+        pass
+
+
 # The utilities below were obtained from:
 # https://github.com/cython/cython/wiki/FAQ
 # #how-can-i-run-doctests-in-cython-code-pyx-files
@@ -81,7 +92,7 @@ def _from_module(module, object):
         raise ValueError("object must be a class or function")
 
 
-def fix_module_doctest(module):
+def _fix_module_doctest(module):
     """
     Extract docstrings from cython functions, that would be skipped by doctest
     otherwise.
@@ -102,5 +113,5 @@ def module_doctest(m, *args, **kwargs):
 
     Return True on success, False on failure.
     """
-    fix_module_doctest(m)
+    _fix_module_doctest(m)
     return doctest.testmod(m, *args, **kwargs).failed == 0
