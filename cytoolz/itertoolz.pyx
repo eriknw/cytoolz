@@ -1,5 +1,5 @@
 #cython: embedsignature=True
-from cpython.dict cimport PyDict_GetItem
+from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
 from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
                           PyErr_GivenExceptionMatches, PyErr_Occurred)
 from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
@@ -96,7 +96,17 @@ cdef class accumulate:
         return self.result
 
 
-cpdef dict groupby(object func, object seq):
+cdef inline void _groupby_core(dict d, object key, object item):
+    cdef PyObject *obj = PyDict_GetItem(d, key)
+    if obj is NULL:
+        val = []
+        PyList_Append(val, item)
+        PyDict_SetItem(d, key, val)
+    else:
+        PyList_Append(<object>obj, item)
+
+
+cpdef dict groupby(object key, object seq):
     """
     Group a collection by a key function
 
@@ -108,20 +118,39 @@ cpdef dict groupby(object func, object seq):
     >>> groupby(iseven, [1, 2, 3, 4, 5, 6, 7, 8])
     {False: [1, 3, 5, 7], True: [2, 4, 6, 8]}
 
+    Non-callable keys imply grouping on a member.
+
+    >>> groupby('gender', [{'name': 'Alice', 'gender': 'F'},
+    ...                    {'name': 'Bob', 'gender': 'M'},
+    ...                    {'name': 'Charlie', 'gender': 'M'}]) # doctest:+SKIP
+    {'F': [{'gender': 'F', 'name': 'Alice'}],
+     'M': [{'gender': 'M', 'name': 'Bob'},
+           {'gender': 'M', 'name': 'Charlie'}]}
+
     See Also:
-        ``countby``
+        countby
     """
     cdef dict d = {}
-    cdef list vals
-    cdef PyObject *obj
-    cdef object item, key
-    for item in seq:
-        key = func(item)
-        obj = PyDict_GetItem(d, key)
-        if obj is NULL:
-            d[key] = [item]
-        else:
-            PyList_Append(<object>obj, item)
+    cdef object item, keyval
+    cdef Py_ssize_t i, N
+    if callable(key):
+        for item in seq:
+            keyval = key(item)
+            _groupby_core(d, keyval, item)
+    elif isinstance(key, list):
+        N = PyList_GET_SIZE(key)
+        for item in seq:
+            keyval = PyTuple_New(N)
+            for i in range(N):
+                val = <object>PyList_GET_ITEM(key, i)
+                val = item[val]
+                Py_INCREF(val)
+                PyTuple_SET_ITEM(keyval, i, val)
+            _groupby_core(d, keyval, item)
+    else:
+        for item in seq:
+            keyval = item[key]
+            _groupby_core(d, keyval, item)
     return d
 
 
