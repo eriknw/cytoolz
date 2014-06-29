@@ -45,6 +45,20 @@ def test_groupby():
     assert groupby(iseven, [1, 2, 3, 4]) == {True: [2, 4], False: [1, 3]}
 
 
+def test_groupby_non_callable():
+    assert groupby(0, [(1, 2), (1, 3), (2, 2), (2, 4)]) == \
+        {1: [(1, 2), (1, 3)],
+         2: [(2, 2), (2, 4)]}
+
+    assert groupby([0], [(1, 2), (1, 3), (2, 2), (2, 4)]) == \
+        {(1,): [(1, 2), (1, 3)],
+         (2,): [(2, 2), (2, 4)]}
+
+    assert groupby([0, 0], [(1, 2), (1, 3), (2, 2), (2, 4)]) == \
+        {(1, 1): [(1, 2), (1, 3)],
+         (2, 2): [(2, 2), (2, 4)]}
+
+
 def test_merge_sorted():
     assert list(merge_sorted([1, 2, 3], [1, 2, 3])) == [1, 1, 2, 2, 3, 3]
     assert list(merge_sorted([1, 3, 5], [2, 4, 6])) == [1, 2, 3, 4, 5, 6]
@@ -293,8 +307,6 @@ def test_join():
                     ((2, 'two', 'banana', 2)),
                     ((2, 'two', 'coconut', 2))])
 
-    print(result)
-    print(expected)
     assert result == expected
 
 
@@ -329,8 +341,6 @@ def test_join_double_repeats():
                     ((2, 'dos', 'banana', 2)),
                     ((2, 'dos', 'coconut', 2))])
 
-    print(result)
-    print(expected)
     assert result == expected
 
 
@@ -339,7 +349,6 @@ def test_join_missing_element():
     fruit = [('apple', 5), ('orange', 1)]
 
     result = list(join(first, names, second, fruit))
-    print(result)
     result = set(starmap(add, result))
 
     expected = set([((1, 'one', 'orange', 1))])
@@ -351,8 +360,6 @@ def test_left_outer_join():
     result = set(join(identity, [1, 2], identity, [2, 3], left_default=None))
     expected = set([(2, 2), (None, 3)])
 
-    print(result)
-    print(expected)
     assert result == expected
 
 

@@ -9,7 +9,7 @@ cdef class accumulate:
     cdef object result
 
 
-cpdef dict groupby(object func, object seq)
+cpdef dict groupby(object key, object seq)
 
 
 cdef class _merge_sorted:
