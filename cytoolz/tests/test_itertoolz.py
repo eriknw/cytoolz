@@ -225,6 +225,18 @@ def test_reduceby():
                     lambda acc, x: acc + x['cost'],
                     projects, 0) == {'CA': 1200000, 'IL': 2100000}
 
+    assert reduceby('state',
+                    lambda acc, x: acc + x['cost'],
+                    projects, 0) == {'CA': 1200000, 'IL': 2100000}
+
+    assert reduceby(['state'],
+                    lambda acc, x: acc + x['cost'],
+                    projects, 0) == {('CA',): 1200000, ('IL',): 2100000}
+
+    assert reduceby(['state', 'state'],
+                    lambda acc, x: acc + x['cost'],
+                    projects, 0) == {('CA', 'CA'): 1200000, ('IL', 'IL'): 2100000}
+
 
 def test_reduce_by_init():
     assert reduceby(iseven, add, [1, 2, 3, 4]) == {True: 2 + 4, False: 1 + 3}
@@ -348,8 +360,7 @@ def test_join_missing_element():
     names = [(1, 'one'), (2, 'two'), (3, 'three')]
     fruit = [('apple', 5), ('orange', 1)]
 
-    result = list(join(first, names, second, fruit))
-    result = set(starmap(add, result))
+    result = set(starmap(add, join(first, names, second, fruit)))
 
     expected = set([((1, 'one', 'orange', 1))])
 

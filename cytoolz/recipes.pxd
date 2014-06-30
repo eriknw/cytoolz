@@ -1,4 +1,4 @@
-cpdef object countby(object func, object seq)
+cpdef object countby(object key, object seq)
 
 
 cdef class partitionby:
