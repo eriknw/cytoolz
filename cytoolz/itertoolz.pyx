@@ -21,7 +21,8 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'unique', 'isiterable', 'isdistinct', 'take', 'drop', 'take_nth',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
-           'sliding_window', 'partition', 'partition_all', 'count', 'pluck']
+           'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
+           'join']
 
 
 concatv = chain
@@ -35,7 +36,7 @@ cpdef object identity(object x):
 cdef class remove:
     """ remove(predicate, seq)
 
-    Return those items of collection for which predicate(item) is true.
+    Return those items of sequence for which predicate(item) is False
 
     >>> def iseven(x):
     ...     return x % 2 == 0
@@ -725,20 +726,6 @@ cpdef dict frequencies(object seq):
     return d
 
 
-''' Alternative implementation of `frequencies`
-cpdef dict frequencies(object seq):
-    cdef dict d = {}
-    cdef Py_ssize_t val
-    for item in seq:
-        if item in d:
-            val = d[item]
-            d[item] = val + 1
-        else:
-            d[item] = 1
-    return d
-'''
-
-
 cdef inline object _reduceby_core(dict d, object key, object item, object binop,
                                 object init, bint skip_init):
     cdef PyObject *obj = PyDict_GetItem(d, key)
@@ -1135,7 +1122,8 @@ cpdef object join(object leftkey, object leftseq,
                   object rightkey, object rightseq,
                   object left_default=no_default,
                   object right_default=no_default):
-    """ Join two sequences on common attributes
+    """
+    Join two sequences on common attributes
 
     This is a semi-streaming operation.  The LEFT sequence is fully evaluated
     and placed into memory.  The RIGHT sequence is evaluated lazily and so can
@@ -1370,13 +1358,3 @@ cdef class _inner_join(_join):
         match = <object>PyList_GET_ITEM(self.matches, self.i)  # skip error checking
         self.i += 1
         return (match, self.right)
-
-
-# I find `_consume` convenient for benchmarking.  Perhaps this belongs
-# elsewhere, so it is private (leading underscore) and hidden away for now.
-
-cpdef object _consume(object seq):
-    """
-    Efficiently consume an iterable """
-    for _ in seq:
-        pass

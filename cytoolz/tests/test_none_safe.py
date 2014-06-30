@@ -256,6 +256,10 @@ def test_itertoolz():
     assert raises(TypeError, lambda: list(unique([1, 1, 2], key=None)))
     tested.append('unique')
 
+    assert raises(TypeError, lambda: join(first, None, second, (1, 2, 3)))
+    assert raises(TypeError, lambda: join(first, (1, 2, 3), second, None))
+    tested.append('join')
+
     s1 = set(tested)
     s2 = set(cytoolz.itertoolz.__all__)
     assert s1 == s2, '%s not tested for being None-safe' % ', '.join(s2 - s1)
