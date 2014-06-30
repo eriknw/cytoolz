@@ -96,7 +96,7 @@ cdef class accumulate:
         return self.result
 
 
-cdef inline void _groupby_core(dict d, object key, object item):
+cdef inline object _groupby_core(dict d, object key, object item):
     cdef PyObject *obj = PyDict_GetItem(d, key)
     if obj is NULL:
         val = []
@@ -739,6 +739,17 @@ cpdef dict frequencies(object seq):
 '''
 
 
+cdef inline object _reduceby_core(dict d, object key, object item, object binop,
+                                object init, bint skip_init):
+    cdef PyObject *obj = PyDict_GetItem(d, key)
+    if obj is not NULL:
+        PyDict_SetItem(d, key, binop(<object>obj, item))
+    elif skip_init:
+        PyDict_SetItem(d, key, item)
+    else:
+        PyDict_SetItem(d, key, binop(init, item))
+
+
 cpdef dict reduceby(object key, object binop, object seq, object init=no_default):
     """
     Perform a simultaneous groupby and reduction
@@ -759,38 +770,55 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
     operate in much less space.  This makes it suitable for larger datasets
     that do not fit comfortably in memory
 
+    Simple Examples
+    ---------------
+
     >>> from operator import add, mul
-    >>> data = [1, 2, 3, 4, 5]
     >>> iseven = lambda x: x % 2 == 0
-    >>> reduceby(iseven, add, data, 0)
+
+    >>> data = [1, 2, 3, 4, 5]
+
+    >>> reduceby(iseven, add, data)
     {False: 9, True: 6}
-    >>> reduceby(iseven, mul, data, 1)
+
+    >>> reduceby(iseven, mul, data)
     {False: 15, True: 8}
+
+    Complex Example
+    ---------------
 
     >>> projects = [{'name': 'build roads', 'state': 'CA', 'cost': 1000000},
     ...             {'name': 'fight crime', 'state': 'IL', 'cost': 100000},
     ...             {'name': 'help farmers', 'state': 'IL', 'cost': 2000000},
     ...             {'name': 'help farmers', 'state': 'CA', 'cost': 200000}]
-    >>> reduceby(lambda x: x['state'],              # doctest: +SKIP
+
+    >>> reduceby('state',                        # doctest: +SKIP
     ...          lambda acc, x: acc + x['cost'],
     ...          projects, 0)
     {'CA': 1200000, 'IL': 2100000}
     """
     cdef dict d = {}
-    cdef object item, k, val
-    cdef PyObject *obj
-    for item in seq:
-        k = key(item)
-        obj = PyDict_GetItem(d, k)
-        if obj is NULL:
-            if init is no_default:
-                val = item
-            else:
-                val = binop(init, item)
-        else:
-            val = <object>obj
-            val = binop(val, item)
-        d[k] = val
+    cdef object item, keyval
+    cdef Py_ssize_t i, N
+    cdef bint skip_init = init is no_default
+    if callable(key):
+        for item in seq:
+            keyval = key(item)
+            _reduceby_core(d, keyval, item, binop, init, skip_init)
+    elif isinstance(key, list):
+        N = PyList_GET_SIZE(key)
+        for item in seq:
+            keyval = PyTuple_New(N)
+            for i in range(N):
+                val = <object>PyList_GET_ITEM(key, i)
+                val = item[val]
+                Py_INCREF(val)
+                PyTuple_SET_ITEM(keyval, i, val)
+            _reduceby_core(d, keyval, item, binop, init, skip_init)
+    else:
+        for item in seq:
+            keyval = item[key]
+            _reduceby_core(d, keyval, item, binop, init, skip_init)
     return d
 
 
