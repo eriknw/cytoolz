@@ -155,23 +155,22 @@ cpdef object join(object leftkey, object leftseq,
                   object right_default=*)
 
 cdef class _join:
-    cdef Py_ssize_t n
-    cdef object iterseq
-    cdef object leftkey
+    cdef dict d
+    cdef list matches
+    cdef set seen_keys
     cdef object leftseq
-    cdef object rightkey
     cdef object rightseq
-    cdef object matches
+    cdef object _rightkey
     cdef object right
-    cdef object key
-    cdef object d
-    cdef object d_items
-    cdef object seen_keys
-    cdef object is_rightseq_exhausted
     cdef object left_default
     cdef object right_default
-    cdef int i
     cdef object keys
+    cdef Py_ssize_t N
+    cdef Py_ssize_t i
+    cdef bint is_rightseq_exhausted
+
+    cdef object rightkey(self)
+
 
 cdef class _inner_join(_join):
     pass
@@ -183,4 +182,41 @@ cdef class _left_outer_join(_join):
     pass
 
 cdef class _outer_join(_join):
+    pass
+
+
+cdef class _inner_join_key(_inner_join):
+    pass
+
+cdef class _inner_join_index(_inner_join):
+    pass
+
+cdef class _inner_join_indices(_inner_join):
+    pass
+
+cdef class _right_outer_join_key(_right_outer_join):
+    pass
+
+cdef class _right_outer_join_index(_right_outer_join):
+    pass
+
+cdef class _right_outer_join_indices(_right_outer_join):
+    pass
+
+cdef class _left_outer_join_key(_left_outer_join):
+    pass
+
+cdef class _left_outer_join_index(_left_outer_join):
+    pass
+
+cdef class _left_outer_join_indices(_left_outer_join):
+    pass
+
+cdef class _outer_join_key(_outer_join):
+    pass
+
+cdef class _outer_join_index(_outer_join):
+    pass
+
+cdef class _outer_join_indices(_outer_join):
     pass
