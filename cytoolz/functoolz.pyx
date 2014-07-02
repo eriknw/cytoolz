@@ -1,15 +1,19 @@
 #cython: embedsignature=True
 import inspect
+import sys
+from .compatibility import filter as ifilter, map as imap, reduce
+
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
-from cpython.object cimport PyCallable_Check, PyObject_Call, PyObject_CallObject
+from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
+                             PyObject_RichCompare, Py_EQ, Py_NE)
 from cpython.ref cimport PyObject
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PyObject_Call as CyObject_Call
+from .cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
@@ -109,6 +113,13 @@ def thread_last(val, *forms):
     return c_thread_last(val, forms)
 
 
+# This is a kludge for Python 3.4.0 support
+# currently len(inspect.getargspec(map).args) == 0, a wrong result.
+# As this is fixed in future versions then hopefully this kludge can be
+# removed.
+known_numargs = {map: 2, filter: 2, reduce: 2, imap: 2, ifilter: 2}
+
+
 cpdef object _num_required_args(object func):
     """
     Number of args for func
@@ -125,6 +136,8 @@ cpdef object _num_required_args(object func):
     >>> print(_num_required_args(bar))
     None
     """
+    if func in known_numargs:
+        return known_numargs[func]
     try:
         spec = inspect.getargspec(func)
         if spec.varargs:
@@ -166,21 +179,15 @@ cdef class curry:
         cytoolz.curried - namespace of curried functions
                         http://toolz.readthedocs.org/en/latest/curry.html
     """
-    property __doc__:
-        def __get__(self):
-            return self.func.__doc__
-
-    property __name__:
-        def __get__(self):
-            return self.func.__name__
-
     def __cinit__(self, func, *args, **kwargs):
         if not PyCallable_Check(func):
             raise TypeError("Input must be callable")
 
         # curry- or functools.partial-like object?  Unpack and merge arguments
-        if (hasattr(func, 'func') and hasattr(func, 'args')
-                and hasattr(func, 'keywords')):
+        if (hasattr(func, 'func')
+                and hasattr(func, 'args')
+                and hasattr(func, 'keywords')
+                and isinstance(func.args, tuple)):
             if func.keywords:
                 PyDict_Merge(kwargs, func.keywords, False)
                 ## Equivalent to:
@@ -193,12 +200,28 @@ cdef class curry:
         self.func = func
         self.args = args
         self.keywords = kwargs if kwargs else None
+        self.__doc__ = getattr(func, '__doc__', None)
+        self.__name__ = getattr(func, '__name__', '<curry>')
 
     def __str__(self):
         return str(self.func)
 
     def __repr__(self):
         return repr(self.func)
+
+    def __hash__(self):
+        return hash((self.func, self.args,
+                     frozenset(self.keywords.items()) if self.keywords
+                     else None))
+
+    def __richcmp__(self, other, int op):
+        is_equal = (isinstance(other, curry) and self.func == other.func and
+                self.args == other.args and self.keywords == other.keywords)
+        if op == Py_EQ:
+            return is_equal
+        if op == Py_NE:
+            return not is_equal
+        return PyObject_RichCompare(id(self), id(other), op)
 
     def __call__(self, *args, **kwargs):
         cdef PyObject *obj
@@ -211,7 +234,7 @@ cdef class curry:
         if self.keywords is not None:
             PyDict_Merge(kwargs, self.keywords, False)
 
-        obj = CyObject_Call(self.func, args, kwargs)
+        obj = PtrObject_Call(self.func, args, kwargs)
         if obj is not NULL:
             val = <object>obj
             return val
@@ -224,6 +247,54 @@ cdef class curry:
             if required_args is None or len(args) < required_args:
                 return curry(self.func, *args, **kwargs)
         raise val
+
+    def __reduce__(self):
+        return (curry, (self.func,), (self.args, self.keywords))
+
+    def __setstate__(self, state):
+        self.args, self.keywords = state
+
+
+cpdef object has_kwargs(object f):
+    """
+    Does a function have keyword arguments?
+
+    >>> def f(x, y=0):
+    ...     return x + y
+
+    >>> has_kwargs(f)
+    True
+    """
+    if sys.version_info[0] == 2:
+        spec = inspect.getargspec(f)
+        return bool(spec and (spec.keywords or spec.defaults))
+    if sys.version_info[0] == 3:
+        spec = inspect.getfullargspec(f)
+        return bool(spec.defaults)
+
+
+cpdef object isunary(object f):
+    """
+    Does a function have only a single argument?
+
+    >>> def f(x):
+    ...     return x
+
+    >>> isunary(f)
+    True
+    >>> isunary(lambda x, y: x + y)
+    False
+    """
+    try:
+        if sys.version_info[0] == 2:
+            spec = inspect.getargspec(f)
+        if sys.version_info[0] == 3:
+            spec = inspect.getfullargspec(f)
+        return bool(spec and spec.varargs is None and not has_kwargs(f)
+                    and len(spec.args) == 1)
+    except TypeError:
+        pass
+    return None    # in Python < 3.4 builtins fail, return None
 
 
 cdef class c_memoize:
@@ -244,12 +315,9 @@ cdef class c_memoize:
         self.key = key
 
         try:
-            spec = inspect.getargspec(func)
-            self.may_have_kwargs = bool(not spec or spec.keywords or
-                                        spec.defaults)
+            self.may_have_kwargs = has_kwargs(func)
             # Is unary function (single arg, no variadic argument or keywords)?
-            self.is_unary = (spec and spec.varargs is None and
-                             not self.may_have_kwargs and len(spec.args) == 1)
+            self.is_unary = isunary(func)
         except TypeError:
             self.is_unary = False
             self.may_have_kwargs = True
@@ -336,6 +404,12 @@ cdef class Compose:
             ret = func(ret)
         return ret
 
+    def __reduce__(self):
+        return (Compose, (self.firstfunc,), self.funcs)
+
+    def __setstate__(self, state):
+        self.funcs = state
+
 
 cdef object c_compose(object funcs):
     if not funcs:
@@ -418,16 +492,22 @@ cdef class complement:
     def __call__(self, *args, **kwargs):
         return not PyObject_Call(self.func, args, kwargs)  # use PyObject_Not?
 
+    def __reduce__(self):
+        return (complement, (self.func,))
+
 
 cdef class _juxt_inner:
     def __cinit__(self, funcs):
-        self.funcs = funcs
+        self.funcs = tuple(funcs)
 
     def __call__(self, *args, **kwargs):
         if kwargs:
-            return (PyObject_Call(func, args, kwargs) for func in self.funcs)
+            return tuple(PyObject_Call(func, args, kwargs) for func in self.funcs)
         else:
-            return (PyObject_CallObject(func, args) for func in self.funcs)
+            return tuple(PyObject_CallObject(func, args) for func in self.funcs)
+
+    def __reduce__(self):
+        return (_juxt_inner, (self.funcs,))
 
 
 cdef object c_juxt(object funcs):
@@ -439,22 +519,21 @@ def juxt(*funcs):
     Creates a function that calls several functions with the same arguments.
 
     Takes several functions and returns a function that applies its arguments
-    to each of those functions then returns a sequence of the results.
+    to each of those functions then returns a tuple of the results.
 
     Name comes from juxtaposition: the fact of two things being seen or placed
     close together with contrasting effect.
 
     >>> inc = lambda x: x + 1
     >>> double = lambda x: x * 2
-    >>> list(juxt(inc, double)(10))
-    [11, 20]
-    >>> list(juxt([inc, double])(10))
-    [11, 20]
+    >>> juxt(inc, double)(10)
+    (11, 20)
+    >>> juxt([inc, double])(10)
+    (11, 20)
     """
     if len(funcs) == 1 and not PyCallable_Check(funcs[0]):
-        funcs = tuple(funcs[0])
+        funcs = funcs[0]
     return c_juxt(funcs)
-
 
 
 cpdef object do(object func, object x):

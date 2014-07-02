@@ -1,6 +1,6 @@
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
-                               compose, pipe, complement, do, juxt,
-                               _num_required_args)
+                             compose, pipe, complement, do, juxt)
+from cytoolz.functoolz import _num_required_args
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial
@@ -72,6 +72,17 @@ def test_memoize_curried():
         return x + y
 
     f2 = f(y=1)
+    fm2 = memoize(f2)
+
+    assert fm2(3) == f2(3)
+    assert fm2(3) == f2(3)
+
+
+def test_memoize_partial():
+    def f(x, y=0):
+        return x + y
+
+    f2 = partial(f, y=1)
     fm2 = memoize(f2)
 
     assert fm2(3) == f2(3)
@@ -221,8 +232,89 @@ def test_curry_is_like_partial():
     assert p(1, 2) == c(1, 2)
 
 
+def test_curry_is_idempotent():
+    def foo(a, b, c=1):
+        return a + b + c
+
+    f = curry(foo, 1, c=2)
+    g = curry(f)
+    assert isinstance(f, curry)
+    assert isinstance(g, curry)
+    assert not isinstance(g.func, curry)
+    assert not hasattr(g.func, 'func')
+    assert f.func == g.func
+    assert f.args == g.args
+    assert f.keywords == g.keywords
+
+
+def test_curry_attributes_readonly():
+    def foo(a, b, c=1):
+        return a + b + c
+
+    f = curry(foo, 1, c=2)
+    assert raises(AttributeError, lambda: setattr(f, 'args', (2,)))
+    assert raises(AttributeError, lambda: setattr(f, 'keywords', {'c': 3}))
+    assert raises(AttributeError, lambda: setattr(f, 'func', f))
+
+
+def test_curry_attributes_writable():
+    def foo(a, b, c=1):
+        return a + b + c
+
+    f = curry(foo, 1, c=2)
+    f.__name__ = 'newname'
+    f.__doc__ = 'newdoc'
+    assert f.__name__ == 'newname'
+    assert f.__doc__ == 'newdoc'
+    if hasattr(f, 'func_name'):
+        assert f.__name__ == f.func_name
+
+
+def test_curry_comparable():
+    def foo(a, b, c=1):
+        return a + b + c
+    f1 = curry(foo, 1, c=2)
+    f2 = curry(foo, 1, c=2)
+    g1 = curry(foo, 1, c=3)
+    h1 = curry(foo, c=2)
+    h2 = h1(c=2)
+    h3 = h1()
+    assert f1 == f2
+    assert not (f1 != f2)
+    assert f1 != g1
+    assert not (f1 == g1)
+    assert f1 != h1
+    assert h1 == h2
+    assert h1 == h3
+
+    # test function comparison works
+    def bar(a, b, c=1):
+        return a + b + c
+    b1 = curry(bar, 1, c=2)
+    assert b1 != f1
+
+    assert set([f1, f2, g1, h1, h2, h3, b1, b1()]) == set([f1, g1, h1, b1])
+
+    # test unhashable input
+    unhash1 = curry(foo, [])
+    assert raises(TypeError, lambda: hash(unhash1))
+    unhash2 = curry(foo, c=[])
+    assert raises(TypeError, lambda: hash(unhash2))
+
+
+def test_curry_doesnot_transmogrify():
+    # Early versions of `curry` transmogrified to `partial` objects if
+    # only one positional argument remained even if keyword arguments
+    # were present.  Now, `curry` should always remain `curry`.
+    def f(x, y=0):
+        return x + y
+
+    cf = curry(f)
+    assert cf(y=1)(y=2)(y=3)(1) == f(1, 3)
+
+
 def test__num_required_args():
-    assert _num_required_args(map) is None
+    assert _num_required_args(map) != 0
     assert _num_required_args(lambda x: x) == 1
     assert _num_required_args(lambda x, y: x) == 2
 
@@ -289,5 +381,5 @@ def test_do():
 def test_juxt_generator_input():
     data = list(range(10))
     juxtfunc = juxt(itemgetter(2*i) for i in range(5))
-    assert tuple(juxtfunc(data)) == (0, 2, 4, 6, 8)
-    assert tuple(juxtfunc(data)) == (0, 2, 4, 6, 8)
+    assert juxtfunc(data) == (0, 2, 4, 6, 8)
+    assert juxtfunc(data) == (0, 2, 4, 6, 8)
