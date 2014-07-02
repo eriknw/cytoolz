@@ -66,6 +66,12 @@ Please take a look at our issue pages for
 `cytoolz <https://github.com/pytoolz/cytoolz/issues>`__
 for contribution ideas.
 
+Community
+---------
+
+See our `mailing list <https://groups.google.com/forum/#!forum/pytoolz>`__.
+We're friendly.
+
 .. |Build Status| image:: https://travis-ci.org/pytoolz/cytoolz.png
    :target: https://travis-ci.org/pytoolz/cytoolz
 .. |Version Status| image:: https://pypip.in/v/cytoolz/badge.png
