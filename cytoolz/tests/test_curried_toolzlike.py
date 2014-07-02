@@ -19,6 +19,8 @@ def test_toolzcurry_is_class():
 def test_cytoolz_like_toolz():
     for key, val in toolz.curried.__dict__.items():
         if isinstance(val, toolz.curry):
+            if val.func is toolz.curry:  # XXX: Python 3.4 work-around!
+                continue
             assert hasattr(cytoolz.curried, key), (
                     'cytoolz.curried.%s does not exist' % key)
             assert isinstance(getattr(cytoolz.curried, key), cytoolz.curry), (
