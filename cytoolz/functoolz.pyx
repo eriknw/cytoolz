@@ -1,5 +1,8 @@
 #cython: embedsignature=True
 import inspect
+import sys
+from .compatibility import filter as ifilter, map as imap, reduce
+
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
@@ -110,6 +113,13 @@ def thread_last(val, *forms):
     return c_thread_last(val, forms)
 
 
+# This is a kludge for Python 3.4.0 support
+# currently len(inspect.getargspec(map).args) == 0, a wrong result.
+# As this is fixed in future versions then hopefully this kludge can be
+# removed.
+known_numargs = {map: 2, filter: 2, reduce: 2, imap: 2, ifilter: 2}
+
+
 cpdef object _num_required_args(object func):
     """
     Number of args for func
@@ -126,6 +136,8 @@ cpdef object _num_required_args(object func):
     >>> print(_num_required_args(bar))
     None
     """
+    if func in known_numargs:
+        return known_numargs[func]
     try:
         spec = inspect.getargspec(func)
         if spec.varargs:
@@ -172,8 +184,10 @@ cdef class curry:
             raise TypeError("Input must be callable")
 
         # curry- or functools.partial-like object?  Unpack and merge arguments
-        if (hasattr(func, 'func') and hasattr(func, 'args')
-                and hasattr(func, 'keywords')):
+        if (hasattr(func, 'func')
+                and hasattr(func, 'args')
+                and hasattr(func, 'keywords')
+                and isinstance(func.args, tuple)):
             if func.keywords:
                 PyDict_Merge(kwargs, func.keywords, False)
                 ## Equivalent to:
@@ -241,6 +255,48 @@ cdef class curry:
         self.args, self.keywords = state
 
 
+cpdef object has_kwargs(object f):
+    """
+    Does a function have keyword arguments?
+
+    >>> def f(x, y=0):
+    ...     return x + y
+
+    >>> has_kwargs(f)
+    True
+    """
+    if sys.version_info[0] == 2:
+        spec = inspect.getargspec(f)
+        return bool(spec and (spec.keywords or spec.defaults))
+    if sys.version_info[0] == 3:
+        spec = inspect.getfullargspec(f)
+        return bool(spec.defaults)
+
+
+cpdef object isunary(object f):
+    """
+    Does a function have only a single argument?
+
+    >>> def f(x):
+    ...     return x
+
+    >>> isunary(f)
+    True
+    >>> isunary(lambda x, y: x + y)
+    False
+    """
+    try:
+        if sys.version_info[0] == 2:
+            spec = inspect.getargspec(f)
+        if sys.version_info[0] == 3:
+            spec = inspect.getfullargspec(f)
+        return bool(spec and spec.varargs is None and not has_kwargs(f)
+                    and len(spec.args) == 1)
+    except TypeError:
+        pass
+    return None    # in Python < 3.4 builtins fail, return None
+
+
 cdef class c_memoize:
     property __doc__:
         def __get__(self):
@@ -259,12 +315,9 @@ cdef class c_memoize:
         self.key = key
 
         try:
-            spec = inspect.getargspec(func)
-            self.may_have_kwargs = bool(not spec or spec.keywords or
-                                        spec.defaults)
+            self.may_have_kwargs = has_kwargs(func)
             # Is unary function (single arg, no variadic argument or keywords)?
-            self.is_unary = (spec and spec.varargs is None and
-                             not self.may_have_kwargs and len(spec.args) == 1)
+            self.is_unary = isunary(func)
         except TypeError:
             self.is_unary = False
             self.may_have_kwargs = True
