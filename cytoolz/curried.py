@@ -26,7 +26,6 @@ See Also:
 
 import cytoolz
 from cytoolz import *
-from cytoolz.curried_exceptions import *
 
 
 # Here is the recipe used to create the list below
