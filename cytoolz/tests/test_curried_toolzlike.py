@@ -10,7 +10,7 @@ from dev_skip_test import dev_skip_test
 def numargs(f):
     if f._numargs is not None:
         return f._numargs
-    spec = inspect.getargspec(f)
+    spec = inspect.getargspec(f.func)
     return len(spec.args) - len(spec.defaults or ())
 
 
