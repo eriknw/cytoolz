@@ -2,12 +2,17 @@ import cytoolz
 import cytoolz.curried
 import toolz
 import toolz.curried
+import inspect
 import types
 from dev_skip_test import dev_skip_test
 
 
-# Note that the tests in this file assume `toolz.curry` is a class, but we
-# may some day make `toolz.curry` a function and `toolz.Curry` a class.
+def numargs(f):
+    if f._numargs is not None:
+        return f._numargs
+    spec = inspect.getargspec(f)
+    return len(spec.args) - len(spec.defaults or ())
+
 
 @dev_skip_test
 def test_toolzcurry_is_function():
@@ -27,9 +32,9 @@ def test_cytoolz_like_toolz():
                     'cytoolz.curried.%s does not exist' % key)
             assert isinstance(getattr(cytoolz.curried, key), cytoolz.functoolz.Curry), (
                     'cytoolz.curried.%s should be curried' % key)
-            assert getattr(cytoolz.curried, key)._numargs == val._numargs, (
+            assert getattr(cytoolz.curried, key)._numargs == numargs(val), (
                     'cytoolz.curried.%s has incorrect "numargs" (should be %s)'
-                    % (key, val._numargs))
+                    % (key, numargs(val)))
 
 
 @dev_skip_test
