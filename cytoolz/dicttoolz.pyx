@@ -1,7 +1,7 @@
 #cython: embedsignature=True
 from cpython.dict cimport (PyDict_Check, PyDict_GetItem, PyDict_Merge,
                            PyDict_New, PyDict_Next, PyDict_SetItem,
-                           PyDict_Update)
+                           PyDict_Update, PyDict_DelItem)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
 from cpython.ref cimport PyObject
@@ -11,7 +11,7 @@ from .cpython cimport PtrObject_GetItem
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'valfilter', 'keyfilter',
-           'assoc', 'get_in', 'update_in']
+           'assoc', 'dissoc', 'get_in', 'update_in']
 
 
 cdef dict c_merge(object dicts):
@@ -212,6 +212,22 @@ cpdef dict assoc(dict d, object key, object value):
     cdef dict rv
     rv = d.copy()
     PyDict_SetItem(rv, key, value)
+    return rv
+
+
+cpdef dict dissoc(dict d, object key):
+    """
+    Return a new dict with the given key removed.
+
+    New dict has d[key] deleted.
+    Does not modify the initial dictionary.
+
+    >>> dissoc({'x': 1, 'y': 2}, 'y')
+    {'x': 1}
+    """
+    cdef dict rv
+    rv = d.copy()
+    PyDict_DelItem(rv, key)
     return rv
 
 

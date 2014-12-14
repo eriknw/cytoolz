@@ -19,6 +19,9 @@ cpdef dict keyfilter(object predicate, dict d)
 cpdef dict assoc(dict d, object key, object value)
 
 
+cpdef dict dissoc(dict d, object key)
+
+
 cpdef dict update_in(dict d, object keys, object func, object default=*)
 
 
