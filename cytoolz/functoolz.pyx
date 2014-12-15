@@ -251,6 +251,9 @@ cdef class curry:
                 return curry(self.func, *args, **kwargs)
         raise val
 
+    def __get__(self, instance, owner):
+        return curry(self, instance)
+
     def __reduce__(self):
         return (curry, (self.func,), (self.args, self.keywords))
 
@@ -344,6 +347,9 @@ cdef class c_memoize:
             result = PyObject_Call(self.func, args, kwargs)
             self.cache[key] = result
             return result
+
+    def __get__(self, instance, owner):
+        return curry(self, instance)
 
 
 cpdef object memoize(object func=None, object cache=None, object key=None):
