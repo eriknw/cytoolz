@@ -12,7 +12,7 @@ from cytoolz.functoolz cimport (
 
 from cytoolz.dicttoolz cimport (
     assoc, c_merge, c_merge_with, dissoc, get_in, keyfilter, keymap,
-    update_in, valfilter, valmap)
+    itemfilter, itemmap, update_in, valfilter, valmap)
 
 
 from cytoolz.recipes cimport countby, partitionby

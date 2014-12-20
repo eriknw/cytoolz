@@ -754,12 +754,14 @@ cpdef dict frequencies(object seq):
 
 
 cdef inline object _reduceby_core(dict d, object key, object item, object binop,
-                                object init, bint skip_init):
+                                object init, bint skip_init, bint call_init):
     cdef PyObject *obj = PyDict_GetItem(d, key)
     if obj is not NULL:
         PyDict_SetItem(d, key, binop(<object>obj, item))
     elif skip_init:
         PyDict_SetItem(d, key, item)
+    elif call_init:
+        PyDict_SetItem(d, key, binop(init(), item))
     else:
         PyDict_SetItem(d, key, binop(init, item))
 
@@ -783,6 +785,10 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
     But the former does not build the intermediate groups, allowing it to
     operate in much less space.  This makes it suitable for larger datasets
     that do not fit comfortably in memory
+
+    The ``init`` keyword argument is the default initialization of the
+    reduction.  This can be either a constant value like ``0`` or a callable
+    like ``lambda : 0`` as might be used in ``defaultdict``.
 
     Simple Examples
     ---------------
@@ -810,15 +816,27 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
     ...          lambda acc, x: acc + x['cost'],
     ...          projects, 0)
     {'CA': 1200000, 'IL': 2100000}
+
+    Example Using ``init``
+    ----------------------
+
+    >>> def set_add(s, i):
+    ...     s.add(i)
+    ...     return s
+
+    >>> reduceby(iseven, set_add, [1, 2, 3, 4, 1, 2, 3], set)  # doctest: +SKIP
+    {True:  set([2, 4]),
+     False: set([1, 3])}
     """
     cdef dict d = {}
     cdef object item, keyval
     cdef Py_ssize_t i, N
     cdef bint skip_init = init is no_default
+    cdef bint call_init = callable(init)
     if callable(key):
         for item in seq:
             keyval = key(item)
-            _reduceby_core(d, keyval, item, binop, init, skip_init)
+            _reduceby_core(d, keyval, item, binop, init, skip_init, call_init)
     elif isinstance(key, list):
         N = PyList_GET_SIZE(key)
         for item in seq:
@@ -828,11 +846,11 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
                 val = item[val]
                 Py_INCREF(val)
                 PyTuple_SET_ITEM(keyval, i, val)
-            _reduceby_core(d, keyval, item, binop, init, skip_init)
+            _reduceby_core(d, keyval, item, binop, init, skip_init, call_init)
     else:
         for item in seq:
             keyval = item[key]
-            _reduceby_core(d, keyval, item, binop, init, skip_init)
+            _reduceby_core(d, keyval, item, binop, init, skip_init, call_init)
     return d
 
 

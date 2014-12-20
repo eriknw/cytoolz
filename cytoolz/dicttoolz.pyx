@@ -10,8 +10,8 @@ from cpython.ref cimport PyObject
 from .cpython cimport PtrObject_GetItem
 
 
-__all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'valfilter', 'keyfilter',
-           'assoc', 'dissoc', 'get_in', 'update_in']
+__all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'itemmap', 'valfilter',
+           'keyfilter', 'itemfilter', 'assoc', 'dissoc', 'get_in', 'update_in']
 
 
 cdef dict c_merge(object dicts):
@@ -94,6 +94,7 @@ cpdef dict valmap(object func, dict d):
 
     See Also:
         keymap
+        itemmap
     """
     cdef:
         dict rv
@@ -121,6 +122,7 @@ cpdef dict keymap(object func, dict d):
 
     See Also:
         valmap
+        itemmap
     """
     cdef:
         dict rv
@@ -138,6 +140,36 @@ cpdef dict keymap(object func, dict d):
     return rv
 
 
+cpdef dict itemmap(object func, dict d):
+    """
+    Apply function to items of dictionary
+
+    >>> accountids = {"Alice": 10, "Bob": 20}
+    >>> itemmap(reversed, accountids)  # doctest: +SKIP
+    {10: "Alice", 20: "Bob"}
+
+    See Also:
+        keymap
+        valmap
+    """
+    cdef:
+        dict rv
+        object newk, newv
+        Py_ssize_t pos
+        PyObject *k
+        PyObject *v
+
+    if d is None:
+        raise TypeError("expected dict, got None")
+
+    rv = PyDict_New()
+    pos = 0
+    while PyDict_Next(d, &pos, &k, &v):
+       newk, newv = func((<object>k, <object>v))
+       PyDict_SetItem(rv, newk, newv)
+    return rv
+
+
 cpdef dict valfilter(object predicate, dict d):
     """
     Filter items in dictionary by value
@@ -149,6 +181,7 @@ cpdef dict valfilter(object predicate, dict d):
 
     See Also:
         keyfilter
+        itemfilter
         valmap
     """
     cdef:
@@ -179,6 +212,7 @@ cpdef dict keyfilter(object predicate, dict d):
 
     See Also:
         valfilter
+        itemfilter
         keymap
     """
     cdef:
@@ -194,6 +228,40 @@ cpdef dict keyfilter(object predicate, dict d):
     pos = 0
     while PyDict_Next(d, &pos, &k, &v):
         if predicate(<object>k):
+            PyDict_SetItem(rv, <object>k, <object>v)
+    return rv
+
+
+cpdef dict itemfilter(object predicate, dict d):
+    """
+    Filter items in dictionary by item
+
+    >>> def isvalid(item):
+    ...     k, v = item
+    ...     return k % 2 == 0 and v < 4
+
+    >>> d = {1: 2, 2: 3, 3: 4, 4: 5}
+    >>> itemfilter(isvalid, d)
+    {2: 3}
+
+    See Also:
+        keyfilter
+        valfilter
+        itemmap
+    """
+    cdef:
+        dict rv
+        Py_ssize_t pos
+        PyObject *k
+        PyObject *v
+
+    if d is None:
+        raise TypeError("expected dict, got None")
+
+    rv = PyDict_New()
+    pos = 0
+    while PyDict_Next(d, &pos, &k, &v):
+        if predicate((<object>k, <object>v)):
             PyDict_SetItem(rv, <object>k, <object>v)
     return rv
 

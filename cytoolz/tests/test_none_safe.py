@@ -91,6 +91,15 @@ def test_dicttoolz():
     assert raises(TypeError, lambda: valmap(identity, None))
     tested.append('valmap')
 
+    assert (raises(TypeError, lambda: itemmap(None, {1: 2})) or
+            itemmap(None, {1: 2}) == {1: (2,)})
+    assert raises(TypeError, lambda: itemmap(identity, None))
+    tested.append('itemmap')
+
+    assert raises(TypeError, lambda: itemfilter(None, {1: 2}))
+    assert raises(TypeError, lambda: itemfilter(identity, None))
+    tested.append('itemfilter')
+
     s1 = set(tested)
     s2 = set(cytoolz.dicttoolz.__all__)
     assert s1 == s2, '%s not tested for being None-safe' % ', '.join(s2 - s1)
