@@ -537,6 +537,8 @@ cpdef object nth(Py_ssize_t n, object seq):
     """
     if PySequence_Check(seq):
         return seq[n]
+    if n < 0:
+        raise ValueError('"n" must be positive when indexing an iterator')
     seq = iter(seq)
     while n > 0:
         n -= 1
