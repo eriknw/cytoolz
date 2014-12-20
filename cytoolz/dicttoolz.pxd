@@ -10,10 +10,16 @@ cpdef dict valmap(object func, dict d)
 cpdef dict keymap(object func, dict d)
 
 
+cpdef dict itemmap(object func, dict d)
+
+
 cpdef dict valfilter(object predicate, dict d)
 
 
 cpdef dict keyfilter(object predicate, dict d)
+
+
+cpdef dict itemfilter(object predicate, dict d)
 
 
 cpdef dict assoc(dict d, object key, object value)
