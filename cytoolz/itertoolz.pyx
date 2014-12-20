@@ -11,6 +11,7 @@ from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 # Locally defined bindings that differ from `cython.cpython` bindings
 from .cpython cimport PtrIter_Next, PtrObject_GetItem
 
+from collections import deque
 from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
 from operator import itemgetter
@@ -22,7 +23,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join']
+           'join', 'tail']
 
 
 concatv = chain
@@ -472,8 +473,28 @@ cpdef object take(Py_ssize_t n, object seq):
 
     >>> list(take(2, [10, 20, 30, 40, 50]))
     [10, 20]
+
+    See Also:
+        drop
+        tail
     """
     return islice(seq, n)
+
+
+cpdef object tail(Py_ssize_t n, object seq):
+    """
+    The last n elements of a sequence
+
+    >>> tail(2, [10, 20, 30, 40, 50])
+    [40, 50]
+
+    See Also:
+        drop
+        take
+    """
+    if PySequence_Check(seq):
+        return seq[-n:]
+    return tuple(deque(seq, n))
 
 
 cpdef object drop(Py_ssize_t n, object seq):
@@ -482,6 +503,10 @@ cpdef object drop(Py_ssize_t n, object seq):
 
     >>> list(drop(2, [10, 20, 30, 40, 50]))
     [30, 40, 50]
+
+    See Also:
+        take
+        tail
     """
     if n < 0:
         raise ValueError('n argument for drop() must be non-negative')
@@ -1108,6 +1133,47 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
     if default is no_default:
         return _pluck_index(ind, seqs)
     return _pluck_index_default(ind, seqs, default)
+
+
+cdef class _getter_index:
+    def __cinit__(self, object ind):
+        self.ind = ind
+
+    def __call__(self, object seq):
+        return seq[self.ind]
+
+
+cdef class _getter_list:
+    def __cinit__(self, list ind not None):
+        self.ind = ind
+        self.n = len(ind)
+
+    def __call__(self, object seq):
+        cdef Py_ssize_t i
+        cdef tuple result
+        cdef object val
+        result = PyTuple_New(self.n)
+        for i, val in enumerate(self.ind):
+            val = seq[val]
+            Py_INCREF(val)
+            PyTuple_SET_ITEM(result, i, val)
+        return result
+
+
+cdef class _getter_null:
+    def __call__(self, object seq):
+        return ()
+
+
+# TODO: benchmark getters (and compare against itemgetter)
+cpdef object getter(object index):
+    if isinstance(index, list):
+        if PyList_GET_SIZE(index) == 0:
+            return _getter_null()
+        elif PyList_GET_SIZE(index) < 10:
+            return _getter_list(index)
+        return itemgetter(*index)
+    return _getter_index(index)
 
 
 cpdef object join(object leftkey, object leftseq,
