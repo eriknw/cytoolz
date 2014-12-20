@@ -43,6 +43,9 @@ def test_dicttoolz():
     assert raises((TypeError, AttributeError), lambda: assoc(None, 1, 2))
     tested.append('assoc')
 
+    assert raises((TypeError, AttributeError), lambda: dissoc(None, 1))
+    tested.append('dissoc')
+
     # XXX
     assert (raises(TypeError, lambda: get_in(None, {})) or
             get_in(None, {}) is None)
@@ -87,6 +90,15 @@ def test_dicttoolz():
             valmap(None, {1: 2}) == {1: (2,)})
     assert raises(TypeError, lambda: valmap(identity, None))
     tested.append('valmap')
+
+    assert (raises(TypeError, lambda: itemmap(None, {1: 2})) or
+            itemmap(None, {1: 2}) == {1: (2,)})
+    assert raises(TypeError, lambda: itemmap(identity, None))
+    tested.append('itemmap')
+
+    assert raises(TypeError, lambda: itemfilter(None, {1: 2}))
+    assert raises(TypeError, lambda: itemfilter(identity, None))
+    tested.append('itemfilter')
 
     s1 = set(tested)
     s2 = set(cytoolz.dicttoolz.__all__)
@@ -245,6 +257,12 @@ def test_itertoolz():
             list(take(None, [1, 2])) == [1, 2])
     assert raises(TypeError, lambda: list(take(1, None)))
     tested.append('take')
+
+    # XXX
+    assert (raises(TypeError, lambda: list(tail(None, [1, 2])) == [1, 2]) or
+            list(tail(None, [1, 2])) == [1, 2])
+    assert raises(TypeError, lambda: list(tail(1, None)))
+    tested.append('tail')
 
     # XXX
     assert (raises(TypeError, lambda: list(take_nth(None, [1, 2]))) or

@@ -120,7 +120,7 @@ def thread_last(val, *forms):
 known_numargs = {map: 2, filter: 2, reduce: 2, imap: 2, ifilter: 2}
 
 
-cpdef object _num_required_args(object func):
+cpdef Py_ssize_t _num_required_args(object func) except *:
     """
     Number of args for func
 
@@ -134,19 +134,21 @@ cpdef object _num_required_args(object func):
     ...     return sum(args)
 
     >>> print(_num_required_args(bar))
-    None
+    -1
     """
+    cdef Py_ssize_t num_defaults
+
     if func in known_numargs:
         return known_numargs[func]
     try:
         spec = inspect.getargspec(func)
         if spec.varargs:
-            return None
+            return -1
         num_defaults = len(spec.defaults) if spec.defaults else 0
         return len(spec.args) - num_defaults
     except TypeError:
         pass
-    return None
+    return -1
 
 
 cdef class curry:
@@ -225,6 +227,7 @@ cdef class curry:
 
     def __call__(self, *args, **kwargs):
         cdef PyObject *obj
+        cdef Py_ssize_t required_args
         cdef object val
 
         if PyTuple_GET_SIZE(args) == 0:
@@ -244,9 +247,12 @@ cdef class curry:
             PyErr_Clear()
             required_args = _num_required_args(self.func)
             # If there was a genuine TypeError
-            if required_args is None or len(args) < required_args:
+            if required_args == -1 or len(args) < required_args:
                 return curry(self.func, *args, **kwargs)
         raise val
+
+    def __get__(self, instance, owner):
+        return curry(self, instance)
 
     def __reduce__(self):
         return (curry, (self.func,), (self.args, self.keywords))
@@ -285,10 +291,11 @@ cpdef object isunary(object f):
     >>> isunary(lambda x, y: x + y)
     False
     """
+    cdef int major = sys.version_info[0]
     try:
-        if sys.version_info[0] == 2:
+        if major == 2:
             spec = inspect.getargspec(f)
-        if sys.version_info[0] == 3:
+        if major == 3:
             spec = inspect.getfullargspec(f)
         return bool(spec and spec.varargs is None and not has_kwargs(f)
                     and len(spec.args) == 1)
@@ -340,6 +347,9 @@ cdef class c_memoize:
             result = PyObject_Call(self.func, args, kwargs)
             self.cache[key] = result
             return result
+
+    def __get__(self, instance, owner):
+        return curry(self, instance)
 
 
 cpdef object memoize(object func=None, object cache=None, object key=None):

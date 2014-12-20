@@ -149,6 +149,23 @@ cdef class _pluck_list_default:
 
 cpdef object pluck(object ind, object seqs, object default=*)
 
+
+cdef class _getter_index:
+    cdef object ind
+
+
+cdef class _getter_list:
+    cdef list ind
+    cdef Py_ssize_t n
+
+
+cdef class _getter_null:
+    pass
+
+
+cpdef object getter(object index)
+
+
 cpdef object join(object leftkey, object leftseq,
                   object rightkey, object rightseq,
                   object left_default=*,
