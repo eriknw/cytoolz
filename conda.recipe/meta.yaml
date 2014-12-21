@@ -11,11 +11,11 @@ requirements:
       - python
       - cython
       - toolz
-      - libpython # [win]
+      - libpython # [win and not (win64 and py34)]
 
     run:
       - python
-      - libpython # [win]
+      - libpython # [win and not (win64 and py34)]
 
 test:
     requires:
