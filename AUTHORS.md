@@ -7,3 +7,5 @@ Lars Buitinck                                   [@larsmans](http://github.com/la
 [Thouis (Ray) Jones](http://people.seas.harvard.edu/~thouis)  [@thouis](https://github.com/thouis/)
 
 scoder                                          [@scoder](https://github.com/scoder/)
+
+Phillip Cloud                                   [@cpcloud](https://github.com/cpcloud)
