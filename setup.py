@@ -20,7 +20,7 @@ from distutils.extension import Extension
 
 info = {}
 filename = os.path.join('cytoolz', '_version.py')
-exec(compile(open(filename, "rb").read().replace('\r\n', '\n'),
+exec(compile(open(filename, "rb").read().replace(b'\r\n', b'\n'),
              filename, 'exec'), info)
 VERSION = info['__version__']
 
