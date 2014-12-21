@@ -79,7 +79,7 @@ if __name__ == '__main__':
         maintainer='Erik Welch',
         maintainer_email='erik.n.welch@gmail.com',
         license = 'BSD',
-        packages=['cytoolz'],
+        packages=['cytoolz', 'cytoolz.tests'],
         package_data={'cytoolz': ['*.pxd']},
         # include_package_data = True,
         keywords=('functional utility itertools functools iterator generator '
