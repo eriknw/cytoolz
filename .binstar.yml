@@ -15,8 +15,3 @@ script:
 build_targets:
   files: conda
   channels: main
-
----
-platform: win-64
-engine: python=3.4
-exclude: true
