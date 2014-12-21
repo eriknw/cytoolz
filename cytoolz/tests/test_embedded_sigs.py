@@ -4,7 +4,7 @@ import toolz
 
 from types import BuiltinFunctionType
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
-from dev_skip_test import dev_skip_test
+from cytoolz.tests.dev_skip_test import dev_skip_test
 
 
 @curry

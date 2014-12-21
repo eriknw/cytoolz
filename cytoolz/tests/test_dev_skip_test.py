@@ -1,4 +1,4 @@
-from dev_skip_test import istest, nottest, dev_skip_test
+from cytoolz.tests.dev_skip_test import istest, nottest, dev_skip_test
 
 d = {}
 
