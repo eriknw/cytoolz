@@ -4,9 +4,6 @@ package:
 
 build:
     number: {{environ.get('BINSTAR_BUILD', 1)}}
-    script: 
-      - cd $RECIPE_DIR
-      - $PYTHON setup.py install --with-cython
 
 requirements:
     build:
@@ -14,9 +11,21 @@ requirements:
       - python
       - cython
       - toolz
+      - libpython # [win and not (win64 and py34)]
 
     run:
       - python
+      - libpython # [win and not (win64 and py34)]
+
+test:
+    requires:
+      - pytest
+      - nose
+      - toolz
+    imports:
+      - cytoolz
+    commands:
+      - py.test -x --doctest-modules --pyargs cytoolz
 
 about:
     home: http://toolz.readthedocs.org/
