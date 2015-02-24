@@ -6,9 +6,15 @@ python:
     - "3.3"
     - "3.4"
 
+matrix:
+    - CYTHON_VERSION=0.22
+    - CYTHON_VERSION=0.17.4
+    - CYTHON_VERSION=0.17.1
+    - CYTHON_VERSION=0.14.1
+
 before_install:
     - pip install git+https://github.com/pytoolz/toolz.git
-    - pip install cython
+    - pip install cython==$CYTHON_VERSION
 
 install:
     - python setup.py build_ext --inplace --with-cython
