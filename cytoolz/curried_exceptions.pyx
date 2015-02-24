@@ -1,6 +1,6 @@
 #cython: embedsignature=True
 from cpython.dict cimport PyDict_Check
-from .dicttoolz cimport c_merge_with
+from cytoolz.dicttoolz cimport c_merge_with
 
 __all__ = ['merge_with']
 

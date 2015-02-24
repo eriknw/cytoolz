@@ -1,9 +1,9 @@
 #cython: embedsignature=True
 from cpython.sequence cimport PySequence_Tuple
-from .itertoolz cimport frequencies, pluck
+from cytoolz.itertoolz cimport frequencies, pluck
 
 from itertools import groupby
-from .compatibility import map
+from cytoolz.compatibility import map
 
 
 __all__ = ['countby', 'partitionby']

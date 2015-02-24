@@ -9,13 +9,13 @@ from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PtrIter_Next, PtrObject_GetItem
+from cytoolz.cpython cimport PtrIter_Next, PtrObject_GetItem
 
 from collections import deque
 from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
 from operator import itemgetter
-from .compatibility import map, zip, zip_longest
+from cytoolz.compatibility import map, zip, zip_longest
 
 
 __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
