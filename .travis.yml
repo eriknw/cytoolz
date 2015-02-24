@@ -9,8 +9,24 @@ python:
 env:
     matrix:
         - CYTHON_VERSION=0.22
+        - CYTHON_VERSION=0.21.2
+        - CYTHON_VERSION=0.21.1
+        - CYTHON_VERSION=0.21
+        - CYTHON_VERSION=0.20.2
+        - CYTHON_VERSION=0.20.1
+        - CYTHON_VERSION=0.20
+        - CYTHON_VERSION=0.19.2
+        - CYTHON_VERSION=0.19.1
+        - CYTHON_VERSION=0.19
+        - CYTHON_VERSION=0.18
         - CYTHON_VERSION=0.17.4
+        - CYTHON_VERSION=0.17.3
+        - CYTHON_VERSION=0.17.2
         - CYTHON_VERSION=0.17.1
+        - CYTHON_VERSION=0.17
+        - CYTHON_VERSION=0.16
+        - CYTHON_VERSION=0.15.1
+        - CYTHON_VERSION=0.15
         - CYTHON_VERSION=0.14.1
 
 before_install:
