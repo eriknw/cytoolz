@@ -1,7 +1,7 @@
 #cython: embedsignature=True
 import inspect
 import sys
-from .compatibility import filter as ifilter, map as imap, reduce
+from cytoolz.compatibility import filter as ifilter, map as imap, reduce
 
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
@@ -13,7 +13,7 @@ from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PtrObject_Call
+from cytoolz.cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
