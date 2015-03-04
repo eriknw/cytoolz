@@ -252,8 +252,7 @@ cdef class _merge_sorted_key:
                 item = self.pq[0]
                 self.shortcut = item[3]
                 return item[2]
-            retval = next(self.shortcut)
-            return self.key(retval)
+            return next(self.shortcut)
 
         item = self.pq[0]
         retval = item[2]
