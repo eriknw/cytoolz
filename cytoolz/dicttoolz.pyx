@@ -7,7 +7,7 @@ from cpython.list cimport PyList_Append, PyList_New
 from cpython.ref cimport PyObject
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PtrObject_GetItem
+from cytoolz.cpython cimport PtrObject_GetItem
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'itemmap', 'valfilter',

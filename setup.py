@@ -20,7 +20,8 @@ from distutils.extension import Extension
 
 info = {}
 filename = os.path.join('cytoolz', '_version.py')
-exec(compile(open(filename, "rb").read(), filename, 'exec'), info)
+exec(compile(open(filename, "rb").read().replace(b'\r\n', b'\n'),
+             filename, 'exec'), info)
 VERSION = info['__version__']
 
 try:
@@ -62,50 +63,48 @@ for modname in ['dicttoolz', 'functoolz', 'itertoolz',
 if use_cython:
     ext_modules = cythonize(ext_modules)
 
-
-if __name__ == '__main__':
-    setup(
-        name='cytoolz',
-        version=VERSION,
-        description=('Cython implementation of Toolz: '
-                     'High performance functional utilities'),
-        ext_modules=ext_modules,
-        long_description=(open('README.rst').read()
-                          if os.path.exists('README.rst')
-                          else ''),
-        url='https://github.com/pytoolz/cytoolz',
-        author='https://raw.github.com/pytoolz/cytoolz/master/AUTHORS.md',
-        author_email='erik.n.welch@gmail.com',
-        maintainer='Erik Welch',
-        maintainer_email='erik.n.welch@gmail.com',
-        license = 'BSD',
-        packages=['cytoolz'],
-        package_data={'cytoolz': ['*.pxd']},
-        # include_package_data = True,
-        keywords=('functional utility itertools functools iterator generator '
-                  'curry memoize lazy streaming bigdata cython toolz cytoolz'),
-        classifiers = [
-            'Development Status :: 4 - Beta',
-            'Intended Audience :: Developers',
-            'Intended Audience :: Education',
-            'Intended Audience :: Science/Research',
-            'License :: OSI Approved :: BSD License',
-            'Operating System :: OS Independent',
-            'Programming Language :: Cython',
-            'Programming Language :: Python',
-            'Programming Language :: Python :: 2',
-            'Programming Language :: Python :: 2.6',
-            'Programming Language :: Python :: 2.7',
-            'Programming Language :: Python :: 3',
-            'Programming Language :: Python :: 3.2',
-            'Programming Language :: Python :: 3.3',
-            'Programming Language :: Python :: 3.4',
-            'Topic :: Scientific/Engineering',
-            'Topic :: Scientific/Engineering :: Information Analysis',
-            'Topic :: Software Development',
-            'Topic :: Software Development :: Libraries',
-            'Topic :: Software Development :: Libraries :: Python Modules',
-            'Topic :: Utilities',
-        ],
-        # zip_safe=False
-    )
+setup(
+    name='cytoolz',
+    version=VERSION,
+    description=('Cython implementation of Toolz: '
+                    'High performance functional utilities'),
+    ext_modules=ext_modules,
+    long_description=(open('README.rst').read()
+                        if os.path.exists('README.rst')
+                        else ''),
+    url='https://github.com/pytoolz/cytoolz',
+    author='https://raw.github.com/pytoolz/cytoolz/master/AUTHORS.md',
+    author_email='erik.n.welch@gmail.com',
+    maintainer='Erik Welch',
+    maintainer_email='erik.n.welch@gmail.com',
+    license = 'BSD',
+    packages=['cytoolz'],
+    package_data={'cytoolz': ['*.pxd', 'tests/*.py']},
+    # include_package_data = True,
+    keywords=('functional utility itertools functools iterator generator '
+                'curry memoize lazy streaming bigdata cython toolz cytoolz'),
+    classifiers = [
+        'Development Status :: 4 - Beta',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Education',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: BSD License',
+        'Operating System :: OS Independent',
+        'Programming Language :: Cython',
+        'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.6',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Topic :: Scientific/Engineering',
+        'Topic :: Scientific/Engineering :: Information Analysis',
+        'Topic :: Software Development',
+        'Topic :: Software Development :: Libraries',
+        'Topic :: Software Development :: Libraries :: Python Modules',
+        'Topic :: Utilities',
+    ],
+    # zip_safe=False
+)

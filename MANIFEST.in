@@ -1,0 +1,1 @@
+include cytoolz/tests/*.py
