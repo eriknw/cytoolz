@@ -7,7 +7,7 @@ python:
     - "3.4"
 
 before_install:
-    - pip install git+https://github.com/pytoolz/toolz.git
+    - pip install toolz==0.7.1
 
 install:
     - python setup.py build_ext --inplace --without-cython
