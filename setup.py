@@ -79,7 +79,7 @@ setup(
     maintainer_email='erik.n.welch@gmail.com',
     license = 'BSD',
     packages=['cytoolz'],
-    package_data={'cytoolz': ['*.pxd', 'tests/*.py']},
+    package_data={'cytoolz': ['*.pyx', '*.pxd', 'tests/*.py']},
     # include_package_data = True,
     keywords=('functional utility itertools functools iterator generator '
                 'curry memoize lazy streaming bigdata cython toolz cytoolz'),
