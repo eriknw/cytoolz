@@ -1,6 +1,5 @@
 import inspect
 import cytoolz
-import toolz
 
 from types import BuiltinFunctionType
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
@@ -18,6 +17,7 @@ def test_class_sigs():
     """ Test that all ``cdef class`` extension types in ``cytoolz`` have
         correctly embedded the function signature as done in ``toolz``.
     """
+    import toolz
     # only consider items created in both `toolz` and `cytoolz`
     toolz_dict = valfilter(isfrommod('toolz'), toolz.__dict__)
     cytoolz_dict = valfilter(isfrommod('cytoolz'), cytoolz.__dict__)
