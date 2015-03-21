@@ -11,7 +11,11 @@ following conditions are true:
     - cytoolz is a release version
 """
 import cytoolz
-from nose.tools import nottest, istest
+try:
+    from nose.tools import nottest, istest
+except ImportError:
+    istest = lambda func: setattr(func, '__test__', True) or func
+    nottest = lambda func: setattr(func, '__test__', False) or func
 
 try:
     import toolz
