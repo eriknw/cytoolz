@@ -237,3 +237,6 @@ cdef class _outer_join_index(_outer_join):
 
 cdef class _outer_join_indices(_outer_join):
     pass
+
+
+cpdef object topk(Py_ssize_t k, object seq, object key=*)

@@ -252,6 +252,8 @@ cdef class curry:
         raise val
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return self
         return curry(self, instance)
 
     def __reduce__(self):
@@ -349,6 +351,8 @@ cdef class c_memoize:
             return result
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return self
         return curry(self, instance)
 
 

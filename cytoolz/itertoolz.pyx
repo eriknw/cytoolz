@@ -23,7 +23,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join', 'tail']
+           'join', 'tail', 'topk']
 
 
 concatv = chain
@@ -113,11 +113,11 @@ cpdef dict groupby(object key, object seq):
     Group a collection by a key function
 
     >>> names = ['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank']
-    >>> groupby(len, names)
+    >>> groupby(len, names)  # doctest: +SKIP
     {3: ['Bob', 'Dan'], 5: ['Alice', 'Edith', 'Frank'], 7: ['Charlie']}
 
     >>> iseven = lambda x: x % 2 == 0
-    >>> groupby(iseven, [1, 2, 3, 4, 5, 6, 7, 8])
+    >>> groupby(iseven, [1, 2, 3, 4, 5, 6, 7, 8])  # doctest: +SKIP
     {False: [1, 3, 5, 7], True: [2, 4, 6, 8]}
 
     Non-callable keys imply grouping on a member.
@@ -797,10 +797,10 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
 
     >>> data = [1, 2, 3, 4, 5]
 
-    >>> reduceby(iseven, add, data)
+    >>> reduceby(iseven, add, data)  # doctest: +SKIP
     {False: 9, True: 6}
 
-    >>> reduceby(iseven, mul, data)
+    >>> reduceby(iseven, mul, data)  # doctest: +SKIP
     {False: 15, True: 8}
 
     Complex Example
@@ -1502,3 +1502,75 @@ cdef class _inner_join_indices(_inner_join):
             Py_INCREF(val)
             PyTuple_SET_ITEM(keyval, i, val)
         return keyval
+
+
+cpdef object topk(Py_ssize_t k, object seq, object key=None):
+    """
+    Find the k largest elements of a sequence
+
+    Operates lazily in ``n*log(k)`` time
+
+    >>> topk(2, [1, 100, 10, 1000])
+    (1000, 100)
+
+    Use a key function to change sorted order
+
+    >>> topk(2, ['Alice', 'Bob', 'Charlie', 'Dan'], key=len)
+    ('Charlie', 'Alice')
+
+    See also:
+        heapq.nlargest
+    """
+    cdef object item, val, top
+    cdef object it = iter(seq)
+    cdef object _heapreplace = heapreplace
+    cdef Py_ssize_t i = k
+    cdef list pq = []
+
+    if key is not None and not callable(key):
+        key = getter(key)
+
+    if k < 2:
+        if k < 1:
+            return ()
+        top = list(take(1, it))
+        if len(top) == 0:
+            return ()
+        it = concatv(top, it)
+        if key is None:
+            return (max(it),)
+        else:
+            return (max(it, key=key),)
+
+    for item in it:
+        if key is None:
+            PyList_Append(pq, (item, i))
+        else:
+            PyList_Append(pq, (key(item), i, item))
+        i -= 1
+        if i == 0:
+            break
+    if i != 0:
+        pq.sort(reverse=True)
+        k = 0 if key is None else 2
+        return tuple([item[k] for item in pq])
+
+    heapify(pq)
+    top = pq[0][0]
+    if key is None:
+        for item in it:
+            if top < item:
+                _heapreplace(pq, (item, i))
+                top = pq[0][0]
+                i -= 1
+    else:
+        for item in it:
+            val = key(item)
+            if top < val:
+                _heapreplace(pq, (val, i, item))
+                top = pq[0][0]
+                i -= 1
+
+    pq.sort(reverse=True)
+    k = 0 if key is None else 2
+    return tuple([item[k] for item in pq])
