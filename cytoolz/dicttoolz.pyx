@@ -4,7 +4,7 @@ from cpython.dict cimport (PyDict_Check, PyDict_GetItem, PyDict_Merge,
                            PyDict_Update, PyDict_DelItem)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
-from cpython.ref cimport PyObject
+from cpython.ref cimport PyObject, Py_XDECREF
 
 # Locally defined bindings that differ from `cython.cpython` bindings
 from cytoolz.cpython cimport PtrObject_GetItem
@@ -407,5 +407,6 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
                 raise item
             PyErr_Clear()
             return default
+        Py_XDECREF(obj)
         coll = <object>obj
     return coll
