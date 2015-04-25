@@ -3,7 +3,7 @@ from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
 from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
                           PyErr_GivenExceptionMatches, PyErr_Occurred)
 from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
-from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM

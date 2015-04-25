@@ -7,7 +7,7 @@ from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
-from cpython.ref cimport PyObject
+from cpython.ref cimport PyObject, Py_DECREF
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
@@ -240,6 +240,7 @@ cdef class curry:
         obj = PtrObject_Call(self.func, args, kwargs)
         if obj is not NULL:
             val = <object>obj
+            Py_DECREF(val)
             return val
 
         val = <object>PyErr_Occurred()
