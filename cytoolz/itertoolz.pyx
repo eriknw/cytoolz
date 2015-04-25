@@ -3,7 +3,7 @@ from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
 from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
                           PyErr_GivenExceptionMatches, PyErr_Occurred)
 from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
-from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
 from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
@@ -661,7 +661,6 @@ cpdef object get(object ind, object seq, object default=no_default):
                 PyTuple_SET_ITEM(result, i, default)
             else:
                 val = <object>obj
-                Py_INCREF(val)
                 PyTuple_SET_ITEM(result, i, val)
         return result
 
@@ -674,6 +673,7 @@ cpdef object get(object ind, object seq, object default=no_default):
             PyErr_Clear()
             return default
         raise val
+    Py_XDECREF(obj)
     return <object>obj
 
 
@@ -1060,6 +1060,7 @@ cdef class _pluck_index_default:
                 raise <object>PyErr_Occurred()
             PyErr_Clear()
             return self.default
+        Py_XDECREF(obj)
         return <object>obj
 
 
@@ -1111,8 +1112,7 @@ cdef class _pluck_list_default:
                 PyTuple_SET_ITEM(result, i, self.default)
             else:
                 val = <object>obj
-                Py_INCREF(val)
-                PyTuple_SET_ITEM(result, i, val)  # TODO: redefine with "PyObject* val" and avoid cast
+                PyTuple_SET_ITEM(result, i, val)
         return result
 
 
