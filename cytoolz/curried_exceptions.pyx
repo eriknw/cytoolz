@@ -1,11 +1,19 @@
 #cython: embedsignature=True
 from cpython.dict cimport PyDict_Check
-from cytoolz.dicttoolz cimport c_merge_with
+from cytoolz.dicttoolz cimport c_merge, c_merge_with
 
-__all__ = ['merge_with']
+__all__ = ['merge', 'merge_with']
 
 
-def merge_with(func, *dicts):
+def merge(*dicts, **kwargs):
+    if len(dicts) == 0:
+        raise TypeError()
+    if len(dicts) == 1 and not PyDict_Check(dicts[0]):
+        dicts = dicts[0]
+    return c_merge(dicts)
+
+
+def merge_with(func, *dicts, **kwargs):
     """
     Merge dictionaries and apply function to combined values
 
@@ -22,7 +30,7 @@ def merge_with(func, *dicts):
         merge
     """
     if len(dicts) == 0:
-        raise TypeError
+        raise TypeError()
     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
         dicts = dicts[0]
 

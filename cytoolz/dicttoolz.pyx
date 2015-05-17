@@ -22,7 +22,7 @@ cdef dict c_merge(object dicts):
     return rv
 
 
-def merge(*dicts):
+def merge(*dicts, **kwargs):
     """
     Merge a collection of dictionaries
 
@@ -63,7 +63,7 @@ cdef dict c_merge_with(object func, object dicts):
     return rv
 
 
-def merge_with(func, *dicts):
+def merge_with(func, *dicts, **kwargs):
     """
     Merge dictionaries and apply function to combined values
 
@@ -84,7 +84,7 @@ def merge_with(func, *dicts):
     return c_merge_with(func, dicts)
 
 
-cpdef dict valmap(object func, dict d):
+cpdef dict valmap(object func, dict d, object factory=dict):
     """
     Apply function to values of dictionary
 
@@ -112,7 +112,7 @@ cpdef dict valmap(object func, dict d):
     return rv
 
 
-cpdef dict keymap(object func, dict d):
+cpdef dict keymap(object func, dict d, object factory=dict):
     """
     Apply function to keys of dictionary
 
@@ -140,7 +140,7 @@ cpdef dict keymap(object func, dict d):
     return rv
 
 
-cpdef dict itemmap(object func, dict d):
+cpdef dict itemmap(object func, dict d, object factory=dict):
     """
     Apply function to items of dictionary
 
@@ -170,7 +170,7 @@ cpdef dict itemmap(object func, dict d):
     return rv
 
 
-cpdef dict valfilter(object predicate, dict d):
+cpdef dict valfilter(object predicate, dict d, object factory=dict):
     """
     Filter items in dictionary by value
 
@@ -201,7 +201,7 @@ cpdef dict valfilter(object predicate, dict d):
     return rv
 
 
-cpdef dict keyfilter(object predicate, dict d):
+cpdef dict keyfilter(object predicate, dict d, object factory=dict):
     """
     Filter items in dictionary by key
 
@@ -232,7 +232,7 @@ cpdef dict keyfilter(object predicate, dict d):
     return rv
 
 
-cpdef dict itemfilter(object predicate, dict d):
+cpdef dict itemfilter(object predicate, dict d, object factory=dict):
     """
     Filter items in dictionary by item
 
@@ -266,7 +266,7 @@ cpdef dict itemfilter(object predicate, dict d):
     return rv
 
 
-cpdef dict assoc(dict d, object key, object value):
+cpdef dict assoc(dict d, object key, object value, object factory=dict):
     """
     Return a new dict with new key value pair
 
@@ -299,7 +299,7 @@ cpdef dict dissoc(dict d, object key):
     return rv
 
 
-cpdef dict update_in(dict d, object keys, object func, object default=None):
+cpdef dict update_in(dict d, object keys, object func, object default=None, object factory=dict):
     """
     Update value in a (potentially) nested dictionary
 
