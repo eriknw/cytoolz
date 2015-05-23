@@ -7,7 +7,7 @@ from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
-from cpython.ref cimport PyObject
+from cpython.ref cimport PyObject, Py_DECREF
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
@@ -152,7 +152,7 @@ cpdef Py_ssize_t _num_required_args(object func) except *:
 
 
 cdef class curry:
-    """ curry(self, func, *args, **kwargs)
+    """ curry(self, *args, **kwargs)
 
     Curry a callable function
 
@@ -181,7 +181,10 @@ cdef class curry:
         cytoolz.curried - namespace of curried functions
                         http://toolz.readthedocs.org/en/latest/curry.html
     """
-    def __cinit__(self, func, *args, **kwargs):
+    def __cinit__(self, *args, **kwargs):
+        if not args:
+            raise TypeError('__init__() takes at least 2 arguments (1 given)')
+        func, args = args[0], args[1:]
         if not PyCallable_Check(func):
             raise TypeError("Input must be callable")
 
@@ -240,6 +243,7 @@ cdef class curry:
         obj = PtrObject_Call(self.func, args, kwargs)
         if obj is not NULL:
             val = <object>obj
+            Py_DECREF(val)
             return val
 
         val = <object>PyErr_Occurred()
@@ -252,6 +256,8 @@ cdef class curry:
         raise val
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return self
         return curry(self, instance)
 
     def __reduce__(self):
@@ -349,6 +355,8 @@ cdef class c_memoize:
             return result
 
     def __get__(self, instance, owner):
+        if instance is None:
+            return self
         return curry(self, instance)
 
 

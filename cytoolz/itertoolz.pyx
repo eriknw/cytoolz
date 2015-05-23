@@ -3,10 +3,11 @@ from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
 from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
                           PyErr_GivenExceptionMatches, PyErr_Occurred)
 from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
-from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
+from cpython.object cimport PyObject_RichCompareBool, Py_NE
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
-from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
+from cpython.tuple cimport PyTuple_GET_ITEM, PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 
 # Locally defined bindings that differ from `cython.cpython` bindings
 from cytoolz.cpython cimport PtrIter_Next, PtrObject_GetItem
@@ -23,7 +24,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join', 'tail']
+           'join', 'tail', 'diff', 'topk']
 
 
 concatv = chain
@@ -113,11 +114,11 @@ cpdef dict groupby(object key, object seq):
     Group a collection by a key function
 
     >>> names = ['Alice', 'Bob', 'Charlie', 'Dan', 'Edith', 'Frank']
-    >>> groupby(len, names)
+    >>> groupby(len, names)  # doctest: +SKIP
     {3: ['Bob', 'Dan'], 5: ['Alice', 'Edith', 'Frank'], 7: ['Charlie']}
 
     >>> iseven = lambda x: x % 2 == 0
-    >>> groupby(iseven, [1, 2, 3, 4, 5, 6, 7, 8])
+    >>> groupby(iseven, [1, 2, 3, 4, 5, 6, 7, 8])  # doctest: +SKIP
     {False: [1, 3, 5, 7], True: [2, 4, 6, 8]}
 
     Non-callable keys imply grouping on a member.
@@ -661,7 +662,6 @@ cpdef object get(object ind, object seq, object default=no_default):
                 PyTuple_SET_ITEM(result, i, default)
             else:
                 val = <object>obj
-                Py_INCREF(val)
                 PyTuple_SET_ITEM(result, i, val)
         return result
 
@@ -674,6 +674,7 @@ cpdef object get(object ind, object seq, object default=no_default):
             PyErr_Clear()
             return default
         raise val
+    Py_XDECREF(obj)
     return <object>obj
 
 
@@ -797,10 +798,10 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
 
     >>> data = [1, 2, 3, 4, 5]
 
-    >>> reduceby(iseven, add, data)
+    >>> reduceby(iseven, add, data)  # doctest: +SKIP
     {False: 9, True: 6}
 
-    >>> reduceby(iseven, mul, data)
+    >>> reduceby(iseven, mul, data)  # doctest: +SKIP
     {False: 15, True: 8}
 
     Complex Example
@@ -1060,6 +1061,7 @@ cdef class _pluck_index_default:
                 raise <object>PyErr_Occurred()
             PyErr_Clear()
             return self.default
+        Py_XDECREF(obj)
         return <object>obj
 
 
@@ -1111,8 +1113,7 @@ cdef class _pluck_list_default:
                 PyTuple_SET_ITEM(result, i, self.default)
             else:
                 val = <object>obj
-                Py_INCREF(val)
-                PyTuple_SET_ITEM(result, i, val)  # TODO: redefine with "PyObject* val" and avoid cast
+                PyTuple_SET_ITEM(result, i, val)
         return result
 
 
@@ -1502,3 +1503,158 @@ cdef class _inner_join_indices(_inner_join):
             Py_INCREF(val)
             PyTuple_SET_ITEM(keyval, i, val)
         return keyval
+
+
+cdef class _diff_key:
+    def __cinit__(self, object seqs, object key, object default=no_default):
+        self.N = len(seqs)
+        if self.N < 2:
+            raise TypeError('Too few sequences given (min 2 required)')
+        if default == no_default:
+            self.iters = zip(*seqs)
+        else:
+            self.iters = zip_longest(*seqs, fillvalue=default)
+        self.key = key
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef object val, val2, items
+        cdef Py_ssize_t i
+        while True:
+            items = next(self.iters)
+            val = self.key(<object>PyTuple_GET_ITEM(items, 0))
+            for i in range(1, self.N):
+                val2 = self.key(<object>PyTuple_GET_ITEM(items, i))
+                if PyObject_RichCompareBool(val, val2, Py_NE):
+                    return items
+
+cdef class _diff_identity:
+    def __cinit__(self, object seqs, object default=no_default):
+        self.N = len(seqs)
+        if self.N < 2:
+            raise TypeError('Too few sequences given (min 2 required)')
+        if default == no_default:
+            self.iters = zip(*seqs)
+        else:
+            self.iters = zip_longest(*seqs, fillvalue=default)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef object val, val2, items
+        cdef Py_ssize_t i
+        while True:
+            items = next(self.iters)
+            val = <object>PyTuple_GET_ITEM(items, 0)
+            for i in range(1, self.N):
+                val2 = <object>PyTuple_GET_ITEM(items, i)
+                if PyObject_RichCompareBool(val, val2, Py_NE):
+                    return items
+
+
+cdef object c_diff(object seqs, object default=no_default, object key=None):
+    if key is None:
+        return _diff_identity(seqs, default=default)
+    else:
+        return _diff_key(seqs, key, default=default)
+
+
+def diff(*seqs, **kwargs):
+    """
+    Return those items that differ between sequences
+
+    >>> list(diff([1, 2, 3], [1, 2, 10, 100]))
+    [(3, 10)]
+
+    Shorter sequences may be padded with a ``default`` value:
+
+    >>> list(diff([1, 2, 3], [1, 2, 10, 100], default=None))
+    [(3, 10), (None, 100)]
+
+    A ``key`` function may also be applied to each item to use during
+    comparisons:
+
+    >>> list(diff(['apples', 'bananas'], ['Apples', 'Oranges'], key=str.lower))
+    [('bananas', 'Oranges')]
+    """
+    N = len(seqs)
+    if N == 1 and isinstance(seqs[0], list):
+        seqs = seqs[0]
+    default = kwargs.get('default', no_default)
+    key = kwargs.get('key')
+    return c_diff(seqs, default=default, key=key)
+
+
+cpdef object topk(Py_ssize_t k, object seq, object key=None):
+    """
+    Find the k largest elements of a sequence
+
+    Operates lazily in ``n*log(k)`` time
+
+    >>> topk(2, [1, 100, 10, 1000])
+    (1000, 100)
+
+    Use a key function to change sorted order
+
+    >>> topk(2, ['Alice', 'Bob', 'Charlie', 'Dan'], key=len)
+    ('Charlie', 'Alice')
+
+    See also:
+        heapq.nlargest
+    """
+    cdef object item, val, top
+    cdef object it = iter(seq)
+    cdef object _heapreplace = heapreplace
+    cdef Py_ssize_t i = k
+    cdef list pq = []
+
+    if key is not None and not callable(key):
+        key = getter(key)
+
+    if k < 2:
+        if k < 1:
+            return ()
+        top = list(take(1, it))
+        if len(top) == 0:
+            return ()
+        it = concatv(top, it)
+        if key is None:
+            return (max(it),)
+        else:
+            return (max(it, key=key),)
+
+    for item in it:
+        if key is None:
+            PyList_Append(pq, (item, i))
+        else:
+            PyList_Append(pq, (key(item), i, item))
+        i -= 1
+        if i == 0:
+            break
+    if i != 0:
+        pq.sort(reverse=True)
+        k = 0 if key is None else 2
+        return tuple([item[k] for item in pq])
+
+    heapify(pq)
+    top = pq[0][0]
+    if key is None:
+        for item in it:
+            if top < item:
+                _heapreplace(pq, (item, i))
+                top = pq[0][0]
+                i -= 1
+    else:
+        for item in it:
+            val = key(item)
+            if top < val:
+                _heapreplace(pq, (val, i, item))
+                top = pq[0][0]
+                i -= 1
+
+    pq.sort(reverse=True)
+    k = 0 if key is None else 2
+    return tuple([item[k] for item in pq])

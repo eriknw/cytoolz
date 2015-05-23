@@ -1,6 +1,5 @@
 import difflib
 import cytoolz
-import toolz
 
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
 from cytoolz.utils import raises
@@ -33,6 +32,7 @@ def convertdoc(doc):
 
 @dev_skip_test
 def test_docstrings_uptodate():
+    import toolz
     differ = difflib.Differ()
 
     # only consider items created in both `toolz` and `cytoolz`

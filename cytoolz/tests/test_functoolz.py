@@ -1,10 +1,13 @@
+import platform
+
+
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
                              compose, pipe, complement, do, juxt)
 from cytoolz.functoolz import _num_required_args
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial
-from cytoolz.compatibility import reduce
+from cytoolz.compatibility import reduce, PY3
 
 
 def iseven(x):
@@ -161,6 +164,7 @@ def test_curry_simple():
     cmap = curry(map)
     assert list(cmap(inc)([1, 2, 3])) == [2, 3, 4]
 
+    assert raises(TypeError, lambda: curry())
     assert raises(TypeError, lambda: curry({1: 2}))
 
 
@@ -185,6 +189,16 @@ def test_curry_kwargs():
     assert cg(a=0, b=1) == 1
     assert cg(0) == 2  # pass "a" as arg, not kwarg
     assert raises(TypeError, lambda: cg(1, 2))  # pass "b" as arg AND kwarg
+
+    def h(x, func=int):
+        return func(x)
+
+    if platform.python_implementation() != 'PyPy'\
+            or platform.python_version_tuple()[0] != '3':  # Bug on PyPy3<2.5
+        # __init__ must not pick func as positional arg
+        assert curry(h)(0.0) == 0
+        assert curry(h)(func=str)(0.0) == '0.0'
+        assert curry(h, func=str)(0.0) == '0.0'
 
 
 def test_curry_passes_errors():
@@ -311,6 +325,93 @@ def test_curry_doesnot_transmogrify():
 
     cf = curry(f)
     assert cf(y=1)(y=2)(y=3)(1) == f(1, 3)
+
+
+def test_curry_on_classmethods():
+    class A(object):
+        BASE = 10
+
+        def __init__(self, base):
+            self.BASE = base
+
+        @curry
+        def addmethod(self, x, y):
+            return self.BASE + x + y
+
+        @classmethod
+        @curry
+        def addclass(cls, x, y):
+            return cls.BASE + x + y
+
+        @staticmethod
+        @curry
+        def addstatic(x, y):
+            return x + y
+
+    a = A(100)
+    assert a.addmethod(3, 4) == 107
+    assert a.addmethod(3)(4) == 107
+    assert A.addmethod(a, 3, 4) == 107
+    assert A.addmethod(a)(3)(4) == 107
+
+    assert a.addclass(3, 4) == 17
+    assert a.addclass(3)(4) == 17
+    assert A.addclass(3, 4) == 17
+    assert A.addclass(3)(4) == 17
+
+    assert a.addstatic(3, 4) == 7
+    assert a.addstatic(3)(4) == 7
+    assert A.addstatic(3, 4) == 7
+    assert A.addstatic(3)(4) == 7
+
+    # we want this to be of type curry
+    assert isinstance(a.addmethod, curry)
+    assert isinstance(A.addmethod, curry)
+
+
+def test_memoize_on_classmethods():
+    class A(object):
+        BASE = 10
+        HASH = 10
+
+        def __init__(self, base):
+            self.BASE = base
+
+        @memoize
+        def addmethod(self, x, y):
+            return self.BASE + x + y
+
+        @classmethod
+        @memoize
+        def addclass(cls, x, y):
+            return cls.BASE + x + y
+
+        @staticmethod
+        @memoize
+        def addstatic(x, y):
+            return x + y
+
+        def __hash__(self):
+            return self.HASH
+
+    a = A(100)
+    assert a.addmethod(3, 4) == 107
+    assert A.addmethod(a, 3, 4) == 107
+
+    a.BASE = 200
+    assert a.addmethod(3, 4) == 107
+    a.HASH = 200
+    assert a.addmethod(3, 4) == 207
+
+    assert a.addclass(3, 4) == 17
+    assert A.addclass(3, 4) == 17
+    A.BASE = 20
+    assert A.addclass(3, 4) == 17
+    A.HASH = 20  # hashing of class is handled by metaclass
+    assert A.addclass(3, 4) == 17  # hence, != 27
+
+    assert a.addstatic(3, 4) == 7
+    assert A.addstatic(3, 4) == 7
 
 
 def test__num_required_args():

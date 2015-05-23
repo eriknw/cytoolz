@@ -237,3 +237,20 @@ cdef class _outer_join_index(_outer_join):
 
 cdef class _outer_join_indices(_outer_join):
     pass
+
+
+cdef class _diff_key:
+    cdef Py_ssize_t N
+    cdef object iters
+    cdef object key
+
+
+cdef class _diff_identity:
+    cdef Py_ssize_t N
+    cdef object iters
+
+
+cdef object c_diff(object seqs, object default=*, object key=*)
+
+
+cpdef object topk(Py_ssize_t k, object seq, object key=*)
