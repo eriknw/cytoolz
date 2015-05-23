@@ -1,24 +1,87 @@
 #cython: embedsignature=True
-from cpython.dict cimport (PyDict_Check, PyDict_GetItem, PyDict_Merge,
-                           PyDict_New, PyDict_Next, PyDict_SetItem,
-                           PyDict_Update, PyDict_DelItem)
+from cpython.dict cimport (PyDict_Check, PyDict_CheckExact, PyDict_GetItem,
+                           PyDict_Merge, PyDict_New, PyDict_Next,
+                           PyDict_SetItem, PyDict_Update, PyDict_DelItem)
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
-from cpython.ref cimport PyObject, Py_XDECREF
+from cpython.object cimport PyObject_SetItem
+from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
+#from cpython.type cimport PyType_Check
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from cytoolz.cpython cimport PtrObject_GetItem
+from cytoolz.cpython cimport PtrObject_GetItem, PyDict_Next_Compat, PtrIter_Next
+
+from copy import copy
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'itemmap', 'valfilter',
            'keyfilter', 'itemfilter', 'assoc', 'dissoc', 'get_in', 'update_in']
 
 
-cdef dict c_merge(object dicts):
-    cdef dict rv
-    rv = PyDict_New()
-    for d in dicts:
-        PyDict_Update(rv, d)
+cdef int PyMapping_Next(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *pval) except -1:
+    """Mimic "PyDict_Next" interface, but for any mapping"""
+    cdef PyObject *obj
+    obj = PtrIter_Next(p)
+    if obj is NULL:
+        return 0
+    pkey[0] = <PyObject*>(<object>obj)[0]
+    pval[0] = <PyObject*>(<object>obj)[1]
+    Py_XDECREF(obj)
+    return 1
+
+
+cdef f_map_next get_map_iter(object d, PyObject* *ptr) except NULL:
+    """Return function pointer to perform iteration over object returned in ptr.
+
+    The returned function signature matches "PyDict_Next".  If ``d`` is a dict,
+    then the returned function *is* PyDict_Next, so iteration wil be very fast.
+
+    The object returned through ``ptr`` needs to have its reference count
+    reduced by one once the caller "owns" the object.
+
+    This function lets us control exactly how iteration should be performed
+    over a given mapping.  The current rules are:
+
+    1) If ``d`` is exactly a dict, use PyDict_Next
+    2) If ``d`` is subtype of dict, use PyMapping_Next.  This lets the user
+       control the order iteration, such as for ordereddict.
+    3) If using PyMapping_Next, iterate using ``iteritems`` if possible,
+       otherwise iterate using ``items``.
+
+    """
+    cdef object val
+    cdef f_map_next rv
+    if PyDict_CheckExact(d):
+        val = d
+        rv = &PyDict_Next_Compat
+    elif hasattr(d, 'iteritems'):
+        val = iter(d.iteritems())
+        rv = &PyMapping_Next
+    else:
+        val = iter(d.items())
+        rv = &PyMapping_Next
+    Py_INCREF(val)
+    ptr[0] = <PyObject*>val
+    return rv
+
+
+cdef get_factory(name, kwargs):
+    factory = kwargs.pop('factory', dict)
+    if kwargs:
+        raise TypeError("{0}() got an unexpected keyword argument "
+                        "'{1}'".format(name, kwargs.popitem()[0]))
+    return factory
+
+
+cdef object c_merge(object dicts, object factory=dict):
+    cdef object rv
+    rv = factory()
+    if PyDict_CheckExact(rv):
+        for d in dicts:
+            PyDict_Update(rv, d)
+    else:
+        for d in dicts:
+            rv.update(d)
     return rv
 
 
@@ -39,27 +102,43 @@ def merge(*dicts, **kwargs):
     """
     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
         dicts = dicts[0]
-    return c_merge(dicts)
+    factory = get_factory('merge', kwargs)
+    return c_merge(dicts, factory)
 
 
-cdef dict c_merge_with(object func, object dicts):
-    cdef dict result, rv, d
-    cdef list seq
-    cdef object k, v
-    cdef PyObject *obj
+cdef object c_merge_with(object func, object dicts, object factory=dict):
+    cdef:
+        dict result
+        object rv, d
+        list seq
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos
+
     result = PyDict_New()
-    rv = PyDict_New()
+    rv = factory()
     for d in dicts:
-        for k, v in d.iteritems():
-            obj = PyDict_GetItem(result, k)
+        f = get_map_iter(d, &obj)
+        d = <object>obj
+        Py_DECREF(d)
+        pos = 0
+        while f(d, &pos, &pkey, &pval):
+            obj = PyDict_GetItem(result, <object>pkey)
             if obj is NULL:
                 seq = PyList_New(0)
-                PyList_Append(seq, v)
-                PyDict_SetItem(result, k, seq)
+                PyList_Append(seq, <object>pval)
+                PyDict_SetItem(result, <object>pkey, seq)
             else:
-                PyList_Append(<object>obj, v)
-    for k, v in result.iteritems():
-        PyDict_SetItem(rv, k, func(v))
+                PyList_Append(<object>obj, <object>pval)
+
+    f = get_map_iter(result, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    pos = 0
+    while f(d, &pos, &pkey, &pval):
+        PyObject_SetItem(rv, <object>pkey, func(<object>pval))
     return rv
 
 
@@ -81,10 +160,11 @@ def merge_with(func, *dicts, **kwargs):
     """
     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
         dicts = dicts[0]
-    return c_merge_with(func, dicts)
+    factory = get_factory('merge_with', kwargs)
+    return c_merge_with(func, dicts, factory)
 
 
-cpdef dict valmap(object func, dict d, object factory=dict):
+cpdef object valmap(object func, object d, object factory=dict):
     """
     Apply function to values of dictionary
 
@@ -97,22 +177,23 @@ cpdef dict valmap(object func, dict d, object factory=dict):
         itemmap
     """
     cdef:
-        dict rv
-        Py_ssize_t pos
-        PyObject *k
-        PyObject *v
+        object rv
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos = 0
 
-    if d is None:
-        raise TypeError("expected dict, got None")
-
-    rv = PyDict_New()
-    pos = 0
-    while PyDict_Next(d, &pos, &k, &v):
-       PyDict_SetItem(rv, <object>k, func(<object>v))
+    rv = factory()
+    f = get_map_iter(d, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    while f(d, &pos, &pkey, &pval):
+        rv[<object>pkey] = func(<object>pval)
     return rv
 
 
-cpdef dict keymap(object func, dict d, object factory=dict):
+cpdef object keymap(object func, object d, object factory=dict):
     """
     Apply function to keys of dictionary
 
@@ -125,22 +206,23 @@ cpdef dict keymap(object func, dict d, object factory=dict):
         itemmap
     """
     cdef:
-        dict rv
-        Py_ssize_t pos
-        PyObject *k
-        PyObject *v
+        object rv
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos = 0
 
-    if d is None:
-        raise TypeError("expected dict, got None")
-
-    rv = PyDict_New()
-    pos = 0
-    while PyDict_Next(d, &pos, &k, &v):
-       PyDict_SetItem(rv, func(<object>k), <object>v)
+    rv = factory()
+    f = get_map_iter(d, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    while f(d, &pos, &pkey, &pval):
+        rv[func(<object>pkey)] = <object>pval
     return rv
 
 
-cpdef dict itemmap(object func, dict d, object factory=dict):
+cpdef object itemmap(object func, object d, object factory=dict):
     """
     Apply function to items of dictionary
 
@@ -153,24 +235,24 @@ cpdef dict itemmap(object func, dict d, object factory=dict):
         valmap
     """
     cdef:
-        dict rv
-        object newk, newv
-        Py_ssize_t pos
-        PyObject *k
-        PyObject *v
+        object rv, k, v
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos = 0
 
-    if d is None:
-        raise TypeError("expected dict, got None")
-
-    rv = PyDict_New()
-    pos = 0
-    while PyDict_Next(d, &pos, &k, &v):
-       newk, newv = func((<object>k, <object>v))
-       PyDict_SetItem(rv, newk, newv)
+    rv = factory()
+    f = get_map_iter(d, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    while f(d, &pos, &pkey, &pval):
+        k, v = func((<object>pkey, <object>pval))
+        rv[k] = v
     return rv
 
 
-cpdef dict valfilter(object predicate, dict d, object factory=dict):
+cpdef object valfilter(object predicate, object d, object factory=dict):
     """
     Filter items in dictionary by value
 
@@ -185,23 +267,24 @@ cpdef dict valfilter(object predicate, dict d, object factory=dict):
         valmap
     """
     cdef:
-        dict rv
-        Py_ssize_t pos
-        PyObject *k
-        PyObject *v
+        object rv
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos = 0
 
-    if d is None:
-        raise TypeError("expected dict, got None")
-
-    rv = PyDict_New()
-    pos = 0
-    while PyDict_Next(d, &pos, &k, &v):
-        if predicate(<object>v):
-            PyDict_SetItem(rv, <object>k, <object>v)
+    rv = factory()
+    f = get_map_iter(d, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    while f(d, &pos, &pkey, &pval):
+        if predicate(<object>pval):
+            rv[<object>pkey] = <object>pval
     return rv
 
 
-cpdef dict keyfilter(object predicate, dict d, object factory=dict):
+cpdef object keyfilter(object predicate, object d, object factory=dict):
     """
     Filter items in dictionary by key
 
@@ -216,23 +299,24 @@ cpdef dict keyfilter(object predicate, dict d, object factory=dict):
         keymap
     """
     cdef:
-        dict rv
-        Py_ssize_t pos
-        PyObject *k
-        PyObject *v
+        object rv
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos = 0
 
-    if d is None:
-        raise TypeError("expected dict, got None")
-
-    rv = PyDict_New()
-    pos = 0
-    while PyDict_Next(d, &pos, &k, &v):
-        if predicate(<object>k):
-            PyDict_SetItem(rv, <object>k, <object>v)
+    rv = factory()
+    f = get_map_iter(d, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    while f(d, &pos, &pkey, &pval):
+        if predicate(<object>pkey):
+            rv[<object>pkey] = <object>pval
     return rv
 
 
-cpdef dict itemfilter(object predicate, dict d, object factory=dict):
+cpdef object itemfilter(object predicate, object d, object factory=dict):
     """
     Filter items in dictionary by item
 
@@ -250,23 +334,26 @@ cpdef dict itemfilter(object predicate, dict d, object factory=dict):
         itemmap
     """
     cdef:
-        dict rv
-        Py_ssize_t pos
-        PyObject *k
-        PyObject *v
+        object rv, k, v
+        f_map_next f
+        PyObject *obj
+        PyObject *pkey
+        PyObject *pval
+        Py_ssize_t pos = 0
 
-    if d is None:
-        raise TypeError("expected dict, got None")
-
-    rv = PyDict_New()
-    pos = 0
-    while PyDict_Next(d, &pos, &k, &v):
-        if predicate((<object>k, <object>v)):
-            PyDict_SetItem(rv, <object>k, <object>v)
+    rv = factory()
+    f = get_map_iter(d, &obj)
+    d = <object>obj
+    Py_DECREF(d)
+    while f(d, &pos, &pkey, &pval):
+        k = <object>pkey
+        v = <object>pval
+        if predicate((k, v)):
+            rv[k] = v
     return rv
 
 
-cpdef dict assoc(dict d, object key, object value, object factory=dict):
+cpdef object assoc(object d, object key, object value, object factory=dict):
     """
     Return a new dict with new key value pair
 
@@ -277,13 +364,17 @@ cpdef dict assoc(dict d, object key, object value, object factory=dict):
     >>> assoc({'x': 1}, 'y', 3)   # doctest: +SKIP
     {'x': 1, 'y': 3}
     """
-    cdef dict rv
-    rv = d.copy()
-    PyDict_SetItem(rv, key, value)
+    cdef object rv
+    rv = factory()
+    if PyDict_CheckExact(rv):
+        PyDict_Update(rv, d)
+    else:
+        rv.update(d)
+    rv[key] = value
     return rv
 
 
-cpdef dict dissoc(dict d, object key):
+cpdef object dissoc(object d, object key):
     """
     Return a new dict with the given key removed.
 
@@ -293,13 +384,13 @@ cpdef dict dissoc(dict d, object key):
     >>> dissoc({'x': 1, 'y': 2}, 'y')
     {'x': 1}
     """
-    cdef dict rv
-    rv = d.copy()
-    PyDict_DelItem(rv, key)
+    cdef object rv
+    rv = copy(d)
+    del rv[key]
     return rv
 
 
-cpdef dict update_in(dict d, object keys, object func, object default=None, object factory=dict):
+cpdef object update_in(object d, object keys, object func, object default=None, object factory=dict):
     """
     Update value in a (potentially) nested dictionary
 
@@ -335,30 +426,35 @@ cpdef dict update_in(dict d, object keys, object func, object default=None, obje
     {1: 'foo', 2: {3: {4: 1}}}
     """
     cdef object prevkey, key
-    cdef dict rv, inner, dtemp
-    cdef PyObject *obj
+    cdef object rv, inner, dtemp
     prevkey, keys = keys[0], keys[1:]
-    rv = d.copy()
+    rv = factory()
+    if PyDict_CheckExact(rv):
+        PyDict_Update(rv, d)
+    else:
+        rv.update(d)
     inner = rv
 
     for key in keys:
-        obj = PyDict_GetItem(d, prevkey)
-        if obj is NULL:
-            d = PyDict_New()
-            dtemp = d
+        if prevkey in d:
+            d = d[prevkey]
+            dtemp = factory()
+            if PyDict_CheckExact(dtemp):
+                PyDict_Update(dtemp, d)
+            else:
+                dtemp.update(d)
         else:
-            d = <object>obj
-            dtemp = d.copy()
-        PyDict_SetItem(inner, prevkey, dtemp)
+            d = factory()
+            dtemp = d
+        inner[prevkey] = dtemp
         prevkey = key
         inner = dtemp
 
-    obj = PyDict_GetItem(d, prevkey)
-    if obj is NULL:
-        key = func(default)
+    if prevkey in d:
+        key = func(d[prevkey])
     else:
-        key = func(<object>obj)
-    PyDict_SetItem(inner, prevkey, key)
+        key = func(default)
+    inner[prevkey] = key
     return rv
 
 
@@ -410,3 +506,4 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
         Py_XDECREF(obj)
         coll = <object>obj
     return coll
+
