@@ -474,6 +474,8 @@ struct __pyx_obj_7cytoolz_9itertoolz__left_outer_join_indices;
 struct __pyx_obj_7cytoolz_9itertoolz__outer_join_key;
 struct __pyx_obj_7cytoolz_9itertoolz__outer_join_index;
 struct __pyx_obj_7cytoolz_9itertoolz__outer_join_indices;
+struct __pyx_obj_7cytoolz_9itertoolz__diff_key;
+struct __pyx_obj_7cytoolz_9itertoolz__diff_identity;
 struct __pyx_obj_7cytoolz_7recipes_partitionby;
 struct __pyx_opt_args_7cytoolz_9itertoolz_c_merge_sorted;
 struct __pyx_opt_args_7cytoolz_9itertoolz_unique;
@@ -482,6 +484,8 @@ struct __pyx_opt_args_7cytoolz_9itertoolz_reduceby;
 struct __pyx_opt_args_7cytoolz_9itertoolz_partition;
 struct __pyx_opt_args_7cytoolz_9itertoolz_pluck;
 struct __pyx_opt_args_7cytoolz_9itertoolz_join;
+struct __pyx_opt_args_7cytoolz_9itertoolz_c_diff;
+struct __pyx_opt_args_7cytoolz_9itertoolz_topk;
 
 /* "cytoolz/itertoolz.pxd":26
  * 
@@ -566,6 +570,29 @@ struct __pyx_opt_args_7cytoolz_9itertoolz_join {
   int __pyx_n;
   PyObject *left_default;
   PyObject *right_default;
+};
+
+/* "cytoolz/itertoolz.pxd":253
+ * 
+ * 
+ * cdef object c_diff(object seqs, object default=*, object key=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9itertoolz_c_diff {
+  int __pyx_n;
+  PyObject *__pyx_default;
+  PyObject *key;
+};
+
+/* "cytoolz/itertoolz.pxd":256
+ * 
+ * 
+ * cpdef object topk(Py_ssize_t k, object seq, object key=*)             # <<<<<<<<<<<<<<
+ */
+struct __pyx_opt_args_7cytoolz_9itertoolz_topk {
+  int __pyx_n;
+  PyObject *key;
 };
 
 /* "cytoolz/itertoolz.pxd":1
@@ -1040,9 +1067,39 @@ struct __pyx_obj_7cytoolz_9itertoolz__outer_join_index {
  * 
  * cdef class _outer_join_indices(_outer_join):             # <<<<<<<<<<<<<<
  *     pass
+ * 
  */
 struct __pyx_obj_7cytoolz_9itertoolz__outer_join_indices {
   struct __pyx_obj_7cytoolz_9itertoolz__outer_join __pyx_base;
+};
+
+
+/* "cytoolz/itertoolz.pxd":242
+ * 
+ * 
+ * cdef class _diff_key:             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t N
+ *     cdef object iters
+ */
+struct __pyx_obj_7cytoolz_9itertoolz__diff_key {
+  PyObject_HEAD
+  Py_ssize_t N;
+  PyObject *iters;
+  PyObject *key;
+};
+
+
+/* "cytoolz/itertoolz.pxd":248
+ * 
+ * 
+ * cdef class _diff_identity:             # <<<<<<<<<<<<<<
+ *     cdef Py_ssize_t N
+ *     cdef object iters
+ */
+struct __pyx_obj_7cytoolz_9itertoolz__diff_identity {
+  PyObject_HEAD
+  Py_ssize_t N;
+  PyObject *iters;
 };
 
 
@@ -1288,6 +1345,7 @@ static struct __pyx_vtabstruct_7cytoolz_9itertoolz__outer_join_index *__pyx_vtab
  * 
  * cdef class _outer_join_indices(_outer_join):             # <<<<<<<<<<<<<<
  *     pass
+ * 
  */
 
 struct __pyx_vtabstruct_7cytoolz_9itertoolz__outer_join_indices {
@@ -1499,6 +1557,8 @@ static PyTypeObject *__pyx_ptype_7cytoolz_9itertoolz__left_outer_join_indices = 
 static PyTypeObject *__pyx_ptype_7cytoolz_9itertoolz__outer_join_key = 0;
 static PyTypeObject *__pyx_ptype_7cytoolz_9itertoolz__outer_join_index = 0;
 static PyTypeObject *__pyx_ptype_7cytoolz_9itertoolz__outer_join_indices = 0;
+static PyTypeObject *__pyx_ptype_7cytoolz_9itertoolz__diff_key = 0;
+static PyTypeObject *__pyx_ptype_7cytoolz_9itertoolz__diff_identity = 0;
 static PyObject *(*__pyx_f_7cytoolz_9itertoolz_frequencies)(PyObject *, int __pyx_skip_dispatch); /*proto*/
 static PyObject *(*__pyx_f_7cytoolz_9itertoolz_pluck)(PyObject *, PyObject *, int __pyx_skip_dispatch, struct __pyx_opt_args_7cytoolz_9itertoolz_pluck *__pyx_optional_args); /*proto*/
 
@@ -2386,6 +2446,8 @@ PyMODINIT_FUNC PyInit_recipes(void)
   __pyx_vtabptr_7cytoolz_9itertoolz__outer_join_index = (struct __pyx_vtabstruct_7cytoolz_9itertoolz__outer_join_index*)__Pyx_GetVtable(__pyx_ptype_7cytoolz_9itertoolz__outer_join_index->tp_dict); if (unlikely(!__pyx_vtabptr_7cytoolz_9itertoolz__outer_join_index)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 235; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_ptype_7cytoolz_9itertoolz__outer_join_indices = __Pyx_ImportType("cytoolz.itertoolz", "_outer_join_indices", sizeof(struct __pyx_obj_7cytoolz_9itertoolz__outer_join_indices), 1); if (unlikely(!__pyx_ptype_7cytoolz_9itertoolz__outer_join_indices)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 238; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_vtabptr_7cytoolz_9itertoolz__outer_join_indices = (struct __pyx_vtabstruct_7cytoolz_9itertoolz__outer_join_indices*)__Pyx_GetVtable(__pyx_ptype_7cytoolz_9itertoolz__outer_join_indices->tp_dict); if (unlikely(!__pyx_vtabptr_7cytoolz_9itertoolz__outer_join_indices)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 238; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_7cytoolz_9itertoolz__diff_key = __Pyx_ImportType("cytoolz.itertoolz", "_diff_key", sizeof(struct __pyx_obj_7cytoolz_9itertoolz__diff_key), 1); if (unlikely(!__pyx_ptype_7cytoolz_9itertoolz__diff_key)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 242; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_ptype_7cytoolz_9itertoolz__diff_identity = __Pyx_ImportType("cytoolz.itertoolz", "_diff_identity", sizeof(struct __pyx_obj_7cytoolz_9itertoolz__diff_identity), 1); if (unlikely(!__pyx_ptype_7cytoolz_9itertoolz__diff_identity)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 248; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   /*--- Variable import code ---*/
   /*--- Function import code ---*/
   __pyx_t_1 = __Pyx_ImportModule("cytoolz.itertoolz"); if (!__pyx_t_1) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}

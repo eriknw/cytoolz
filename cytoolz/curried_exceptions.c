@@ -438,22 +438,149 @@ static const char *__pyx_f[] = {
 };
 
 /*--- Type declarations ---*/
+struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge_with;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_valmap;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_keymap;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_itemmap;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_valfilter;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_keyfilter;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_itemfilter;
+struct __pyx_opt_args_7cytoolz_9dicttoolz_assoc;
 struct __pyx_opt_args_7cytoolz_9dicttoolz_update_in;
 struct __pyx_opt_args_7cytoolz_9dicttoolz_get_in;
 
-/* "cytoolz/dicttoolz.pxd":31
+/* "cytoolz/dicttoolz.pxd":4
+ * 
+ * # utility functions to perform iteration over dicts or generic mapping
+ * ctypedef int (*f_map_next)(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *pval) except -1             # <<<<<<<<<<<<<<
+ * 
+ * cdef f_map_next get_map_iter(object d, PyObject* *ptr) except NULL
+ */
+typedef int (*__pyx_t_7cytoolz_9dicttoolz_f_map_next)(PyObject *, Py_ssize_t *, PyObject **, PyObject **);
+
+/* "cytoolz/dicttoolz.pxd":11
  * 
  * 
- * cpdef dict update_in(dict d, object keys, object func, object default=*)             # <<<<<<<<<<<<<<
+ * cdef object c_merge(object dicts, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":14
+ * 
+ * 
+ * cdef object c_merge_with(object func, object dicts, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge_with {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":17
+ * 
+ * 
+ * cpdef object valmap(object func, object d, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_valmap {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":20
+ * 
+ * 
+ * cpdef object keymap(object func, object d, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_keymap {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":23
+ * 
+ * 
+ * cpdef object itemmap(object func, object d, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_itemmap {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":26
+ * 
+ * 
+ * cpdef object valfilter(object predicate, object d, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_valfilter {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":29
+ * 
+ * 
+ * cpdef object keyfilter(object predicate, object d, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_keyfilter {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":32
+ * 
+ * 
+ * cpdef object itemfilter(object predicate, object d, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_itemfilter {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":35
+ * 
+ * 
+ * cpdef object assoc(object d, object key, object value, object factory=*)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+struct __pyx_opt_args_7cytoolz_9dicttoolz_assoc {
+  int __pyx_n;
+  PyObject *factory;
+};
+
+/* "cytoolz/dicttoolz.pxd":41
+ * 
+ * 
+ * cpdef object update_in(object d, object keys, object func, object default=*, object factory=*)             # <<<<<<<<<<<<<<
  * 
  * 
  */
 struct __pyx_opt_args_7cytoolz_9dicttoolz_update_in {
   int __pyx_n;
   PyObject *__pyx_default;
+  PyObject *factory;
 };
 
-/* "cytoolz/dicttoolz.pxd":34
+/* "cytoolz/dicttoolz.pxd":44
  * 
  * 
  * cpdef object get_in(object keys, object coll, object default=*, object no_default=*)             # <<<<<<<<<<<<<<
@@ -544,14 +671,23 @@ static CYTHON_INLINE PyObject* __Pyx_PyObject_GetAttrStr(PyObject* obj, PyObject
 
 static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 
-static void __Pyx_RaiseDoubleKeywordsError(const char* func_name, PyObject* kw_name);
+static CYTHON_INLINE int __Pyx_CheckKeywordStrings(PyObject *kwdict, const char* function_name, int kw_allowed);
 
-static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[], \
-    PyObject *kwds2, PyObject *values[], Py_ssize_t num_pos_args, \
-    const char* function_name);
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
+#else
+#define __Pyx_PyObject_Call(func, arg, kw) PyObject_Call(func, arg, kw)
+#endif
 
-static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
-    Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg);
+#endif
+
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func);
+#else
+#define __Pyx_PyObject_CallNoArg(func) __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL)
+#endif
 
 static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb);
 static CYTHON_INLINE void __Pyx_ErrFetch(PyObject **type, PyObject **value, PyObject **tb);
@@ -578,6 +714,15 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize
 static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
 static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
                                                      int is_list, int wraparound, int boundscheck);
+
+static void __Pyx_RaiseDoubleKeywordsError(const char* func_name, PyObject* kw_name);
+
+static int __Pyx_ParseOptionalKeywords(PyObject *kwds, PyObject **argnames[], \
+    PyObject *kwds2, PyObject *values[], Py_ssize_t num_pos_args, \
+    const char* function_name);
+
+static void __Pyx_RaiseArgtupleInvalid(const char* func_name, int exact,
+    Py_ssize_t num_min, Py_ssize_t num_max, Py_ssize_t num_found);
 
 typedef struct {
     int code_line;
@@ -624,7 +769,8 @@ static int __Pyx_InitStrings(__Pyx_StringTabEntry *t);
 /* Module declarations from 'cpython.dict' */
 
 /* Module declarations from 'cytoolz.dicttoolz' */
-static PyObject *(*__pyx_f_7cytoolz_9dicttoolz_c_merge_with)(PyObject *, PyObject *); /*proto*/
+static PyObject *(*__pyx_f_7cytoolz_9dicttoolz_c_merge)(PyObject *, struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge *__pyx_optional_args); /*proto*/
+static PyObject *(*__pyx_f_7cytoolz_9dicttoolz_c_merge_with)(PyObject *, PyObject *, struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge_with *__pyx_optional_args); /*proto*/
 
 /* Module declarations from 'cytoolz.curried_exceptions' */
 #define __Pyx_MODULE_NAME "cytoolz.curried_exceptions"
@@ -632,15 +778,18 @@ int __pyx_module_is_main_cytoolz__curried_exceptions = 0;
 
 /* Implementation of 'cytoolz.curried_exceptions' */
 static PyObject *__pyx_builtin_TypeError;
-static PyObject *__pyx_pf_7cytoolz_18curried_exceptions_merge_with(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_func, PyObject *__pyx_v_dicts); /* proto */
+static PyObject *__pyx_pf_7cytoolz_18curried_exceptions_merge(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_dicts, CYTHON_UNUSED PyObject *__pyx_v_kwargs); /* proto */
+static PyObject *__pyx_pf_7cytoolz_18curried_exceptions_2merge_with(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_func, PyObject *__pyx_v_dicts, CYTHON_UNUSED PyObject *__pyx_v_kwargs); /* proto */
 static char __pyx_k_all[] = "__all__";
 static char __pyx_k_func[] = "func";
 static char __pyx_k_main[] = "__main__";
 static char __pyx_k_test[] = "__test__";
 static char __pyx_k_dicts[] = "dicts";
+static char __pyx_k_merge[] = "merge";
+static char __pyx_k_kwargs[] = "kwargs";
 static char __pyx_k_TypeError[] = "TypeError";
 static char __pyx_k_merge_with[] = "merge_with";
-static char __pyx_k_merge_with_line_8[] = "merge_with (line 8)";
+static char __pyx_k_merge_with_line_16[] = "merge_with (line 16)";
 static char __pyx_k_cytoolz_curried_exceptions[] = "cytoolz.curried_exceptions";
 static char __pyx_k_Merge_dictionaries_and_apply_fu[] = "\n    Merge dictionaries and apply function to combined values\n\n    A key may occur in more than one dict, and all values mapped from the key\n    will be passed to the function as a list, such as func([val1, val2, ...]).\n\n    >>> merge_with(sum, {1: 1, 2: 2}, {1: 10, 2: 20})\n    {1: 11, 2: 22}\n\n    >>> merge_with(first, {1: 1, 2: 2}, {2: 20, 3: 30})  # doctest: +SKIP\n    {1: 1, 2: 2, 3: 30}\n\n    See Also:\n        merge\n    ";
 static char __pyx_k_Users_ewelch_git_cytoolz_cytool[] = "/Users/ewelch/git/cytoolz/cytoolz/curried_exceptions.pyx";
@@ -651,37 +800,187 @@ static PyObject *__pyx_n_s_all;
 static PyObject *__pyx_n_s_cytoolz_curried_exceptions;
 static PyObject *__pyx_n_s_dicts;
 static PyObject *__pyx_n_s_func;
+static PyObject *__pyx_n_s_kwargs;
 static PyObject *__pyx_n_s_main;
+static PyObject *__pyx_n_s_merge;
 static PyObject *__pyx_n_s_merge_with;
-static PyObject *__pyx_kp_u_merge_with_line_8;
+static PyObject *__pyx_kp_u_merge_with_line_16;
 static PyObject *__pyx_n_s_test;
 static PyObject *__pyx_tuple_;
+static PyObject *__pyx_tuple__3;
 static PyObject *__pyx_codeobj__2;
+static PyObject *__pyx_codeobj__4;
 
 /* "cytoolz/curried_exceptions.pyx":8
  * 
  * 
- * def merge_with(func, *dicts):             # <<<<<<<<<<<<<<
+ * def merge(*dicts, **kwargs):             # <<<<<<<<<<<<<<
+ *     if len(dicts) == 0:
+ *         raise TypeError()
+ */
+
+/* Python wrapper */
+static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_1merge(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_7cytoolz_18curried_exceptions_merge[] = "merge(*dicts, **kwargs)";
+static PyMethodDef __pyx_mdef_7cytoolz_18curried_exceptions_1merge = {"merge", (PyCFunction)__pyx_pw_7cytoolz_18curried_exceptions_1merge, METH_VARARGS|METH_KEYWORDS, __pyx_doc_7cytoolz_18curried_exceptions_merge};
+static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_1merge(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+  PyObject *__pyx_v_dicts = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_kwargs = 0;
+  PyObject *__pyx_r = 0;
+  __Pyx_RefNannyDeclarations
+  __Pyx_RefNannySetupContext("merge (wrapper)", 0);
+  if (unlikely(__pyx_kwds) && unlikely(!__Pyx_CheckKeywordStrings(__pyx_kwds, "merge", 1))) return NULL;
+  __pyx_v_kwargs = (__pyx_kwds) ? PyDict_Copy(__pyx_kwds) : PyDict_New();
+  if (unlikely(!__pyx_v_kwargs)) return NULL;
+  __Pyx_GOTREF(__pyx_v_kwargs);
+  __Pyx_INCREF(__pyx_args);
+  __pyx_v_dicts = __pyx_args;
+  __pyx_r = __pyx_pf_7cytoolz_18curried_exceptions_merge(__pyx_self, __pyx_v_dicts, __pyx_v_kwargs);
+
+  /* function exit code */
+  __Pyx_XDECREF(__pyx_v_dicts);
+  __Pyx_XDECREF(__pyx_v_kwargs);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+static PyObject *__pyx_pf_7cytoolz_18curried_exceptions_merge(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_dicts, CYTHON_UNUSED PyObject *__pyx_v_kwargs) {
+  PyObject *__pyx_r = NULL;
+  __Pyx_RefNannyDeclarations
+  Py_ssize_t __pyx_t_1;
+  int __pyx_t_2;
+  PyObject *__pyx_t_3 = NULL;
+  int __pyx_t_4;
+  int __pyx_lineno = 0;
+  const char *__pyx_filename = NULL;
+  int __pyx_clineno = 0;
+  __Pyx_RefNannySetupContext("merge", 0);
+  __Pyx_INCREF(__pyx_v_dicts);
+
+  /* "cytoolz/curried_exceptions.pyx":9
+ * 
+ * def merge(*dicts, **kwargs):
+ *     if len(dicts) == 0:             # <<<<<<<<<<<<<<
+ *         raise TypeError()
+ *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
+ */
+  __pyx_t_1 = PyObject_Length(__pyx_v_dicts); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 9; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = ((__pyx_t_1 == 0) != 0);
+  if (__pyx_t_2) {
+
+    /* "cytoolz/curried_exceptions.pyx":10
+ * def merge(*dicts, **kwargs):
+ *     if len(dicts) == 0:
+ *         raise TypeError()             # <<<<<<<<<<<<<<
+ *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
+ *         dicts = dicts[0]
+ */
+    __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_builtin_TypeError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  }
+
+  /* "cytoolz/curried_exceptions.pyx":11
+ *     if len(dicts) == 0:
+ *         raise TypeError()
+ *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):             # <<<<<<<<<<<<<<
+ *         dicts = dicts[0]
+ *     return c_merge(dicts)
+ */
+  __pyx_t_1 = PyObject_Length(__pyx_v_dicts); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = ((__pyx_t_1 == 1) != 0);
+  if (__pyx_t_4) {
+  } else {
+    __pyx_t_2 = __pyx_t_4;
+    goto __pyx_L5_bool_binop_done;
+  }
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_dicts, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = ((!(PyDict_Check(__pyx_t_3) != 0)) != 0);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_2 = __pyx_t_4;
+  __pyx_L5_bool_binop_done:;
+  if (__pyx_t_2) {
+
+    /* "cytoolz/curried_exceptions.pyx":12
+ *         raise TypeError()
+ *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
+ *         dicts = dicts[0]             # <<<<<<<<<<<<<<
+ *     return c_merge(dicts)
+ * 
+ */
+    __pyx_t_3 = __Pyx_GetItemInt_Tuple(__pyx_v_dicts, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 12; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF_SET(__pyx_v_dicts, __pyx_t_3);
+    __pyx_t_3 = 0;
+    goto __pyx_L4;
+  }
+  __pyx_L4:;
+
+  /* "cytoolz/curried_exceptions.pyx":13
+ *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
+ *         dicts = dicts[0]
+ *     return c_merge(dicts)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __Pyx_XDECREF(__pyx_r);
+  __pyx_t_3 = __pyx_f_7cytoolz_9dicttoolz_c_merge(__pyx_v_dicts, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 13; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
+  goto __pyx_L0;
+
+  /* "cytoolz/curried_exceptions.pyx":8
+ * 
+ * 
+ * def merge(*dicts, **kwargs):             # <<<<<<<<<<<<<<
+ *     if len(dicts) == 0:
+ *         raise TypeError()
+ */
+
+  /* function exit code */
+  __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_AddTraceback("cytoolz.curried_exceptions.merge", __pyx_clineno, __pyx_lineno, __pyx_filename);
+  __pyx_r = NULL;
+  __pyx_L0:;
+  __Pyx_XDECREF(__pyx_v_dicts);
+  __Pyx_XGIVEREF(__pyx_r);
+  __Pyx_RefNannyFinishContext();
+  return __pyx_r;
+}
+
+/* "cytoolz/curried_exceptions.pyx":16
+ * 
+ * 
+ * def merge_with(func, *dicts, **kwargs):             # <<<<<<<<<<<<<<
  *     """
  *     Merge dictionaries and apply function to combined values
  */
 
 /* Python wrapper */
-static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_1merge_with(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
-static char __pyx_doc_7cytoolz_18curried_exceptions_merge_with[] = "merge_with(func, *dicts)\n\n    Merge dictionaries and apply function to combined values\n\n    A key may occur in more than one dict, and all values mapped from the key\n    will be passed to the function as a list, such as func([val1, val2, ...]).\n\n    >>> merge_with(sum, {1: 1, 2: 2}, {1: 10, 2: 20})\n    {1: 11, 2: 22}\n\n    >>> merge_with(first, {1: 1, 2: 2}, {2: 20, 3: 30})  # doctest: +SKIP\n    {1: 1, 2: 2, 3: 30}\n\n    See Also:\n        merge\n    ";
-static PyMethodDef __pyx_mdef_7cytoolz_18curried_exceptions_1merge_with = {"merge_with", (PyCFunction)__pyx_pw_7cytoolz_18curried_exceptions_1merge_with, METH_VARARGS|METH_KEYWORDS, __pyx_doc_7cytoolz_18curried_exceptions_merge_with};
-static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_1merge_with(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
+static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_3merge_with(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds); /*proto*/
+static char __pyx_doc_7cytoolz_18curried_exceptions_2merge_with[] = "merge_with(func, *dicts, **kwargs)\n\n    Merge dictionaries and apply function to combined values\n\n    A key may occur in more than one dict, and all values mapped from the key\n    will be passed to the function as a list, such as func([val1, val2, ...]).\n\n    >>> merge_with(sum, {1: 1, 2: 2}, {1: 10, 2: 20})\n    {1: 11, 2: 22}\n\n    >>> merge_with(first, {1: 1, 2: 2}, {2: 20, 3: 30})  # doctest: +SKIP\n    {1: 1, 2: 2, 3: 30}\n\n    See Also:\n        merge\n    ";
+static PyMethodDef __pyx_mdef_7cytoolz_18curried_exceptions_3merge_with = {"merge_with", (PyCFunction)__pyx_pw_7cytoolz_18curried_exceptions_3merge_with, METH_VARARGS|METH_KEYWORDS, __pyx_doc_7cytoolz_18curried_exceptions_2merge_with};
+static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_3merge_with(PyObject *__pyx_self, PyObject *__pyx_args, PyObject *__pyx_kwds) {
   PyObject *__pyx_v_func = 0;
   PyObject *__pyx_v_dicts = 0;
+  CYTHON_UNUSED PyObject *__pyx_v_kwargs = 0;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   PyObject *__pyx_r = 0;
   __Pyx_RefNannyDeclarations
   __Pyx_RefNannySetupContext("merge_with (wrapper)", 0);
+  __pyx_v_kwargs = PyDict_New(); if (unlikely(!__pyx_v_kwargs)) return NULL;
+  __Pyx_GOTREF(__pyx_v_kwargs);
   if (PyTuple_GET_SIZE(__pyx_args) > 1) {
     __pyx_v_dicts = PyTuple_GetSlice(__pyx_args, 1, PyTuple_GET_SIZE(__pyx_args));
     if (unlikely(!__pyx_v_dicts)) {
+      __Pyx_DECREF(__pyx_v_kwargs); __pyx_v_kwargs = 0;
       __Pyx_RefNannyFinishContext();
       return NULL;
     }
@@ -708,7 +1007,7 @@ static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_1merge_with(PyObject *__
       }
       if (unlikely(kw_args > 0)) {
         const Py_ssize_t used_pos_args = (pos_args < 1) ? pos_args : 1;
-        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, 0, values, used_pos_args, "merge_with") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+        if (unlikely(__Pyx_ParseOptionalKeywords(__pyx_kwds, __pyx_pyargnames, __pyx_v_kwargs, values, used_pos_args, "merge_with") < 0)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
       }
     } else if (PyTuple_GET_SIZE(__pyx_args) < 1) {
       goto __pyx_L5_argtuple_error;
@@ -719,116 +1018,121 @@ static PyObject *__pyx_pw_7cytoolz_18curried_exceptions_1merge_with(PyObject *__
   }
   goto __pyx_L4_argument_unpacking_done;
   __pyx_L5_argtuple_error:;
-  __Pyx_RaiseArgtupleInvalid("merge_with", 0, 1, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
+  __Pyx_RaiseArgtupleInvalid("merge_with", 0, 1, 1, PyTuple_GET_SIZE(__pyx_args)); {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L3_error;}
   __pyx_L3_error:;
   __Pyx_DECREF(__pyx_v_dicts); __pyx_v_dicts = 0;
+  __Pyx_DECREF(__pyx_v_kwargs); __pyx_v_kwargs = 0;
   __Pyx_AddTraceback("cytoolz.curried_exceptions.merge_with", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __Pyx_RefNannyFinishContext();
   return NULL;
   __pyx_L4_argument_unpacking_done:;
-  __pyx_r = __pyx_pf_7cytoolz_18curried_exceptions_merge_with(__pyx_self, __pyx_v_func, __pyx_v_dicts);
+  __pyx_r = __pyx_pf_7cytoolz_18curried_exceptions_2merge_with(__pyx_self, __pyx_v_func, __pyx_v_dicts, __pyx_v_kwargs);
 
   /* function exit code */
   __Pyx_XDECREF(__pyx_v_dicts);
+  __Pyx_XDECREF(__pyx_v_kwargs);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-static PyObject *__pyx_pf_7cytoolz_18curried_exceptions_merge_with(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_func, PyObject *__pyx_v_dicts) {
+static PyObject *__pyx_pf_7cytoolz_18curried_exceptions_2merge_with(CYTHON_UNUSED PyObject *__pyx_self, PyObject *__pyx_v_func, PyObject *__pyx_v_dicts, CYTHON_UNUSED PyObject *__pyx_v_kwargs) {
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   Py_ssize_t __pyx_t_1;
   int __pyx_t_2;
-  int __pyx_t_3;
-  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_3 = NULL;
+  int __pyx_t_4;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_RefNannySetupContext("merge_with", 0);
   __Pyx_INCREF(__pyx_v_dicts);
 
-  /* "cytoolz/curried_exceptions.pyx":24
+  /* "cytoolz/curried_exceptions.pyx":32
  *         merge
  *     """
  *     if len(dicts) == 0:             # <<<<<<<<<<<<<<
- *         raise TypeError
+ *         raise TypeError()
  *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
  */
-  __pyx_t_1 = PyObject_Length(__pyx_v_dicts); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 24; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = PyObject_Length(__pyx_v_dicts); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 32; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_t_2 = ((__pyx_t_1 == 0) != 0);
   if (__pyx_t_2) {
 
-    /* "cytoolz/curried_exceptions.pyx":25
+    /* "cytoolz/curried_exceptions.pyx":33
  *     """
  *     if len(dicts) == 0:
- *         raise TypeError             # <<<<<<<<<<<<<<
+ *         raise TypeError()             # <<<<<<<<<<<<<<
  *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
  *         dicts = dicts[0]
  */
-    __Pyx_Raise(__pyx_builtin_TypeError, 0, 0, 0);
-    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __pyx_t_3 = __Pyx_PyObject_CallNoArg(__pyx_builtin_TypeError); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_Raise(__pyx_t_3, 0, 0, 0);
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    {__pyx_filename = __pyx_f[0]; __pyx_lineno = 33; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
 
-  /* "cytoolz/curried_exceptions.pyx":26
+  /* "cytoolz/curried_exceptions.pyx":34
  *     if len(dicts) == 0:
- *         raise TypeError
+ *         raise TypeError()
  *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):             # <<<<<<<<<<<<<<
  *         dicts = dicts[0]
  * 
  */
-  __pyx_t_1 = PyObject_Length(__pyx_v_dicts); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_t_3 = ((__pyx_t_1 == 1) != 0);
-  if (__pyx_t_3) {
+  __pyx_t_1 = PyObject_Length(__pyx_v_dicts); if (unlikely(__pyx_t_1 == -1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = ((__pyx_t_1 == 1) != 0);
+  if (__pyx_t_4) {
   } else {
-    __pyx_t_2 = __pyx_t_3;
+    __pyx_t_2 = __pyx_t_4;
     goto __pyx_L5_bool_binop_done;
   }
-  __pyx_t_4 = __Pyx_GetItemInt(__pyx_v_dicts, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_3 = ((!(PyDict_Check(__pyx_t_4) != 0)) != 0);
-  __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-  __pyx_t_2 = __pyx_t_3;
+  __pyx_t_3 = __Pyx_GetItemInt(__pyx_v_dicts, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 34; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_4 = ((!(PyDict_Check(__pyx_t_3) != 0)) != 0);
+  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+  __pyx_t_2 = __pyx_t_4;
   __pyx_L5_bool_binop_done:;
   if (__pyx_t_2) {
 
-    /* "cytoolz/curried_exceptions.pyx":27
- *         raise TypeError
+    /* "cytoolz/curried_exceptions.pyx":35
+ *         raise TypeError()
  *     if len(dicts) == 1 and not PyDict_Check(dicts[0]):
  *         dicts = dicts[0]             # <<<<<<<<<<<<<<
  * 
  *     return c_merge_with(func, dicts)
  */
-    __pyx_t_4 = __Pyx_GetItemInt_Tuple(__pyx_v_dicts, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 27; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-    __Pyx_GOTREF(__pyx_t_4);
-    __Pyx_DECREF_SET(__pyx_v_dicts, __pyx_t_4);
-    __pyx_t_4 = 0;
+    __pyx_t_3 = __Pyx_GetItemInt_Tuple(__pyx_v_dicts, 0, long, 1, __Pyx_PyInt_From_long, 0, 0, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 35; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __Pyx_GOTREF(__pyx_t_3);
+    __Pyx_DECREF_SET(__pyx_v_dicts, __pyx_t_3);
+    __pyx_t_3 = 0;
     goto __pyx_L4;
   }
   __pyx_L4:;
 
-  /* "cytoolz/curried_exceptions.pyx":29
+  /* "cytoolz/curried_exceptions.pyx":37
  *         dicts = dicts[0]
  * 
  *     return c_merge_with(func, dicts)             # <<<<<<<<<<<<<<
  */
   __Pyx_XDECREF(__pyx_r);
-  __pyx_t_4 = __pyx_f_7cytoolz_9dicttoolz_c_merge_with(__pyx_v_func, __pyx_v_dicts); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 29; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_4);
-  __pyx_r = __pyx_t_4;
-  __pyx_t_4 = 0;
+  __pyx_t_3 = __pyx_f_7cytoolz_9dicttoolz_c_merge_with(__pyx_v_func, __pyx_v_dicts, NULL); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 37; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_r = __pyx_t_3;
+  __pyx_t_3 = 0;
   goto __pyx_L0;
 
-  /* "cytoolz/curried_exceptions.pyx":8
+  /* "cytoolz/curried_exceptions.pyx":16
  * 
  * 
- * def merge_with(func, *dicts):             # <<<<<<<<<<<<<<
+ * def merge_with(func, *dicts, **kwargs):             # <<<<<<<<<<<<<<
  *     """
  *     Merge dictionaries and apply function to combined values
  */
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("cytoolz.curried_exceptions.merge_with", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -868,14 +1172,16 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_cytoolz_curried_exceptions, __pyx_k_cytoolz_curried_exceptions, sizeof(__pyx_k_cytoolz_curried_exceptions), 0, 0, 1, 1},
   {&__pyx_n_s_dicts, __pyx_k_dicts, sizeof(__pyx_k_dicts), 0, 0, 1, 1},
   {&__pyx_n_s_func, __pyx_k_func, sizeof(__pyx_k_func), 0, 0, 1, 1},
+  {&__pyx_n_s_kwargs, __pyx_k_kwargs, sizeof(__pyx_k_kwargs), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
+  {&__pyx_n_s_merge, __pyx_k_merge, sizeof(__pyx_k_merge), 0, 0, 1, 1},
   {&__pyx_n_s_merge_with, __pyx_k_merge_with, sizeof(__pyx_k_merge_with), 0, 0, 1, 1},
-  {&__pyx_kp_u_merge_with_line_8, __pyx_k_merge_with_line_8, sizeof(__pyx_k_merge_with_line_8), 0, 1, 0, 0},
+  {&__pyx_kp_u_merge_with_line_16, __pyx_k_merge_with_line_16, sizeof(__pyx_k_merge_with_line_16), 0, 1, 0, 0},
   {&__pyx_n_s_test, __pyx_k_test, sizeof(__pyx_k_test), 0, 0, 1, 1},
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 25; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_TypeError = __Pyx_GetBuiltinName(__pyx_n_s_TypeError); if (!__pyx_builtin_TypeError) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 10; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
   __pyx_L1_error:;
   return -1;
@@ -888,14 +1194,26 @@ static int __Pyx_InitCachedConstants(void) {
   /* "cytoolz/curried_exceptions.pyx":8
  * 
  * 
- * def merge_with(func, *dicts):             # <<<<<<<<<<<<<<
+ * def merge(*dicts, **kwargs):             # <<<<<<<<<<<<<<
+ *     if len(dicts) == 0:
+ *         raise TypeError()
+ */
+  __pyx_tuple_ = PyTuple_Pack(2, __pyx_n_s_dicts, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple_);
+  __Pyx_GIVEREF(__pyx_tuple_);
+  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(0, 0, 2, 0, CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_merge, 8, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+
+  /* "cytoolz/curried_exceptions.pyx":16
+ * 
+ * 
+ * def merge_with(func, *dicts, **kwargs):             # <<<<<<<<<<<<<<
  *     """
  *     Merge dictionaries and apply function to combined values
  */
-  __pyx_tuple_ = PyTuple_Pack(2, __pyx_n_s_func, __pyx_n_s_dicts); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_tuple_);
-  __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_merge_with, 8, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_tuple__3 = PyTuple_Pack(3, __pyx_n_s_func, __pyx_n_s_dicts, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_tuple__3);
+  __Pyx_GIVEREF(__pyx_tuple__3);
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 3, 0, CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_merge_with, 16, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
@@ -995,21 +1313,25 @@ PyMODINIT_FUNC PyInit_curried_exceptions(void)
   /*--- Variable import code ---*/
   /*--- Function import code ---*/
   __pyx_t_1 = __Pyx_ImportModule("cytoolz.dicttoolz"); if (!__pyx_t_1) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ImportFunction(__pyx_t_1, "c_merge_with", (void (**)(void))&__pyx_f_7cytoolz_9dicttoolz_c_merge_with, "PyObject *(PyObject *, PyObject *)") < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ImportFunction(__pyx_t_1, "c_merge", (void (**)(void))&__pyx_f_7cytoolz_9dicttoolz_c_merge, "PyObject *(PyObject *, struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge *__pyx_optional_args)") < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ImportFunction(__pyx_t_1, "c_merge_with", (void (**)(void))&__pyx_f_7cytoolz_9dicttoolz_c_merge_with, "PyObject *(PyObject *, PyObject *, struct __pyx_opt_args_7cytoolz_9dicttoolz_c_merge_with *__pyx_optional_args)") < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   Py_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   /*--- Execution code ---*/
 
   /* "cytoolz/curried_exceptions.pyx":5
- * from cytoolz.dicttoolz cimport c_merge_with
+ * from cytoolz.dicttoolz cimport c_merge, c_merge_with
  * 
- * __all__ = ['merge_with']             # <<<<<<<<<<<<<<
+ * __all__ = ['merge', 'merge_with']             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_t_2 = PyList_New(1); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 5; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyList_New(2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 5; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
+  __Pyx_INCREF(__pyx_n_s_merge);
+  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_merge);
+  __Pyx_GIVEREF(__pyx_n_s_merge);
   __Pyx_INCREF(__pyx_n_s_merge_with);
-  PyList_SET_ITEM(__pyx_t_2, 0, __pyx_n_s_merge_with);
+  PyList_SET_ITEM(__pyx_t_2, 1, __pyx_n_s_merge_with);
   __Pyx_GIVEREF(__pyx_n_s_merge_with);
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_all, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 5; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
@@ -1017,23 +1339,35 @@ PyMODINIT_FUNC PyInit_curried_exceptions(void)
   /* "cytoolz/curried_exceptions.pyx":8
  * 
  * 
- * def merge_with(func, *dicts):             # <<<<<<<<<<<<<<
+ * def merge(*dicts, **kwargs):             # <<<<<<<<<<<<<<
+ *     if len(dicts) == 0:
+ *         raise TypeError()
+ */
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_7cytoolz_18curried_exceptions_1merge, NULL, __pyx_n_s_cytoolz_curried_exceptions); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_GOTREF(__pyx_t_2);
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_merge, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
+
+  /* "cytoolz/curried_exceptions.pyx":16
+ * 
+ * 
+ * def merge_with(func, *dicts, **kwargs):             # <<<<<<<<<<<<<<
  *     """
  *     Merge dictionaries and apply function to combined values
  */
-  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_7cytoolz_18curried_exceptions_1merge_with, NULL, __pyx_n_s_cytoolz_curried_exceptions); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_2 = PyCFunction_NewEx(&__pyx_mdef_7cytoolz_18curried_exceptions_3merge_with, NULL, __pyx_n_s_cytoolz_curried_exceptions); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_d, __pyx_n_s_merge_with, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 8; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_d, __pyx_n_s_merge_with, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 16; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
   /* "cytoolz/curried_exceptions.pyx":1
  * #cython: embedsignature=True             # <<<<<<<<<<<<<<
  * from cpython.dict cimport PyDict_Check
- * from cytoolz.dicttoolz cimport c_merge_with
+ * from cytoolz.dicttoolz cimport c_merge, c_merge_with
  */
   __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  if (PyDict_SetItem(__pyx_t_2, __pyx_kp_u_merge_with_line_8, __pyx_kp_u_Merge_dictionaries_and_apply_fu) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (PyDict_SetItem(__pyx_t_2, __pyx_kp_u_merge_with_line_16, __pyx_kp_u_Merge_dictionaries_and_apply_fu) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (PyDict_SetItem(__pyx_d, __pyx_n_s_test, __pyx_t_2) < 0) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
 
@@ -1090,107 +1424,33 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name) {
     return result;
 }
 
-static void __Pyx_RaiseDoubleKeywordsError(
-    const char* func_name,
-    PyObject* kw_name)
+static CYTHON_INLINE int __Pyx_CheckKeywordStrings(
+    PyObject *kwdict,
+    const char* function_name,
+    int kw_allowed)
 {
-    PyErr_Format(PyExc_TypeError,
-        #if PY_MAJOR_VERSION >= 3
-        "%s() got multiple values for keyword argument '%U'", func_name, kw_name);
-        #else
-        "%s() got multiple values for keyword argument '%s'", func_name,
-        PyString_AsString(kw_name));
-        #endif
-}
-
-static int __Pyx_ParseOptionalKeywords(
-    PyObject *kwds,
-    PyObject **argnames[],
-    PyObject *kwds2,
-    PyObject *values[],
-    Py_ssize_t num_pos_args,
-    const char* function_name)
-{
-    PyObject *key = 0, *value = 0;
+    PyObject* key = 0;
     Py_ssize_t pos = 0;
-    PyObject*** name;
-    PyObject*** first_kw_arg = argnames + num_pos_args;
-    while (PyDict_Next(kwds, &pos, &key, &value)) {
-        name = first_kw_arg;
-        while (*name && (**name != key)) name++;
-        if (*name) {
-            values[name-argnames] = value;
-            continue;
-        }
-        name = first_kw_arg;
+#if CYTHON_COMPILING_IN_PYPY
+    if (!kw_allowed && PyDict_Next(kwdict, &pos, &key, 0))
+        goto invalid_keyword;
+    return 1;
+#else
+    while (PyDict_Next(kwdict, &pos, &key, 0)) {
         #if PY_MAJOR_VERSION < 3
-        if (likely(PyString_CheckExact(key)) || likely(PyString_Check(key))) {
-            while (*name) {
-                if ((CYTHON_COMPILING_IN_PYPY || PyString_GET_SIZE(**name) == PyString_GET_SIZE(key))
-                        && _PyString_Eq(**name, key)) {
-                    values[name-argnames] = value;
-                    break;
-                }
-                name++;
-            }
-            if (*name) continue;
-            else {
-                PyObject*** argname = argnames;
-                while (argname != first_kw_arg) {
-                    if ((**argname == key) || (
-                            (CYTHON_COMPILING_IN_PYPY || PyString_GET_SIZE(**argname) == PyString_GET_SIZE(key))
-                             && _PyString_Eq(**argname, key))) {
-                        goto arg_passed_twice;
-                    }
-                    argname++;
-                }
-            }
-        } else
+        if (unlikely(!PyString_CheckExact(key)) && unlikely(!PyString_Check(key)))
         #endif
-        if (likely(PyUnicode_Check(key))) {
-            while (*name) {
-                int cmp = (**name == key) ? 0 :
-                #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION >= 3
-                    (PyUnicode_GET_SIZE(**name) != PyUnicode_GET_SIZE(key)) ? 1 :
-                #endif
-                    PyUnicode_Compare(**name, key);
-                if (cmp < 0 && unlikely(PyErr_Occurred())) goto bad;
-                if (cmp == 0) {
-                    values[name-argnames] = value;
-                    break;
-                }
-                name++;
-            }
-            if (*name) continue;
-            else {
-                PyObject*** argname = argnames;
-                while (argname != first_kw_arg) {
-                    int cmp = (**argname == key) ? 0 :
-                    #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION >= 3
-                        (PyUnicode_GET_SIZE(**argname) != PyUnicode_GET_SIZE(key)) ? 1 :
-                    #endif
-                        PyUnicode_Compare(**argname, key);
-                    if (cmp < 0 && unlikely(PyErr_Occurred())) goto bad;
-                    if (cmp == 0) goto arg_passed_twice;
-                    argname++;
-                }
-            }
-        } else
-            goto invalid_keyword_type;
-        if (kwds2) {
-            if (unlikely(PyDict_SetItem(kwds2, key, value))) goto bad;
-        } else {
-            goto invalid_keyword;
-        }
+            if (unlikely(!PyUnicode_Check(key)))
+                goto invalid_keyword_type;
     }
-    return 0;
-arg_passed_twice:
-    __Pyx_RaiseDoubleKeywordsError(function_name, key);
-    goto bad;
+    if ((!kw_allowed) && unlikely(key))
+        goto invalid_keyword;
+    return 1;
 invalid_keyword_type:
     PyErr_Format(PyExc_TypeError,
         "%.200s() keywords must be strings", function_name);
-    goto bad;
+    return 0;
+#endif
 invalid_keyword:
     PyErr_Format(PyExc_TypeError,
     #if PY_MAJOR_VERSION < 3
@@ -1200,34 +1460,61 @@ invalid_keyword:
         "%s() got an unexpected keyword argument '%U'",
         function_name, key);
     #endif
-bad:
-    return -1;
+    return 0;
 }
 
-static void __Pyx_RaiseArgtupleInvalid(
-    const char* func_name,
-    int exact,
-    Py_ssize_t num_min,
-    Py_ssize_t num_max,
-    Py_ssize_t num_found)
-{
-    Py_ssize_t num_expected;
-    const char *more_or_less;
-    if (num_found < num_min) {
-        num_expected = num_min;
-        more_or_less = "at least";
-    } else {
-        num_expected = num_max;
-        more_or_less = "at most";
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {
+    PyObject *result;
+    ternaryfunc call = func->ob_type->tp_call;
+    if (unlikely(!call))
+        return PyObject_Call(func, arg, kw);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = (*call)(func, arg, kw);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
     }
-    if (exact) {
-        more_or_less = "exactly";
-    }
-    PyErr_Format(PyExc_TypeError,
-                 "%.200s() takes %.8s %" CYTHON_FORMAT_SSIZE_T "d positional argument%.1s (%" CYTHON_FORMAT_SSIZE_T "d given)",
-                 func_name, more_or_less, num_expected,
-                 (num_expected == 1) ? "" : "s", num_found);
+    return result;
 }
+#endif
+
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallMethO(PyObject *func, PyObject *arg) {
+    PyObject *self, *result;
+    PyCFunction cfunc;
+    cfunc = PyCFunction_GET_FUNCTION(func);
+    self = PyCFunction_GET_SELF(func);
+    if (unlikely(Py_EnterRecursiveCall((char*)" while calling a Python object")))
+        return NULL;
+    result = cfunc(self, arg);
+    Py_LeaveRecursiveCall();
+    if (unlikely(!result) && unlikely(!PyErr_Occurred())) {
+        PyErr_SetString(
+            PyExc_SystemError,
+            "NULL result without error in PyObject_Call");
+    }
+    return result;
+}
+#endif
+
+#if CYTHON_COMPILING_IN_CPYTHON
+static CYTHON_INLINE PyObject* __Pyx_PyObject_CallNoArg(PyObject *func) {
+#ifdef __Pyx_CyFunction_USED
+    if (likely(PyCFunction_Check(func) || PyObject_TypeCheck(func, __pyx_CyFunctionType))) {
+#else
+    if (likely(PyCFunction_Check(func))) {
+#endif
+        if (likely(PyCFunction_GET_FLAGS(func) & METH_NOARGS)) {
+            return __Pyx_PyObject_CallMethO(func, NULL);
+        }
+    }
+    return __Pyx_PyObject_Call(func, __pyx_empty_tuple, NULL);
+}
+#endif
 
 static CYTHON_INLINE void __Pyx_ErrRestore(PyObject *type, PyObject *value, PyObject *tb) {
 #if CYTHON_COMPILING_IN_CPYTHON
@@ -1493,6 +1780,145 @@ static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
     }
 #endif
     return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
+}
+
+static void __Pyx_RaiseDoubleKeywordsError(
+    const char* func_name,
+    PyObject* kw_name)
+{
+    PyErr_Format(PyExc_TypeError,
+        #if PY_MAJOR_VERSION >= 3
+        "%s() got multiple values for keyword argument '%U'", func_name, kw_name);
+        #else
+        "%s() got multiple values for keyword argument '%s'", func_name,
+        PyString_AsString(kw_name));
+        #endif
+}
+
+static int __Pyx_ParseOptionalKeywords(
+    PyObject *kwds,
+    PyObject **argnames[],
+    PyObject *kwds2,
+    PyObject *values[],
+    Py_ssize_t num_pos_args,
+    const char* function_name)
+{
+    PyObject *key = 0, *value = 0;
+    Py_ssize_t pos = 0;
+    PyObject*** name;
+    PyObject*** first_kw_arg = argnames + num_pos_args;
+    while (PyDict_Next(kwds, &pos, &key, &value)) {
+        name = first_kw_arg;
+        while (*name && (**name != key)) name++;
+        if (*name) {
+            values[name-argnames] = value;
+            continue;
+        }
+        name = first_kw_arg;
+        #if PY_MAJOR_VERSION < 3
+        if (likely(PyString_CheckExact(key)) || likely(PyString_Check(key))) {
+            while (*name) {
+                if ((CYTHON_COMPILING_IN_PYPY || PyString_GET_SIZE(**name) == PyString_GET_SIZE(key))
+                        && _PyString_Eq(**name, key)) {
+                    values[name-argnames] = value;
+                    break;
+                }
+                name++;
+            }
+            if (*name) continue;
+            else {
+                PyObject*** argname = argnames;
+                while (argname != first_kw_arg) {
+                    if ((**argname == key) || (
+                            (CYTHON_COMPILING_IN_PYPY || PyString_GET_SIZE(**argname) == PyString_GET_SIZE(key))
+                             && _PyString_Eq(**argname, key))) {
+                        goto arg_passed_twice;
+                    }
+                    argname++;
+                }
+            }
+        } else
+        #endif
+        if (likely(PyUnicode_Check(key))) {
+            while (*name) {
+                int cmp = (**name == key) ? 0 :
+                #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION >= 3
+                    (PyUnicode_GET_SIZE(**name) != PyUnicode_GET_SIZE(key)) ? 1 :
+                #endif
+                    PyUnicode_Compare(**name, key);
+                if (cmp < 0 && unlikely(PyErr_Occurred())) goto bad;
+                if (cmp == 0) {
+                    values[name-argnames] = value;
+                    break;
+                }
+                name++;
+            }
+            if (*name) continue;
+            else {
+                PyObject*** argname = argnames;
+                while (argname != first_kw_arg) {
+                    int cmp = (**argname == key) ? 0 :
+                    #if !CYTHON_COMPILING_IN_PYPY && PY_MAJOR_VERSION >= 3
+                        (PyUnicode_GET_SIZE(**argname) != PyUnicode_GET_SIZE(key)) ? 1 :
+                    #endif
+                        PyUnicode_Compare(**argname, key);
+                    if (cmp < 0 && unlikely(PyErr_Occurred())) goto bad;
+                    if (cmp == 0) goto arg_passed_twice;
+                    argname++;
+                }
+            }
+        } else
+            goto invalid_keyword_type;
+        if (kwds2) {
+            if (unlikely(PyDict_SetItem(kwds2, key, value))) goto bad;
+        } else {
+            goto invalid_keyword;
+        }
+    }
+    return 0;
+arg_passed_twice:
+    __Pyx_RaiseDoubleKeywordsError(function_name, key);
+    goto bad;
+invalid_keyword_type:
+    PyErr_Format(PyExc_TypeError,
+        "%.200s() keywords must be strings", function_name);
+    goto bad;
+invalid_keyword:
+    PyErr_Format(PyExc_TypeError,
+    #if PY_MAJOR_VERSION < 3
+        "%.200s() got an unexpected keyword argument '%.200s'",
+        function_name, PyString_AsString(key));
+    #else
+        "%s() got an unexpected keyword argument '%U'",
+        function_name, key);
+    #endif
+bad:
+    return -1;
+}
+
+static void __Pyx_RaiseArgtupleInvalid(
+    const char* func_name,
+    int exact,
+    Py_ssize_t num_min,
+    Py_ssize_t num_max,
+    Py_ssize_t num_found)
+{
+    Py_ssize_t num_expected;
+    const char *more_or_less;
+    if (num_found < num_min) {
+        num_expected = num_min;
+        more_or_less = "at least";
+    } else {
+        num_expected = num_max;
+        more_or_less = "at most";
+    }
+    if (exact) {
+        more_or_less = "exactly";
+    }
+    PyErr_Format(PyExc_TypeError,
+                 "%.200s() takes %.8s %" CYTHON_FORMAT_SSIZE_T "d positional argument%.1s (%" CYTHON_FORMAT_SSIZE_T "d given)",
+                 func_name, more_or_less, num_expected,
+                 (num_expected == 1) ? "" : "s", num_found);
 }
 
 static int __pyx_bisect_code_objects(__Pyx_CodeObjectCacheEntry* entries, int count, int code_line) {
