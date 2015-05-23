@@ -3,10 +3,11 @@ from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
 from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
                           PyErr_GivenExceptionMatches, PyErr_Occurred)
 from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
+from cpython.object cimport PyObject_RichCompareBool, Py_NE
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.sequence cimport PySequence_Check
 from cpython.set cimport PySet_Add, PySet_Contains
-from cpython.tuple cimport PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
+from cpython.tuple cimport PyTuple_GET_ITEM, PyTuple_GetSlice, PyTuple_New, PyTuple_SET_ITEM
 
 # Locally defined bindings that differ from `cython.cpython` bindings
 from cytoolz.cpython cimport PtrIter_Next, PtrObject_GetItem
@@ -23,7 +24,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join', 'tail', 'topk']
+           'join', 'tail', 'diff', 'topk']
 
 
 concatv = chain
@@ -1502,6 +1503,89 @@ cdef class _inner_join_indices(_inner_join):
             Py_INCREF(val)
             PyTuple_SET_ITEM(keyval, i, val)
         return keyval
+
+
+cdef class _diff_key:
+    def __cinit__(self, object seqs, object key, object default=no_default):
+        self.N = len(seqs)
+        if self.N < 2:
+            raise TypeError('Too few sequences given (min 2 required)')
+        if default == no_default:
+            self.iters = zip(*seqs)
+        else:
+            self.iters = zip_longest(*seqs, fillvalue=default)
+        self.key = key
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef object val, val2, items
+        cdef Py_ssize_t i
+        while True:
+            items = next(self.iters)
+            val = self.key(<object>PyTuple_GET_ITEM(items, 0))
+            for i in range(1, self.N):
+                val2 = self.key(<object>PyTuple_GET_ITEM(items, i))
+                if PyObject_RichCompareBool(val, val2, Py_NE):
+                    return items
+
+cdef class _diff_identity:
+    def __cinit__(self, object seqs, object default=no_default):
+        self.N = len(seqs)
+        if self.N < 2:
+            raise TypeError('Too few sequences given (min 2 required)')
+        if default == no_default:
+            self.iters = zip(*seqs)
+        else:
+            self.iters = zip_longest(*seqs, fillvalue=default)
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        cdef object val, val2, items
+        cdef Py_ssize_t i
+        while True:
+            items = next(self.iters)
+            val = <object>PyTuple_GET_ITEM(items, 0)
+            for i in range(1, self.N):
+                val2 = <object>PyTuple_GET_ITEM(items, i)
+                if PyObject_RichCompareBool(val, val2, Py_NE):
+                    return items
+
+
+cdef object c_diff(object seqs, object default=no_default, object key=None):
+    if key is None:
+        return _diff_identity(seqs, default=default)
+    else:
+        return _diff_key(seqs, key, default=default)
+
+
+def diff(*seqs, **kwargs):
+    """
+    Return those items that differ between sequences
+
+    >>> list(diff([1, 2, 3], [1, 2, 10, 100]))
+    [(3, 10)]
+
+    Shorter sequences may be padded with a ``default`` value:
+
+    >>> list(diff([1, 2, 3], [1, 2, 10, 100], default=None))
+    [(3, 10), (None, 100)]
+
+    A ``key`` function may also be applied to each item to use during
+    comparisons:
+
+    >>> list(diff(['apples', 'bananas'], ['Apples', 'Oranges'], key=str.lower))
+    [('bananas', 'Oranges')]
+    """
+    N = len(seqs)
+    if N == 1 and isinstance(seqs[0], list):
+        seqs = seqs[0]
+    default = kwargs.get('default', no_default)
+    key = kwargs.get('key')
+    return c_diff(seqs, default=default, key=key)
 
 
 cpdef object topk(Py_ssize_t k, object seq, object key=None):

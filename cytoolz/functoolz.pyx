@@ -152,7 +152,7 @@ cpdef Py_ssize_t _num_required_args(object func) except *:
 
 
 cdef class curry:
-    """ curry(self, func, *args, **kwargs)
+    """ curry(self, *args, **kwargs)
 
     Curry a callable function
 
@@ -181,7 +181,10 @@ cdef class curry:
         cytoolz.curried - namespace of curried functions
                         http://toolz.readthedocs.org/en/latest/curry.html
     """
-    def __cinit__(self, func, *args, **kwargs):
+    def __cinit__(self, *args, **kwargs):
+        if not args:
+            raise TypeError('__init__() takes at least 2 arguments (1 given)')
+        func, args = args[0], args[1:]
         if not PyCallable_Check(func):
             raise TypeError("Input must be callable")
 
