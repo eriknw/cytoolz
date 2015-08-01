@@ -17,6 +17,7 @@ from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
 from operator import itemgetter
 from cytoolz.compatibility import map, zip, zip_longest
+from cytoolz.utils import no_default
 
 
 __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
@@ -81,21 +82,23 @@ cdef class accumulate:
     See Also:
         itertools.accumulate :  In standard itertools for Python 3.2+
     """
-    def __cinit__(self, object binop, object seq):
+    def __cinit__(self, object binop, object seq, object start=no_default):
         self.binop = binop
         self.iter_seq = iter(seq)
         self.result = self  # sentinel
+        self.start = start
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef object val
-        val = next(self.iter_seq)
         if self.result is self:
-            self.result = val
+            if self.start is not no_default:
+                self.result = self.start
+            else:
+                self.result = next(self.iter_seq)
         else:
-            self.result = self.binop(self.result, val)
+            self.result = self.binop(self.result, next(self.iter_seq))
         return self.result
 
 
@@ -569,9 +572,6 @@ cpdef object nth(Py_ssize_t n, object seq):
         n -= 1
         next(seq)
     return next(seq)
-
-
-no_default = '__no__default__'
 
 
 cpdef object last(object seq):
