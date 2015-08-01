@@ -1,9 +1,10 @@
 #cython: embedsignature=True
 import inspect
 import sys
+from functools import partial
 from cytoolz.compatibility import filter as ifilter, map as imap, reduce
 
-from cpython.dict cimport PyDict_Merge, PyDict_New
+from cpython.dict cimport PyDict_Merge, PyDict_New, PyDict_Copy
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
@@ -18,9 +19,6 @@ from cytoolz.cpython cimport PtrObject_Call
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
            'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
-
-
-PY2 = sys.version_info[0] == 2
 
 
 cpdef object identity(object x):
@@ -154,6 +152,25 @@ cpdef Py_ssize_t _num_required_args(object func) except *:
     return -1
 
 
+cdef struct partialobject:
+    PyObject _
+    PyObject *fn
+    PyObject *args
+    PyObject *kw
+    PyObject *dict
+    PyObject *weakreflist
+
+
+cdef object _partial = partial(lambda: None)
+
+
+cdef object _empty_kwargs():
+    kwds = (<partialobject*> _partial).kw
+    if kwds == NULL or <object> kwds is None:
+        return None
+    return PyDict_Copy(<object> kwds)
+
+
 cdef class curry:
     """ curry(self, *args, **kwargs)
 
@@ -207,7 +224,7 @@ cdef class curry:
 
         self.func = func
         self.args = args
-        self.keywords = kwargs if kwargs or PY2 else None
+        self.keywords = kwargs if kwargs else _empty_kwargs()
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
 
