@@ -20,6 +20,9 @@ __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
            'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
 
 
+PY2 = sys.version_info[0] == 2
+
+
 cpdef object identity(object x):
     return x
 
@@ -204,7 +207,7 @@ cdef class curry:
 
         self.func = func
         self.args = args
-        self.keywords = kwargs if kwargs else None
+        self.keywords = kwargs if kwargs or PY2 else None
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
 
