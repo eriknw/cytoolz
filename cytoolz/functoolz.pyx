@@ -165,10 +165,10 @@ cdef object _partial = partial(lambda: None)
 
 
 cdef object _empty_kwargs():
-    kwds = (<partialobject*> _partial).kw
-    if kwds == NULL or <object> kwds is None:
+    kwds = <object> (<partialobject*> _partial).kw
+    if kwds is None:
         return None
-    return PyDict_Copy(<object> kwds)
+    return PyDict_Copy(kwds)
 
 
 cdef class curry:
