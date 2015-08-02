@@ -17,7 +17,7 @@ from cytoolz.cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
-           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
+           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize', 'flip']
 
 
 cpdef object identity(object x):
@@ -580,3 +580,10 @@ cpdef object do(object func, object x):
     """
     func(x)
     return x
+
+
+cpdef object _flip(object f, object a, object b):
+    return PyObject_CallObject(f, (b, a))
+
+
+flip = curry(_flip)

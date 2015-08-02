@@ -2,12 +2,11 @@ import platform
 
 
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
-                             compose, pipe, complement, do, juxt)
+                               compose, pipe, complement, do, juxt, flip)
 from cytoolz.functoolz import _num_required_args
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial
-from cytoolz.compatibility import reduce, PY3
 
 
 def iseven(x):
@@ -484,3 +483,10 @@ def test_juxt_generator_input():
     juxtfunc = juxt(itemgetter(2*i) for i in range(5))
     assert juxtfunc(data) == (0, 2, 4, 6, 8)
     assert juxtfunc(data) == (0, 2, 4, 6, 8)
+
+
+def test_flip():
+    def f(a, b):
+        return a, b
+
+    assert flip(f, 'a', 'b') == ('b', 'a')
