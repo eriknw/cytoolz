@@ -4,7 +4,7 @@ import sys
 from functools import partial
 from cytoolz.compatibility import filter as ifilter, map as imap, reduce
 
-from cpython.dict cimport PyDict_Merge, PyDict_New, PyDict_Copy
+from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
@@ -165,10 +165,9 @@ cdef object _partial = partial(lambda: None)
 
 
 cdef object _empty_kwargs():
-    kwds = <object> (<partialobject*> _partial).kw
-    if kwds is None:
+    if <object> (<partialobject*> _partial).kw is None:
         return None
-    return PyDict_Copy(kwds)
+    return PyDict_New()
 
 
 cdef class curry:

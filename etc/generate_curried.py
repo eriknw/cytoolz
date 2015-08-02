@@ -1,7 +1,5 @@
 #!/usr/bin/env python
-from itertools import chain
-import inspect
-
+import cytoolz
 import toolz
 import toolz.curried
 
@@ -42,22 +40,19 @@ Example:
 See Also:
     cytoolz.functoolz.curry
 """
-import inspect
-
 from . import exceptions
 from . import operator
 import cytoolz
 
 
-def _should_curry(f):
-    return f in set([
-        {should_curry}
-    ])
+_curry_set = frozenset([
+    {should_curry}
+])
 
 
 def _curry_namespace(ns):
     return dict(
-        (name, cytoolz.curry(f) if _should_curry(f) else f)
+        (name, cytoolz.curry(f) if f in _curry_set else f)
         for name, f in ns.items() if '__' not in name
     )
 
@@ -68,23 +63,24 @@ locals().update(cytoolz.merge(
 ))
 
 # Clean up the namespace.
-del _should_curry
+del _curry_set
+del _curry_namespace
 del exceptions
 del cytoolz
 '''
 
 
 def _curry_namespace(ns):
+    ct = vars(cytoolz)
     return (
         'cytoolz.' + name + ','
-        for name, f in ns.items() if isinstance(f, toolz.curry)
+        for name, f in ns.items() if isinstance(f, toolz.curry) and name in ct
     )
-
 
 
 def gen_init():
     return init_template.format(
-        should_curry='\n        '.join(
+        should_curry='\n    '.join(
             _curry_namespace(vars(toolz.curried)),
         ),
     )
@@ -93,7 +89,6 @@ def gen_init():
 def main(argv):
     if len(argv) != 1:
         raise ValueError('no arguments expected')
-
 
     print(autogen_header + gen_init())
 

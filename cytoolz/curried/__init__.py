@@ -29,63 +29,59 @@ Example:
 See Also:
     cytoolz.functoolz.curry
 """
-import inspect
-
 from . import exceptions
 from . import operator
 import cytoolz
 
 
-def _should_curry(f):
-    return f in set([
-        cytoolz.partition,
-        cytoolz.unique,
-        cytoolz.take,
-        cytoolz.map,
-        cytoolz.topk,
-        cytoolz.join,
-        cytoolz.interleave,
-        cytoolz.assoc,
-        cytoolz.countby,
-        cytoolz.pluck,
-        cytoolz.sliding_window,
-        cytoolz.groupby,
-        cytoolz.reduceby,
-        cytoolz.dissoc,
-        cytoolz.keymap,
-        cytoolz.merge_with,
-        cytoolz.itemfilter,
-        cytoolz.memoize,
-        cytoolz.iterate,
-        cytoolz.accumulate,
-        cytoolz.valmap,
-        cytoolz.cons,
-        cytoolz.do,
-        cytoolz.sorted,
-        cytoolz.get_in,
-        cytoolz.remove,
-        cytoolz.mapcat,
-        cytoolz.take_nth,
-        cytoolz.get,
-        cytoolz.interpose,
-        cytoolz.itemmap,
-        cytoolz.nth,
-        cytoolz.partitionby,
-        cytoolz.drop,
-        cytoolz.merge,
-        cytoolz.reduce,
-        cytoolz.filter,
-        cytoolz.update_in,
-        cytoolz.keyfilter,
-        cytoolz.tail,
-        cytoolz.valfilter,
-        cytoolz.partition_all,
-    ])
+_curry_set = frozenset([
+    cytoolz.nth,
+    cytoolz.partition,
+    cytoolz.take_nth,
+    cytoolz.tail,
+    cytoolz.valfilter,
+    cytoolz.memoize,
+    cytoolz.reduceby,
+    cytoolz.topk,
+    cytoolz.join,
+    cytoolz.do,
+    cytoolz.sorted,
+    cytoolz.interpose,
+    cytoolz.take,
+    cytoolz.pluck,
+    cytoolz.drop,
+    cytoolz.get_in,
+    cytoolz.reduce,
+    cytoolz.itemfilter,
+    cytoolz.accumulate,
+    cytoolz.merge,
+    cytoolz.interleave,
+    cytoolz.iterate,
+    cytoolz.get,
+    cytoolz.remove,
+    cytoolz.valmap,
+    cytoolz.keymap,
+    cytoolz.cons,
+    cytoolz.unique,
+    cytoolz.partitionby,
+    cytoolz.itemmap,
+    cytoolz.sliding_window,
+    cytoolz.map,
+    cytoolz.partition_all,
+    cytoolz.assoc,
+    cytoolz.mapcat,
+    cytoolz.filter,
+    cytoolz.countby,
+    cytoolz.merge_with,
+    cytoolz.update_in,
+    cytoolz.keyfilter,
+    cytoolz.groupby,
+])
 
 
 def _curry_namespace(ns):
     return dict(
-        (name, cytoolz.curry(f) if _should_curry(f) else f)
+        (name, cytoolz.curry(f) if f in _curry_set else f)
         for name, f in ns.items() if '__' not in name
     )
 
@@ -96,7 +92,8 @@ locals().update(cytoolz.merge(
 ))
 
 # Clean up the namespace.
-del _should_curry
+del _curry_set
+del _curry_namespace
 del exceptions
 del cytoolz
 
