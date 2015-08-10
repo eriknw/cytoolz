@@ -7,7 +7,7 @@ cdef class accumulate:
     cdef object binop
     cdef object iter_seq
     cdef object result
-    cdef object start
+    cdef object initial
 
 
 cpdef dict groupby(object key, object seq)
