@@ -16,21 +16,11 @@ def raises(err, lamda):
         return True
 
 
-@object.__new__
-class no_default(object):
-    def __new__(self):
-        raise TypeError("cannot create 'no_default' instances")
-
-    def __str__(self):
-        return '<object no_default>'
-    __repr__ = __str__
-
-
 try:
     # Attempt to get the no_default sentinel object from toolz
     from toolz.utils import no_default
 except ImportError:
-    pass
+    no_default = '__no_default__'
 
 
 def include_dirs():
