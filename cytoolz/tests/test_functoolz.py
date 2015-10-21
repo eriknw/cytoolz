@@ -2,12 +2,11 @@ import platform
 
 
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
-                             compose, pipe, complement, do, juxt)
+                             compose, pipe, complement, do, juxt, flip)
 from cytoolz.functoolz import _num_required_args
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial
-from cytoolz.compatibility import reduce, PY3
 
 
 def iseven(x):
@@ -436,6 +435,24 @@ def test_compose():
 
     assert compose(str, inc, f)(1, 2, c=3) == '10'
 
+    # Define two functions with different names
+    def f(a):
+        return a
+
+    def g(a):
+        return a
+
+    composed = compose(f, g)
+    assert composed.__name__ == 'f_of_g'
+    assert composed.__doc__ == 'lambda *args, **kwargs: f(g(*args, **kwargs))'
+
+    # Create an object with no __name__.
+    h = object()
+
+    composed = compose(f, h)
+    assert composed.__name__ == 'Compose'
+    assert composed.__doc__ == 'A composition of functions'
+
 
 def test_pipe():
     assert pipe(1, inc) == 2
@@ -484,3 +501,10 @@ def test_juxt_generator_input():
     juxtfunc = juxt(itemgetter(2*i) for i in range(5))
     assert juxtfunc(data) == (0, 2, 4, 6, 8)
     assert juxtfunc(data) == (0, 2, 4, 6, 8)
+
+
+def test_flip():
+    def f(a, b):
+        return a, b
+
+    assert flip(f, 'a', 'b') == ('b', 'a')

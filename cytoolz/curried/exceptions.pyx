@@ -1,10 +1,13 @@
 #cython: embedsignature=True
+from cytoolz import curry
+
 from cpython.dict cimport PyDict_Check
 from cytoolz.dicttoolz cimport c_merge, c_merge_with
 
 __all__ = ['merge', 'merge_with']
 
 
+@curry
 def merge(*dicts, **kwargs):
     if len(dicts) == 0:
         raise TypeError()
@@ -13,6 +16,7 @@ def merge(*dicts, **kwargs):
     return c_merge(dicts)
 
 
+@curry
 def merge_with(func, *dicts, **kwargs):
     """
     Merge dictionaries and apply function to combined values

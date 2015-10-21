@@ -17,6 +17,7 @@ from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
 from operator import itemgetter
 from cytoolz.compatibility import map, zip, zip_longest
+from cytoolz.utils import no_default
 
 
 __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
@@ -24,7 +25,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join', 'tail', 'diff', 'topk']
+           'join', 'tail', 'diff', 'topk', 'peek']
 
 
 concatv = chain
@@ -61,7 +62,7 @@ cdef class remove:
 
 
 cdef class accumulate:
-    """ accumulate(binop, seq)
+    """ accumulate(binop, seq, initial='__no__default__')
 
     Repeatedly apply binary function to a sequence, accumulating results
 
@@ -78,24 +79,34 @@ cdef class accumulate:
     >>> sum    = partial(reduce, add)
     >>> cumsum = partial(accumulate, add)
 
+    Accumulate also takes an optional argument that will be used as the first
+    value. This is similar to reduce.
+
+    >>> list(accumulate(add, [1, 2, 3], -1))
+    [-1, 0, 2, 5]
+    >>> list(accumulate(add, [], 1))
+    [1]
+
     See Also:
         itertools.accumulate :  In standard itertools for Python 3.2+
     """
-    def __cinit__(self, object binop, object seq):
+    def __cinit__(self, object binop, object seq, object initial=no_default):
         self.binop = binop
         self.iter_seq = iter(seq)
         self.result = self  # sentinel
+        self.initial = initial
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef object val
-        val = next(self.iter_seq)
         if self.result is self:
-            self.result = val
+            if self.initial is not no_default:
+                self.result = self.initial
+            else:
+                self.result = next(self.iter_seq)
         else:
-            self.result = self.binop(self.result, val)
+            self.result = self.binop(self.result, next(self.iter_seq))
         return self.result
 
 
@@ -569,9 +580,6 @@ cpdef object nth(Py_ssize_t n, object seq):
         n -= 1
         next(seq)
     return next(seq)
-
-
-no_default = '__no__default__'
 
 
 cpdef object last(object seq):
@@ -1658,3 +1666,23 @@ cpdef object topk(Py_ssize_t k, object seq, object key=None):
     pq.sort(reverse=True)
     k = 0 if key is None else 2
     return tuple([item[k] for item in pq])
+
+
+cpdef object peek(object seq):
+    """
+    Retrieve the next element of a sequence
+
+    Returns the first element and an iterable equivalent to the original
+    sequence, still having the element retrieved.
+
+    >>> seq = [0, 1, 2, 3, 4]
+    >>> first, seq = peek(seq)
+    >>> first
+    0
+    >>> list(seq)
+    [0, 1, 2, 3, 4]
+
+    """
+    iterator = iter(seq)
+    item = next(iterator)
+    return item, chain((item,), iterator)

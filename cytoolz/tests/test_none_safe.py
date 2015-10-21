@@ -140,6 +140,9 @@ def test_functoolz():
     assert thread_last(1, None) is None
     tested.append('thread_last')
 
+    assert flip(lambda a, b: (a, b))(None)(None) == (None, None)
+    tested.append('flip')
+
     s1 = set(tested)
     s2 = set(cytoolz.functoolz.__all__)
     assert s1 == s2, '%s not tested for being None-safe' % ', '.join(s2 - s1)
@@ -287,6 +290,9 @@ def test_itertoolz():
     assert raises(TypeError, lambda: list(diff([None])))
     assert raises(TypeError, lambda: list(diff([None, None])))
     tested.append('diff')
+
+    assert raises(TypeError, lambda: peek(None))
+    tested.append('peek')
 
     s1 = set(tested)
     s2 = set(cytoolz.itertoolz.__all__)

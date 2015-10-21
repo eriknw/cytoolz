@@ -26,8 +26,8 @@ cpdef object memoize(object func=*, object cache=*, object key=*)
 
 
 cdef class Compose:
-    cdef object firstfunc
-    cdef tuple funcs
+    cdef public object first
+    cdef public tuple funcs
 
 
 cdef object c_compose(object funcs)

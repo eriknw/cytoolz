@@ -11,7 +11,7 @@ from cytoolz.itertoolz import (remove, groupby, merge_sorted,
                              reduceby, iterate, accumulate,
                              sliding_window, count, partition,
                              partition_all, take_nth, pluck, join,
-                             diff, topk)
+                             diff, topk, peek)
 from cytoolz.compatibility import range, filter
 from operator import add, mul
 
@@ -266,6 +266,13 @@ def test_iterate():
 def test_accumulate():
     assert list(accumulate(add, [1, 2, 3, 4, 5])) == [1, 3, 6, 10, 15]
     assert list(accumulate(mul, [1, 2, 3, 4, 5])) == [1, 2, 6, 24, 120]
+    assert list(accumulate(add, [1, 2, 3, 4, 5], -1)) == [-1, 0, 2, 5, 9, 14]
+
+    def binop(a, b):
+        raise AssertionError('binop should not be called')
+
+    start = object()
+    assert list(accumulate(binop, [], start)) == [start]
 
 
 def test_accumulate_works_on_consumable_iterables():
@@ -458,3 +465,12 @@ def test_topk():
 
 def test_topk_is_stable():
     assert topk(4, [5, 9, 2, 1, 5, 3], key=lambda x: 1) == (5, 9, 2, 1)
+
+
+def test_peek():
+    alist = ["Alice", "Bob", "Carol"]
+    element, blist  = peek(alist)
+    element == alist[0]
+    assert list(blist) == alist
+
+    assert raises(StopIteration, lambda: peek([]))

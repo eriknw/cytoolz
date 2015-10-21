@@ -1,6 +1,7 @@
 #cython: embedsignature=True
 import inspect
 import sys
+from functools import partial
 from cytoolz.compatibility import filter as ifilter, map as imap, reduce
 
 from cpython.dict cimport PyDict_Merge, PyDict_New
@@ -17,7 +18,7 @@ from cytoolz.cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
-           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
+           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize', 'flip']
 
 
 cpdef object identity(object x):
@@ -151,6 +152,24 @@ cpdef Py_ssize_t _num_required_args(object func) except *:
     return -1
 
 
+cdef struct partialobject:
+    PyObject _
+    PyObject *fn
+    PyObject *args
+    PyObject *kw
+    PyObject *dict
+    PyObject *weakreflist
+
+
+cdef object _partial = partial(lambda: None)
+
+
+cdef object _empty_kwargs():
+    if <object> (<partialobject*> _partial).kw is None:
+        return None
+    return PyDict_New()
+
+
 cdef class curry:
     """ curry(self, *args, **kwargs)
 
@@ -204,7 +223,7 @@ cdef class curry:
 
         self.func = func
         self.args = args
-        self.keywords = kwargs if kwargs else None
+        self.keywords = kwargs if kwargs else _empty_kwargs()
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
 
@@ -412,21 +431,50 @@ cdef class Compose:
         compose
     """
     def __cinit__(self, *funcs):
-        self.firstfunc = funcs[-1]
+        self.first = funcs[-1]
         self.funcs = tuple(reversed(funcs[:-1]))
 
     def __call__(self, *args, **kwargs):
         cdef object func, ret
-        ret = PyObject_Call(self.firstfunc, args, kwargs)
+        ret = PyObject_Call(self.first, args, kwargs)
         for func in self.funcs:
             ret = func(ret)
         return ret
 
     def __reduce__(self):
-        return (Compose, (self.firstfunc,), self.funcs)
+        return (Compose, (self.first,), self.funcs)
 
     def __setstate__(self, state):
         self.funcs = state
+
+    property __name__:
+        def __get__(self):
+            try:
+                return '_of_'.join(
+                    f.__name__ for f in reversed((self.first,) + self.funcs)
+                )
+            except AttributeError:
+                return type(self).__name__
+
+    property __doc__:
+        def __get__(self):
+            def composed_doc(*fs):
+                """Generate a docstring for the composition of fs.
+                """
+                if not fs:
+                    # Argument name for the docstring.
+                    return '*args, **kwargs'
+
+                return '{f}({g})'.format(f=fs[0].__name__, g=composed_doc(*fs[1:]))
+
+            try:
+                return (
+                    'lambda *args, **kwargs: ' +
+                    composed_doc(*reversed((self.first,) + self.funcs))
+                )
+            except AttributeError:
+                # One of our callables does not have a `__name__`, whatever.
+                return 'A composition of functions'
 
 
 cdef object c_compose(object funcs):
@@ -580,3 +628,10 @@ cpdef object do(object func, object x):
     """
     func(x)
     return x
+
+
+cpdef object _flip(object f, object a, object b):
+    return PyObject_CallObject(f, (b, a))
+
+
+flip = curry(_flip)
