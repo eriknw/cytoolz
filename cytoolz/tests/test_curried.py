@@ -1,7 +1,7 @@
 import cytoolz
 import cytoolz.curried
 from cytoolz.curried import (take, first, second, sorted, merge_with, reduce,
-                           merge)
+                           merge, operator as cop)
 from collections import defaultdict
 from operator import add
 
@@ -38,3 +38,22 @@ def test_reduce():
 
 def test_module_name():
     assert cytoolz.curried.__name__ == 'cytoolz.curried'
+
+
+def test_curried_operator():
+    for k, v in vars(cop).items():
+        if not callable(v):
+            continue
+
+        if not isinstance(v, cytoolz.curry):
+            try:
+                # Make sure it is unary
+                # We cannot use isunary because it might be defined in C.
+                v(1)
+            except TypeError:
+                raise AssertionError(
+                    'cytoolz.curried.operator.%s is not curried!' % k,
+                )
+
+    # Make sure this isn't totally empty.
+    assert len(set(vars(cop)) & set(['add', 'sub', 'mul'])) == 3

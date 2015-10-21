@@ -3,7 +3,7 @@ from cytoolz.itertoolz cimport (
     frequencies, interleave, interpose, isdistinct, isiterable, iterate,
     last, mapcat, nth, partition, partition_all, pluck, reduceby, remove,
     rest, second, sliding_window, take, tail, take_nth, unique, join,
-    c_diff, topk)
+    c_diff, topk, peek)
 
 
 from cytoolz.functoolz cimport (
@@ -12,7 +12,7 @@ from cytoolz.functoolz cimport (
 
 
 from cytoolz.dicttoolz cimport (
-    assoc, c_merge, c_merge_with, dissoc, get_in, keyfilter, keymap,
+    assoc, c_merge, c_merge_with, c_dissoc, get_in, keyfilter, keymap,
     itemfilter, itemmap, update_in, valfilter, valmap)
 
 
