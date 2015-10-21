@@ -1,6 +1,7 @@
 #cython: embedsignature=True
 import inspect
 import sys
+from functools import partial
 from cytoolz.compatibility import filter as ifilter, map as imap, reduce
 
 from cpython.dict cimport PyDict_Merge, PyDict_New
@@ -151,6 +152,24 @@ cpdef Py_ssize_t _num_required_args(object func) except *:
     return -1
 
 
+cdef struct partialobject:
+    PyObject _
+    PyObject *fn
+    PyObject *args
+    PyObject *kw
+    PyObject *dict
+    PyObject *weakreflist
+
+
+cdef object _partial = partial(lambda: None)
+
+
+cdef object _empty_kwargs():
+    if <object> (<partialobject*> _partial).kw is None:
+        return None
+    return PyDict_New()
+
+
 cdef class curry:
     """ curry(self, *args, **kwargs)
 
@@ -204,7 +223,7 @@ cdef class curry:
 
         self.func = func
         self.args = args
-        self.keywords = kwargs if kwargs else None
+        self.keywords = kwargs if kwargs else _empty_kwargs()
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
 
