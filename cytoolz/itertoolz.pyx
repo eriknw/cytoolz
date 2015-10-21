@@ -25,7 +25,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join', 'tail', 'diff', 'topk']
+           'join', 'tail', 'diff', 'topk', 'peek']
 
 
 concatv = chain
@@ -62,7 +62,9 @@ cdef class remove:
 
 
 cdef class accumulate:
-    """ Repeatedly apply binary function to a sequence, accumulating results
+    """ accumulate(binop, seq, initial='__no__default__')
+
+    Repeatedly apply binary function to a sequence, accumulating results
 
     >>> from operator import add, mul
     >>> list(accumulate(add, [1, 2, 3, 4, 5]))
@@ -1664,3 +1666,23 @@ cpdef object topk(Py_ssize_t k, object seq, object key=None):
     pq.sort(reverse=True)
     k = 0 if key is None else 2
     return tuple([item[k] for item in pq])
+
+
+cpdef object peek(object seq):
+    """
+    Retrieve the next element of a sequence
+
+    Returns the first element and an iterable equivalent to the original
+    sequence, still having the element retrieved.
+
+    >>> seq = [0, 1, 2, 3, 4]
+    >>> first, seq = peek(seq)
+    >>> first
+    0
+    >>> list(seq)
+    [0, 1, 2, 3, 4]
+
+    """
+    iterator = iter(seq)
+    item = next(iterator)
+    return item, chain((item,), iterator)

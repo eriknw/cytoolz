@@ -374,20 +374,27 @@ cpdef object assoc(object d, object key, object value, object factory=dict):
     return rv
 
 
-cpdef object dissoc(object d, object key):
-    """
-    Return a new dict with the given key removed.
+cdef object c_dissoc(object d, object keys):
+    cdef object rv, key
+    rv = copy(d)
+    for key in keys:
+        del rv[key]
+    return rv
 
-    New dict has d[key] deleted.
+
+def dissoc(d, *keys):
+    """
+    Return a new dict with the given key(s) removed.
+
+    New dict has d[key] deleted for each supplied key.
     Does not modify the initial dictionary.
 
     >>> dissoc({'x': 1, 'y': 2}, 'y')
     {'x': 1}
+    >>> dissoc({'x': 1, 'y': 2}, 'y', 'x')
+    {}
     """
-    cdef object rv
-    rv = copy(d)
-    del rv[key]
-    return rv
+    return c_dissoc(d, keys)
 
 
 cpdef object update_in(object d, object keys, object func, object default=None, object factory=dict):

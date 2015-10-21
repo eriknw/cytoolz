@@ -431,21 +431,50 @@ cdef class Compose:
         compose
     """
     def __cinit__(self, *funcs):
-        self.firstfunc = funcs[-1]
+        self.first = funcs[-1]
         self.funcs = tuple(reversed(funcs[:-1]))
 
     def __call__(self, *args, **kwargs):
         cdef object func, ret
-        ret = PyObject_Call(self.firstfunc, args, kwargs)
+        ret = PyObject_Call(self.first, args, kwargs)
         for func in self.funcs:
             ret = func(ret)
         return ret
 
     def __reduce__(self):
-        return (Compose, (self.firstfunc,), self.funcs)
+        return (Compose, (self.first,), self.funcs)
 
     def __setstate__(self, state):
         self.funcs = state
+
+    property __name__:
+        def __get__(self):
+            try:
+                return '_of_'.join(
+                    f.__name__ for f in reversed((self.first,) + self.funcs)
+                )
+            except AttributeError:
+                return type(self).__name__
+
+    property __doc__:
+        def __get__(self):
+            def composed_doc(*fs):
+                """Generate a docstring for the composition of fs.
+                """
+                if not fs:
+                    # Argument name for the docstring.
+                    return '*args, **kwargs'
+
+                return '{f}({g})'.format(f=fs[0].__name__, g=composed_doc(*fs[1:]))
+
+            try:
+                return (
+                    'lambda *args, **kwargs: ' +
+                    composed_doc(*reversed((self.first,) + self.funcs))
+                )
+            except AttributeError:
+                # One of our callables does not have a `__name__`, whatever.
+                return 'A composition of functions'
 
 
 cdef object c_compose(object funcs):

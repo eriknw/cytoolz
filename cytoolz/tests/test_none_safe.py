@@ -291,6 +291,9 @@ def test_itertoolz():
     assert raises(TypeError, lambda: list(diff([None, None])))
     tested.append('diff')
 
+    assert raises(TypeError, lambda: peek(None))
+    tested.append('peek')
+
     s1 = set(tested)
     s2 = set(cytoolz.itertoolz.__all__)
     assert s1 == s2, '%s not tested for being None-safe' % ', '.join(s2 - s1)

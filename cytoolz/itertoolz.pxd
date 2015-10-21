@@ -255,3 +255,6 @@ cdef object c_diff(object seqs, object default=*, object key=*)
 
 
 cpdef object topk(Py_ssize_t k, object seq, object key=*)
+
+
+cpdef object peek(object seq)

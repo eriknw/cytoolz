@@ -2,7 +2,7 @@ import platform
 
 
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
-                               compose, pipe, complement, do, juxt, flip)
+                             compose, pipe, complement, do, juxt, flip)
 from cytoolz.functoolz import _num_required_args
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
@@ -434,6 +434,24 @@ def test_compose():
         return (a + b) * c
 
     assert compose(str, inc, f)(1, 2, c=3) == '10'
+
+    # Define two functions with different names
+    def f(a):
+        return a
+
+    def g(a):
+        return a
+
+    composed = compose(f, g)
+    assert composed.__name__ == 'f_of_g'
+    assert composed.__doc__ == 'lambda *args, **kwargs: f(g(*args, **kwargs))'
+
+    # Create an object with no __name__.
+    h = object()
+
+    composed = compose(f, h)
+    assert composed.__name__ == 'Compose'
+    assert composed.__doc__ == 'A composition of functions'
 
 
 def test_pipe():
