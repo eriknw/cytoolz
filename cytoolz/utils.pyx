@@ -16,7 +16,11 @@ def raises(err, lamda):
         return True
 
 
-no_default = '__no__default__'
+try:
+    # Attempt to get the no_default sentinel object from toolz
+    from toolz.utils import no_default
+except ImportError:
+    no_default = '__no_default__'
 
 
 def include_dirs():
