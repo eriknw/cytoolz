@@ -20,7 +20,7 @@ usage is achieved by using the iterator protocol and returning iterators
 whenever possible.
 
 ``cytoolz`` implements the same API as ``toolz``.  The main differences are
-that ``cytoolz`` is faster (typically 2-5x faster with a few spectactular
+that ``cytoolz`` is faster (typically 2-5x faster with a few spectacular
 exceptions) and ``cytoolz`` offers a C API that is accessible to other
 projects developed in Cython.  Since ``toolz`` is able to process very
 large (potentially infinite) data sets, the performance increase gained by
