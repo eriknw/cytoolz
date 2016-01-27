@@ -5,7 +5,7 @@ from functools import partial
 from cytoolz.compatibility import filter as ifilter, map as imap, reduce
 
 from cpython.dict cimport PyDict_Merge, PyDict_New
-from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
+from cpython.exc cimport PyErr_Clear, PyErr_Occurred, PyErr_GivenExceptionMatches
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
 from cpython.ref cimport PyObject, Py_DECREF
@@ -266,8 +266,8 @@ cdef class curry:
             return val
 
         val = <object>PyErr_Occurred()
-        if PyErr_ExceptionMatches(TypeError):
-            PyErr_Clear()
+        PyErr_Clear()
+        if PyErr_GivenExceptionMatches(val, TypeError):
             required_args = _num_required_args(self.func)
             # If there was a genuine TypeError
             if required_args == -1 or len(args) < required_args:
