@@ -506,9 +506,9 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
         obj = PtrObject_GetItem(coll, item)
         if obj is NULL:
             item = <object>PyErr_Occurred()
+            PyErr_Clear()
             if no_default or not PyErr_GivenExceptionMatches(item, _get_in_exceptions):
                 raise item
-            PyErr_Clear()
             return default
         Py_XDECREF(obj)
         coll = <object>obj

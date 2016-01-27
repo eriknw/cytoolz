@@ -1,8 +1,7 @@
 #cython: embedsignature=True
 from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
-from cpython.exc cimport (PyErr_Clear, PyErr_ExceptionMatches,
-                          PyErr_GivenExceptionMatches, PyErr_Occurred)
-from cpython.list cimport (PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE)
+from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
+from cpython.list cimport PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE
 from cpython.object cimport PyObject_RichCompareBool, Py_NE
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.sequence cimport PySequence_Check
@@ -356,9 +355,9 @@ cdef class interleave:
             obj = PyErr_Occurred()
             if obj is not NULL:
                 val = <object>obj
+                PyErr_Clear()
                 if not PyErr_GivenExceptionMatches(val, self.pass_exceptions):
                     raise val
-                PyErr_Clear()
 
             if self.i == self.n:
                 self.n = PyList_GET_SIZE(self.newiters)
@@ -663,9 +662,10 @@ cpdef object get(object ind, object seq, object default=no_default):
         for i, val in enumerate(ind):
             obj = PtrObject_GetItem(seq, val)
             if obj is NULL:
-                if not PyErr_ExceptionMatches(_get_list_exc):
-                    raise <object>PyErr_Occurred()
+                val = <object>PyErr_Occurred()
                 PyErr_Clear()
+                if not PyErr_GivenExceptionMatches(val, _get_list_exc):
+                    raise val
                 Py_INCREF(default)
                 PyTuple_SET_ITEM(result, i, default)
             else:
@@ -676,10 +676,10 @@ cpdef object get(object ind, object seq, object default=no_default):
     obj = PtrObject_GetItem(seq, ind)
     if obj is NULL:
         val = <object>PyErr_Occurred()
+        PyErr_Clear()
         if default is no_default:
             raise val
         if PyErr_GivenExceptionMatches(val, _get_exceptions):
-            PyErr_Clear()
             return default
         raise val
     Py_XDECREF(obj)
@@ -1065,9 +1065,10 @@ cdef class _pluck_index_default:
         val = next(self.iterseqs)
         obj = PtrObject_GetItem(val, self.ind)
         if obj is NULL:
-            if not PyErr_ExceptionMatches(_get_exceptions):
-                raise <object>PyErr_Occurred()
+            val = <object>PyErr_Occurred()
             PyErr_Clear()
+            if not PyErr_GivenExceptionMatches(val, _get_exceptions):
+                raise val
             return self.default
         Py_XDECREF(obj)
         return <object>obj
@@ -1114,9 +1115,10 @@ cdef class _pluck_list_default:
         for i, val in enumerate(self.ind):
             obj = PtrObject_GetItem(seq, val)
             if obj is NULL:
-                if not PyErr_ExceptionMatches(_get_list_exc):
-                    raise <object>PyErr_Occurred()
+                val = <object>PyErr_Occurred()
                 PyErr_Clear()
+                if not PyErr_GivenExceptionMatches(val, _get_list_exc):
+                    raise val
                 Py_INCREF(self.default)
                 PyTuple_SET_ITEM(result, i, self.default)
             else:
