@@ -355,9 +355,9 @@ cdef class interleave:
             obj = PyErr_Occurred()
             if obj is not NULL:
                 val = <object>obj
+                PyErr_Clear()
                 if not PyErr_GivenExceptionMatches(val, self.pass_exceptions):
                     raise val
-                PyErr_Clear()
 
             if self.i == self.n:
                 self.n = PyList_GET_SIZE(self.newiters)
