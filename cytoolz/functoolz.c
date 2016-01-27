@@ -1220,7 +1220,7 @@ static char __pyx_k_Number_of_args_for_func_def_foo[] = "\n    Number of args fo
 static char __pyx_k_Pipe_a_value_through_a_sequence[] = "\n    Pipe a value through a sequence of functions\n\n    I.e. ``pipe(data, f, g, h)`` is equivalent to ``h(g(f(data)))``\n\n    We think of the value as progressing through a pipe of several\n    transformations, much like pipes in UNIX\n\n    ``$ cat data | f | g | h``\n\n    >>> double = lambda i: 2 * i\n    >>> pipe(3, double, str)\n    '6'\n\n    See Also:\n        compose\n        thread_first\n        thread_last\n    ";
 static char __pyx_k_Runs_func_on_x_returns_x_Becaus[] = "\n    Runs ``func`` on ``x``, returns ``x``\n\n    Because the results of ``func`` are not returned, only the side\n    effects of ``func`` are relevant.\n\n    Logging functions can be made by composing ``do`` with a storage function\n    like ``list.append`` or ``file.write``\n\n    >>> from cytoolz import compose\n    >>> from cytoolz.curried import do\n\n    >>> log = []\n    >>> inc = lambda x: x + 1\n    >>> inc = compose(inc, do(log.append))\n    >>> inc(1)\n    2\n    >>> inc(11)\n    12\n    >>> log\n    [1, 11]\n\n    ";
 static char __pyx_k_Thread_value_through_a_sequence[] = "\n    Thread value through a sequence of functions/forms\n\n    >>> def double(x): return 2*x\n    >>> def inc(x):    return x + 1\n    >>> thread_first(1, inc, double)\n    4\n\n    If the function expects more than one input you can specify those inputs\n    in a tuple.  The value is used as the first input.\n\n    >>> def add(x, y): return x + y\n    >>> def pow(x, y): return x**y\n    >>> thread_first(1, (add, 4), (pow, 2))  # pow(add(1, 4), 2)\n    25\n\n    So in general\n        thread_first(x, f, (g, y, z))\n    expands to\n        g(f(x), y, z)\n\n    See Also:\n        thread_last\n    ";
-static char __pyx_k_Users_ewelch_git_cytoolz_cytool[] = "/Users/ewelch/git/cytoolz/cytoolz/functoolz.pyx";
+static char __pyx_k_home_erik_git_cytoolz_cytoolz_f[] = "/home/erik/git/cytoolz/cytoolz/functoolz.pyx";
 static char __pyx_k_Thread_value_through_a_sequence_2[] = "\n    Thread value through a sequence of functions/forms\n\n    >>> def double(x): return 2*x\n    >>> def inc(x):    return x + 1\n    >>> thread_last(1, inc, double)\n    4\n\n    If the function expects more than one input you can specify those inputs\n    in a tuple.  The value is used as the last input.\n\n    >>> def add(x, y): return x + y\n    >>> def pow(x, y): return x**y\n    >>> thread_last(1, (add, 4), (pow, 2))  # pow(2, add(4, 1))\n    32\n\n    So in general\n        thread_last(x, f, (g, y, z))\n    expands to\n        g(y, z, f(x))\n\n    >>> def iseven(x):\n    ...     return x % 2 == 0\n    >>> list(thread_last([1, 2, 3], (map, inc), (filter, iseven)))\n    [2, 4]\n\n    See Also:\n        thread_first\n    ";
 static PyObject *__pyx_kp_s_A_composition_of_functions;
 static PyObject *__pyx_n_s_AttributeError;
@@ -1238,7 +1238,6 @@ static PyObject *__pyx_kp_u_Runs_func_on_x_returns_x_Becaus;
 static PyObject *__pyx_kp_u_Thread_value_through_a_sequence;
 static PyObject *__pyx_kp_u_Thread_value_through_a_sequence_2;
 static PyObject *__pyx_n_s_TypeError;
-static PyObject *__pyx_kp_s_Users_ewelch_git_cytoolz_cytool;
 static PyObject *__pyx_n_s_a;
 static PyObject *__pyx_n_s_all;
 static PyObject *__pyx_n_s_args;
@@ -1276,6 +1275,7 @@ static PyObject *__pyx_n_s_genexpr;
 static PyObject *__pyx_n_s_getargspec;
 static PyObject *__pyx_n_s_getfullargspec;
 static PyObject *__pyx_kp_u_has_kwargs_line_289;
+static PyObject *__pyx_kp_s_home_erik_git_cytoolz_cytoolz_f;
 static PyObject *__pyx_n_s_id;
 static PyObject *__pyx_n_s_identity;
 static PyObject *__pyx_n_s_ifilter;
@@ -3743,8 +3743,8 @@ static PyObject *__pyx_pf_7cytoolz_9functoolz_5curry_10__call__(struct __pyx_obj
  *             return val
  * 
  *         val = <object>PyErr_Occurred()             # <<<<<<<<<<<<<<
- *         if PyErr_ExceptionMatches(TypeError):
- *             PyErr_Clear()
+ *         PyErr_Clear()
+ *         if PyErr_GivenExceptionMatches(val, TypeError):
  */
   __pyx_t_6 = PyErr_Occurred();
   __pyx_t_3 = ((PyObject *)__pyx_t_6);
@@ -3755,25 +3755,25 @@ static PyObject *__pyx_pf_7cytoolz_9functoolz_5curry_10__call__(struct __pyx_obj
   /* "cytoolz/functoolz.pyx":269
  * 
  *         val = <object>PyErr_Occurred()
- *         if PyErr_ExceptionMatches(TypeError):             # <<<<<<<<<<<<<<
- *             PyErr_Clear()
+ *         PyErr_Clear()             # <<<<<<<<<<<<<<
+ *         if PyErr_GivenExceptionMatches(val, TypeError):
  *             required_args = _num_required_args(self.func)
  */
-  __pyx_t_4 = (PyErr_ExceptionMatches(__pyx_builtin_TypeError) != 0);
-  if (__pyx_t_4) {
+  PyErr_Clear();
 
-    /* "cytoolz/functoolz.pyx":270
+  /* "cytoolz/functoolz.pyx":270
  *         val = <object>PyErr_Occurred()
- *         if PyErr_ExceptionMatches(TypeError):
- *             PyErr_Clear()             # <<<<<<<<<<<<<<
+ *         PyErr_Clear()
+ *         if PyErr_GivenExceptionMatches(val, TypeError):             # <<<<<<<<<<<<<<
  *             required_args = _num_required_args(self.func)
  *             # If there was a genuine TypeError
  */
-    PyErr_Clear();
+  __pyx_t_4 = (PyErr_GivenExceptionMatches(__pyx_v_val, __pyx_builtin_TypeError) != 0);
+  if (__pyx_t_4) {
 
     /* "cytoolz/functoolz.pyx":271
- *         if PyErr_ExceptionMatches(TypeError):
- *             PyErr_Clear()
+ *         PyErr_Clear()
+ *         if PyErr_GivenExceptionMatches(val, TypeError):
  *             required_args = _num_required_args(self.func)             # <<<<<<<<<<<<<<
  *             # If there was a genuine TypeError
  *             if required_args == -1 or len(args) < required_args:
@@ -3838,12 +3838,12 @@ static PyObject *__pyx_pf_7cytoolz_9functoolz_5curry_10__call__(struct __pyx_obj
  */
     }
 
-    /* "cytoolz/functoolz.pyx":269
- * 
+    /* "cytoolz/functoolz.pyx":270
  *         val = <object>PyErr_Occurred()
- *         if PyErr_ExceptionMatches(TypeError):             # <<<<<<<<<<<<<<
- *             PyErr_Clear()
+ *         PyErr_Clear()
+ *         if PyErr_GivenExceptionMatches(val, TypeError):             # <<<<<<<<<<<<<<
  *             required_args = _num_required_args(self.func)
+ *             # If there was a genuine TypeError
  */
   }
 
@@ -10978,7 +10978,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_Thread_value_through_a_sequence, __pyx_k_Thread_value_through_a_sequence, sizeof(__pyx_k_Thread_value_through_a_sequence), 0, 1, 0, 0},
   {&__pyx_kp_u_Thread_value_through_a_sequence_2, __pyx_k_Thread_value_through_a_sequence_2, sizeof(__pyx_k_Thread_value_through_a_sequence_2), 0, 1, 0, 0},
   {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
-  {&__pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_k_Users_ewelch_git_cytoolz_cytool, sizeof(__pyx_k_Users_ewelch_git_cytoolz_cytool), 0, 0, 1, 0},
   {&__pyx_n_s_a, __pyx_k_a, sizeof(__pyx_k_a), 0, 0, 1, 1},
   {&__pyx_n_s_all, __pyx_k_all, sizeof(__pyx_k_all), 0, 0, 1, 1},
   {&__pyx_n_s_args, __pyx_k_args, sizeof(__pyx_k_args), 0, 0, 1, 1},
@@ -11016,6 +11015,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_getargspec, __pyx_k_getargspec, sizeof(__pyx_k_getargspec), 0, 0, 1, 1},
   {&__pyx_n_s_getfullargspec, __pyx_k_getfullargspec, sizeof(__pyx_k_getfullargspec), 0, 0, 1, 1},
   {&__pyx_kp_u_has_kwargs_line_289, __pyx_k_has_kwargs_line_289, sizeof(__pyx_k_has_kwargs_line_289), 0, 1, 0, 0},
+  {&__pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_k_home_erik_git_cytoolz_cytoolz_f, sizeof(__pyx_k_home_erik_git_cytoolz_cytoolz_f), 0, 0, 1, 0},
   {&__pyx_n_s_id, __pyx_k_id, sizeof(__pyx_k_id), 0, 0, 1, 1},
   {&__pyx_n_s_identity, __pyx_k_identity, sizeof(__pyx_k_identity), 0, 0, 1, 1},
   {&__pyx_n_s_ifilter, __pyx_k_ifilter, sizeof(__pyx_k_ifilter), 0, 0, 1, 1},
@@ -11129,7 +11129,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__5 = PyTuple_Pack(1, __pyx_n_s_fs); if (unlikely(!__pyx_tuple__5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 461; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__5);
   __Pyx_GIVEREF(__pyx_tuple__5);
-  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_composed_doc, 461, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 461; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__6 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__5, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_n_s_composed_doc, 461, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 461; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "cytoolz/functoolz.pyx":42
  * 
@@ -11141,7 +11141,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__7 = PyTuple_Pack(2, __pyx_n_s_val, __pyx_n_s_forms); if (unlikely(!__pyx_tuple__7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__7);
   __Pyx_GIVEREF(__pyx_tuple__7);
-  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_thread_first, 42, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__8 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__7, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_n_s_thread_first, 42, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 42; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "cytoolz/functoolz.pyx":84
  * 
@@ -11153,7 +11153,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__9 = PyTuple_Pack(2, __pyx_n_s_val, __pyx_n_s_forms); if (unlikely(!__pyx_tuple__9)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__9);
   __Pyx_GIVEREF(__pyx_tuple__9);
-  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_thread_last, 84, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__10 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__9, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_n_s_thread_last, 84, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 84; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "cytoolz/functoolz.pyx":489
  * 
@@ -11165,7 +11165,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__11 = PyTuple_Pack(1, __pyx_n_s_funcs); if (unlikely(!__pyx_tuple__11)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 489; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__11);
   __Pyx_GIVEREF(__pyx_tuple__11);
-  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_compose, 489, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 489; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__12 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__11, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_n_s_compose, 489, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 489; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "cytoolz/functoolz.pyx":517
  * 
@@ -11177,7 +11177,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__13 = PyTuple_Pack(2, __pyx_n_s_data, __pyx_n_s_funcs); if (unlikely(!__pyx_tuple__13)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__13);
   __Pyx_GIVEREF(__pyx_tuple__13);
-  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_pipe, 517, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__14 = (PyObject*)__Pyx_PyCode_New(1, 0, 2, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__13, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_n_s_pipe, 517, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__14)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 517; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "cytoolz/functoolz.pyx":583
  * 
@@ -11189,7 +11189,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__15 = PyTuple_Pack(1, __pyx_n_s_funcs); if (unlikely(!__pyx_tuple__15)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 583; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__15);
   __Pyx_GIVEREF(__pyx_tuple__15);
-  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_juxt, 583, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 583; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__16 = (PyObject*)__Pyx_PyCode_New(0, 0, 1, 0, CO_VARARGS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__15, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_f, __pyx_n_s_juxt, 583, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__16)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 583; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;

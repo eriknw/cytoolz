@@ -837,16 +837,16 @@ static char __pyx_k_merge_with[] = "merge_with";
 static char __pyx_k_merge_with_line_20[] = "merge_with (line 20)";
 static char __pyx_k_cytoolz_curried_exceptions[] = "cytoolz.curried.exceptions";
 static char __pyx_k_Merge_dictionaries_and_apply_fu[] = "\n    Merge dictionaries and apply function to combined values\n\n    A key may occur in more than one dict, and all values mapped from the key\n    will be passed to the function as a list, such as func([val1, val2, ...]).\n\n    >>> merge_with(sum, {1: 1, 2: 2}, {1: 10, 2: 20})\n    {1: 11, 2: 22}\n\n    >>> merge_with(first, {1: 1, 2: 2}, {2: 20, 3: 30})  # doctest: +SKIP\n    {1: 1, 2: 2, 3: 30}\n\n    See Also:\n        merge\n    ";
-static char __pyx_k_Users_ewelch_git_cytoolz_cytool[] = "/Users/ewelch/git/cytoolz/cytoolz/curried/exceptions.pyx";
+static char __pyx_k_home_erik_git_cytoolz_cytoolz_c[] = "/home/erik/git/cytoolz/cytoolz/curried/exceptions.pyx";
 static PyObject *__pyx_kp_u_Merge_dictionaries_and_apply_fu;
 static PyObject *__pyx_n_s_TypeError;
-static PyObject *__pyx_kp_s_Users_ewelch_git_cytoolz_cytool;
 static PyObject *__pyx_n_s_all;
 static PyObject *__pyx_n_s_curry;
 static PyObject *__pyx_n_s_cytoolz;
 static PyObject *__pyx_n_s_cytoolz_curried_exceptions;
 static PyObject *__pyx_n_s_dicts;
 static PyObject *__pyx_n_s_func;
+static PyObject *__pyx_kp_s_home_erik_git_cytoolz_cytoolz_c;
 static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_kwargs;
 static PyObject *__pyx_n_s_main;
@@ -1242,13 +1242,13 @@ static struct PyModuleDef __pyx_moduledef = {
 static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_kp_u_Merge_dictionaries_and_apply_fu, __pyx_k_Merge_dictionaries_and_apply_fu, sizeof(__pyx_k_Merge_dictionaries_and_apply_fu), 0, 1, 0, 0},
   {&__pyx_n_s_TypeError, __pyx_k_TypeError, sizeof(__pyx_k_TypeError), 0, 0, 1, 1},
-  {&__pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_k_Users_ewelch_git_cytoolz_cytool, sizeof(__pyx_k_Users_ewelch_git_cytoolz_cytool), 0, 0, 1, 0},
   {&__pyx_n_s_all, __pyx_k_all, sizeof(__pyx_k_all), 0, 0, 1, 1},
   {&__pyx_n_s_curry, __pyx_k_curry, sizeof(__pyx_k_curry), 0, 0, 1, 1},
   {&__pyx_n_s_cytoolz, __pyx_k_cytoolz, sizeof(__pyx_k_cytoolz), 0, 0, 1, 1},
   {&__pyx_n_s_cytoolz_curried_exceptions, __pyx_k_cytoolz_curried_exceptions, sizeof(__pyx_k_cytoolz_curried_exceptions), 0, 0, 1, 1},
   {&__pyx_n_s_dicts, __pyx_k_dicts, sizeof(__pyx_k_dicts), 0, 0, 1, 1},
   {&__pyx_n_s_func, __pyx_k_func, sizeof(__pyx_k_func), 0, 0, 1, 1},
+  {&__pyx_kp_s_home_erik_git_cytoolz_cytoolz_c, __pyx_k_home_erik_git_cytoolz_cytoolz_c, sizeof(__pyx_k_home_erik_git_cytoolz_cytoolz_c), 0, 0, 1, 0},
   {&__pyx_n_s_import, __pyx_k_import, sizeof(__pyx_k_import), 0, 0, 1, 1},
   {&__pyx_n_s_kwargs, __pyx_k_kwargs, sizeof(__pyx_k_kwargs), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
@@ -1279,7 +1279,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple_ = PyTuple_Pack(2, __pyx_n_s_dicts, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple_)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple_);
   __Pyx_GIVEREF(__pyx_tuple_);
-  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(0, 0, 2, 0, CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_merge, 11, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__2 = (PyObject*)__Pyx_PyCode_New(0, 0, 2, 0, CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple_, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_c, __pyx_n_s_merge, 11, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 11; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
 
   /* "cytoolz/curried/exceptions.pyx":20
  * 
@@ -1291,7 +1291,7 @@ static int __Pyx_InitCachedConstants(void) {
   __pyx_tuple__3 = PyTuple_Pack(3, __pyx_n_s_func, __pyx_n_s_dicts, __pyx_n_s_kwargs); if (unlikely(!__pyx_tuple__3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__3);
   __Pyx_GIVEREF(__pyx_tuple__3);
-  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 3, 0, CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_Users_ewelch_git_cytoolz_cytool, __pyx_n_s_merge_with, 20, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_codeobj__4 = (PyObject*)__Pyx_PyCode_New(1, 0, 3, 0, CO_VARARGS|CO_VARKEYWORDS, __pyx_empty_bytes, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_tuple__3, __pyx_empty_tuple, __pyx_empty_tuple, __pyx_kp_s_home_erik_git_cytoolz_cytoolz_c, __pyx_n_s_merge_with, 20, __pyx_empty_bytes); if (unlikely(!__pyx_codeobj__4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 20; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_RefNannyFinishContext();
   return 0;
   __pyx_L1_error:;
