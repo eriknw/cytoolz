@@ -100,6 +100,10 @@ def test_dicttoolz():
     assert raises((AttributeError, TypeError), lambda: itemfilter(identity, None))
     tested.append('itemfilter')
 
+    assert raises((AttributeError, TypeError), lambda: assoc_in(None, [2, 2], 3))
+    assert raises(TypeError, lambda: assoc_in({}, None, 3))
+    tested.append('assoc_in')
+
     s1 = set(tested)
     s2 = set(cytoolz.dicttoolz.__all__)
     assert s1 == s2, '%s not tested for being None-safe' % ', '.join(s2 - s1)
@@ -142,6 +146,10 @@ def test_functoolz():
 
     assert flip(lambda a, b: (a, b))(None)(None) == (None, None)
     tested.append('flip')
+
+    excepts(None, lambda x: x)
+    excepts(TypeError, None)
+    tested.append('excepts')
 
     s1 = set(tested)
     s2 = set(cytoolz.functoolz.__all__)
@@ -293,6 +301,10 @@ def test_itertoolz():
 
     assert raises(TypeError, lambda: peek(None))
     tested.append('peek')
+
+    assert raises(TypeError, lambda: list(random_sample(None, [1])))
+    assert raises(TypeError, lambda: list(random_sample(0.1, None)))
+    tested.append('random_sample')
 
     s1 = set(tested)
     s2 = set(cytoolz.itertoolz.__all__)

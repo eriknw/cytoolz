@@ -1,4 +1,3 @@
-#cython: embedsignature=True
 from cpython.dict cimport (PyDict_Check, PyDict_CheckExact, PyDict_GetItem,
                            PyDict_Merge, PyDict_New, PyDict_Next,
                            PyDict_SetItem, PyDict_Update, PyDict_DelItem)
@@ -15,7 +14,8 @@ from copy import copy
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'itemmap', 'valfilter',
-           'keyfilter', 'itemfilter', 'assoc', 'dissoc', 'get_in', 'update_in']
+           'keyfilter', 'itemfilter', 'assoc', 'dissoc', 'assoc_in', 'get_in',
+           'update_in']
 
 
 cdef int PyMapping_Next(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *pval) except -1:
@@ -374,11 +374,54 @@ cpdef object assoc(object d, object key, object value, object factory=dict):
     return rv
 
 
+cpdef object assoc_in(object d, object keys, object value, object factory=dict):
+    """
+    Return a new dict with new, potentially nested, key value pair
+
+    >>> purchase = {'name': 'Alice',
+    ...             'order': {'items': ['Apple', 'Orange'],
+    ...                       'costs': [0.50, 1.25]},
+    ...             'credit card': '5555-1234-1234-1234'}
+    >>> assoc_in(purchase, ['order', 'costs'], [0.25, 1.00]) # doctest: +SKIP
+    {'credit card': '5555-1234-1234-1234',
+     'name': 'Alice',
+     'purchase': {'costs': [0.25, 1.00], 'items': ['Apple', 'Orange']}}
+    """
+    cdef object prevkey, key
+    cdef object rv, inner, dtemp
+    prevkey, keys = keys[0], keys[1:]
+    rv = factory()
+    if PyDict_CheckExact(rv):
+        PyDict_Update(rv, d)
+    else:
+        rv.update(d)
+    inner = rv
+
+    for key in keys:
+        if prevkey in d:
+            d = d[prevkey]
+            dtemp = factory()
+            if PyDict_CheckExact(dtemp):
+                PyDict_Update(dtemp, d)
+            else:
+                dtemp.update(d)
+        else:
+            d = factory()
+            dtemp = d
+        inner[prevkey] = dtemp
+        prevkey = key
+        inner = dtemp
+
+    inner[prevkey] = value
+    return rv
+
+
 cdef object c_dissoc(object d, object keys):
     cdef object rv, key
     rv = copy(d)
     for key in keys:
-        del rv[key]
+        if key in rv:
+            del rv[key]
     return rv
 
 

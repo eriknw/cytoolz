@@ -61,6 +61,9 @@ for modname in ['dicttoolz', 'functoolz', 'itertoolz',
                                  ['cytoolz/' + modname + suffix]))
 
 if use_cython:
+    from Cython.Compiler.Options import directive_defaults
+    directive_defaults['embedsignature'] = True
+    directive_defaults['binding'] = True
     ext_modules = cythonize(ext_modules)
 
 setup(
@@ -96,9 +99,9 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Software Development',

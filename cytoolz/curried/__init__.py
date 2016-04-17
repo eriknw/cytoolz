@@ -76,6 +76,9 @@ _curry_set = frozenset([
     cytoolz.update_in,
     cytoolz.keyfilter,
     cytoolz.groupby,
+    cytoolz.assoc_in,
+    cytoolz.random_sample,
+    cytoolz.excepts,
 ])
 
 

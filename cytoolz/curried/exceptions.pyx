@@ -1,4 +1,3 @@
-#cython: embedsignature=True
 from cytoolz import curry
 
 from cpython.dict cimport PyDict_Check

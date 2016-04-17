@@ -1,4 +1,3 @@
-#cython: embedsignature=True
 import doctest
 import inspect
 import os.path

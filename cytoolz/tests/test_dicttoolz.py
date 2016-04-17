@@ -1,7 +1,7 @@
 from collections import defaultdict as _defaultdict
 from cytoolz.dicttoolz import (merge, merge_with, valmap, keymap, update_in,
                              assoc, dissoc, keyfilter, valfilter, itemmap,
-                             itemfilter)
+                             itemfilter, assoc_in)
 from cytoolz.utils import raises
 from cytoolz.compatibility import PY3
 
@@ -94,11 +94,26 @@ class TestDict(object):
         assert dissoc(D({"a": 1, "b": 2}), "a") == D({"b": 2})
         assert dissoc(D({"a": 1, "b": 2}), "b") == D({"a": 1})
         assert dissoc(D({"a": 1, "b": 2}), "a", "b") == D({})
+        assert dissoc(D({"a": 1}), "a") == dissoc(dissoc(D({"a": 1}), "a"), "a")
 
         # Verify immutability:
         d = D({'x': 1})
         oldd = d
         d2 = dissoc(d, 'x')
+        assert d is oldd
+        assert d2 is not oldd
+
+    def test_assoc_in(self):
+        D, kw = self.D, self.kw
+        assert assoc_in(D({"a": 1}), ["a"], 2, **kw) == D({"a": 2})
+        assert (assoc_in(D({"a": D({"b": 1})}), ["a", "b"], 2, **kw) ==
+                D({"a": D({"b": 2})}))
+        assert assoc_in(D({}), ["a", "b"], 1, **kw) == D({"a": D({"b": 1})})
+
+        # Verify immutability:
+        d = D({'x': 1})
+        oldd = d
+        d2 = assoc_in(d, ['x'], 2, **kw)
         assert d is oldd
         assert d2 is not oldd
 
@@ -235,4 +250,3 @@ class TestCustomMapping(TestDict):
     """
     D = CustomMapping
     kw = {'factory': lambda: CustomMapping()}
-

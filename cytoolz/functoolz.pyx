@@ -1,9 +1,15 @@
-#cython: embedsignature=True
 import inspect
 import sys
 from functools import partial
-from cytoolz.compatibility import filter as ifilter, map as imap, reduce
-
+from operator import attrgetter
+from textwrap import dedent
+from cytoolz.compatibility import PY3, PY34, filter as ifilter, map as imap, reduce
+from cytoolz._signatures import (
+    is_builtin_valid_args as _is_builtin_valid_args,
+    is_builtin_partial_args as _is_builtin_partial_args,
+    has_unknown_args as _has_unknown_args,
+    signature_or_spec as _signature_or_spec,
+)
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.exc cimport PyErr_Clear, PyErr_Occurred, PyErr_GivenExceptionMatches
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
@@ -18,7 +24,8 @@ from cytoolz.cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
-           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize', 'flip']
+           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize', 'flip',
+           'excepts']
 
 
 cpdef object identity(object x):
@@ -114,44 +121,6 @@ def thread_last(val, *forms):
     return c_thread_last(val, forms)
 
 
-# This is a kludge for Python 3.4.0 support
-# currently len(inspect.getargspec(map).args) == 0, a wrong result.
-# As this is fixed in future versions then hopefully this kludge can be
-# removed.
-known_numargs = {map: 2, filter: 2, reduce: 2, imap: 2, ifilter: 2}
-
-
-cpdef Py_ssize_t _num_required_args(object func) except *:
-    """
-    Number of args for func
-
-    >>> def foo(a, b, c=None):
-    ...     return a + b + c
-
-    >>> _num_required_args(foo)
-    2
-
-    >>> def bar(*args):
-    ...     return sum(args)
-
-    >>> print(_num_required_args(bar))
-    -1
-    """
-    cdef Py_ssize_t num_defaults
-
-    if func in known_numargs:
-        return known_numargs[func]
-    try:
-        spec = inspect.getargspec(func)
-        if spec.varargs:
-            return -1
-        num_defaults = len(spec.defaults) if spec.defaults else 0
-        return len(spec.args) - num_defaults
-    except TypeError:
-        pass
-    return -1
-
-
 cdef struct partialobject:
     PyObject _
     PyObject *fn
@@ -200,6 +169,10 @@ cdef class curry:
         cytoolz.curried - namespace of curried functions
                         http://toolz.readthedocs.org/en/latest/curry.html
     """
+    property __wrapped__:
+        def __get__(self):
+            return self.func
+
     def __cinit__(self, *args, **kwargs):
         if not args:
             raise TypeError('__init__() takes at least 2 arguments (1 given)')
@@ -226,6 +199,8 @@ cdef class curry:
         self.keywords = kwargs if kwargs else _empty_kwargs()
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
+        self._sigspec = None
+        self._has_unknown_args = None
 
     def __str__(self):
         return str(self.func)
@@ -249,7 +224,6 @@ cdef class curry:
 
     def __call__(self, *args, **kwargs):
         cdef PyObject *obj
-        cdef Py_ssize_t required_args
         cdef object val
 
         if PyTuple_GET_SIZE(args) == 0:
@@ -267,20 +241,72 @@ cdef class curry:
 
         val = <object>PyErr_Occurred()
         PyErr_Clear()
-        if PyErr_GivenExceptionMatches(val, TypeError):
-            required_args = _num_required_args(self.func)
-            # If there was a genuine TypeError
-            if required_args == -1 or len(args) < required_args:
-                return curry(self.func, *args, **kwargs)
+        if (PyErr_GivenExceptionMatches(val, TypeError) and
+            self._should_curry_internal(args, kwargs, val)
+        ):
+            return type(self)(self.func, *args, **kwargs)
+        raise val
+
+    def _should_curry_internal(self, args, kwargs, exc=None):
+        func = self.func
+
+        # `toolz` has these three lines
+        #args = self.args + args
+        #if self.keywords:
+        #    kwargs = dict(self.keywords, **kwargs)
+
+        if self._sigspec is None:
+            sigspec = self._sigspec = _signature_or_spec(func)
+            self._has_unknown_args = _has_unknown_args(func, sigspec=sigspec)
+        else:
+            sigspec = self._sigspec
+
+        if is_partial_args(func, args, kwargs, sigspec=sigspec) is False:
+            # Nothing can make the call valid
+            return False
+        elif self._has_unknown_args:
+            # The call may be valid and raised a TypeError, but we curry
+            # anyway because the function may have `*args`.  This is useful
+            # for decorators with signature `func(*args, **kwargs)`.
+            return True
+        elif not is_valid_args(func, args, kwargs, sigspec=sigspec):
+            # Adding more arguments may make the call valid
+            return True
+        else:
+            # There was a genuine TypeError
+            return False
+
+    def bind(self, *args, **kwargs):
+        return type(self)(self, *args, **kwargs)
+
+    def call(self, *args, **kwargs):
+        cdef PyObject *obj
+        cdef object val
+
+        if PyTuple_GET_SIZE(args) == 0:
+            args = self.args
+        elif PyTuple_GET_SIZE(self.args) != 0:
+            args = PySequence_Concat(self.args, args)
+        if self.keywords is not None:
+            PyDict_Merge(kwargs, self.keywords, False)
+
+        obj = PtrObject_Call(self.func, args, kwargs)
+        if obj is not NULL:
+            val = <object>obj
+            Py_DECREF(val)
+            return val
+
+        val = <object>PyErr_Occurred()
+        PyErr_Clear()
         raise val
 
     def __get__(self, instance, owner):
         if instance is None:
             return self
-        return curry(self, instance)
+        return type(self)(self, instance)
 
     def __reduce__(self):
-        return (curry, (self.func,), (self.args, self.keywords))
+        return (type(self), (self.func,), (self.args, self.keywords))
 
     def __setstate__(self, state):
         self.args, self.keywords = state
@@ -337,6 +363,10 @@ cdef class c_memoize:
     property __name__:
         def __get__(self):
             return self.func.__name__
+
+    property __wrapped__:
+        def __get__(self):
+            return self.func
 
     def __cinit__(self, func, cache=None, key=None):
         self.func = func
@@ -635,3 +665,229 @@ cpdef object _flip(object f, object a, object b):
 
 
 flip = curry(_flip)
+
+
+cpdef object return_none(object exc):
+    """
+    Returns None.
+    """
+    return None
+
+
+cdef class excepts:
+    """
+    A wrapper around a function to catch exceptions and
+    dispatch to a handler.
+
+    This is like a functional try/except block, in the same way that
+    ifexprs are functional if/else blocks.
+
+    Examples
+    --------
+    >>> excepting = excepts(
+    ...     ValueError,
+    ...     lambda a: [1, 2].index(a),
+    ...     lambda _: -1,
+    ... )
+    >>> excepting(1)
+    0
+    >>> excepting(3)
+    -1
+
+    Multiple exceptions and default except clause.
+    >>> excepting = excepts((IndexError, KeyError), lambda a: a[0])
+    >>> excepting([])
+    >>> excepting([1])
+    1
+    >>> excepting({})
+    >>> excepting({0: 1})
+    1
+    """
+
+    def __init__(self, exc, func, handler=return_none):
+        self.exc = exc
+        self.func = func
+        self.handler = handler
+
+    def __call__(self, *args, **kwargs):
+        try:
+            return self.func(*args, **kwargs)
+        except self.exc as e:
+            return self.handler(e)
+
+    property __name__:
+        def __get__(self):
+            exc = self.exc
+            try:
+                if isinstance(exc, tuple):
+                    exc_name = '_or_'.join(map(attrgetter('__name__'), exc))
+                else:
+                    exc_name = exc.__name__
+                return '%s_excepting_%s' % (self.func.__name__, exc_name)
+            except AttributeError:
+                return 'excepting'
+
+    property __doc__:
+        def __get__(self):
+            exc = self.exc
+            try:
+                if isinstance(exc, tuple):
+                    exc_name = '(%s)' % ', '.join(
+                        map(attrgetter('__name__'), exc),
+                    )
+                else:
+                    exc_name = exc.__name__
+
+                return dedent(
+                    """\
+                    A wrapper around {inst.func.__name__!r} that will except:
+                    {exc}
+                    and handle any exceptions with {inst.handler.__name__!r}.
+
+                    Docs for {inst.func.__name__!r}:
+                    {inst.func.__doc__}
+
+                    Docs for {inst.handler.__name__!r}:
+                    {inst.handler.__doc__}
+                    """
+                ).format(
+                    inst=self,
+                    exc=exc_name,
+                )
+            except AttributeError:
+                return type(self).__doc__
+
+
+cpdef object is_valid_args(object func, object args, object kwargs, object sigspec=None):
+    if PY34:
+        val = _is_builtin_valid_args(func, args, kwargs)
+        if val is not None:
+            return val
+    if PY3:
+        if sigspec is None:
+            try:
+                sigspec = inspect.signature(func)
+            except (ValueError, TypeError) as e:
+                sigspec = e
+        if isinstance(sigspec, ValueError):
+            return _is_builtin_valid_args(func, args, kwargs)
+        elif isinstance(sigspec, TypeError):
+            return False
+        try:
+            sigspec.bind(*args, **kwargs)
+        except (TypeError, AttributeError):
+            return False
+        return True
+
+    else:
+        if sigspec is None:
+            try:
+                sigspec = inspect.getargspec(func)
+            except TypeError as e:
+                sigspec = e
+        if isinstance(sigspec, TypeError):
+            if not callable(func):
+                return False
+            return _is_builtin_valid_args(func, args, kwargs)
+
+        spec = sigspec
+        defaults = spec.defaults or ()
+        num_pos = len(spec.args) - len(defaults)
+        missing_pos = spec.args[len(args):num_pos]
+        for arg in missing_pos:
+            if arg not in kwargs:
+                return False
+
+        if spec.varargs is None:
+            num_extra_pos = max(0, len(args) - num_pos)
+        else:
+            num_extra_pos = 0
+
+        kwargs = dict(kwargs)
+
+        # Add missing keyword arguments (unless already included in `args`)
+        missing_kwargs = spec.args[num_pos + num_extra_pos:]
+        kwargs.update(zip(missing_kwargs, defaults[num_extra_pos:]))
+
+        # Convert call to use positional arguments
+        more_args = []
+        for key in spec.args[len(args):]:
+            more_args.append(kwargs.pop(key))
+        args = args + tuple(more_args)
+
+        if (
+            not spec.keywords and kwargs or
+            not spec.varargs and len(args) > len(spec.args) or
+            set(spec.args[:len(args)]) & set(kwargs)
+        ):
+            return False
+        else:
+            return True
+
+
+cpdef object is_partial_args(object func, object args, object kwargs, object sigspec=None):
+    if PY34:
+        val = _is_builtin_partial_args(func, args, kwargs)
+        if val is not None:
+            return val
+    if PY3:
+        if sigspec is None:
+            try:
+                sigspec = inspect.signature(func)
+            except (ValueError, TypeError) as e:
+                sigspec = e
+        if isinstance(sigspec, ValueError):
+            return _is_builtin_partial_args(func, args, kwargs)
+        elif isinstance(sigspec, TypeError):
+            return False
+        try:
+            sigspec.bind_partial(*args, **kwargs)
+        except (TypeError, AttributeError):
+            return False
+        return True
+
+    else:
+        if sigspec is None:
+            try:
+                sigspec = inspect.getargspec(func)
+            except TypeError as e:
+                sigspec = e
+        if isinstance(sigspec, TypeError):
+            if not callable(func):
+                return False
+            return _is_builtin_partial_args(func, args, kwargs)
+
+        spec = sigspec
+        defaults = spec.defaults or ()
+        num_pos = len(spec.args) - len(defaults)
+        if spec.varargs is None:
+            num_extra_pos = max(0, len(args) - num_pos)
+        else:
+            num_extra_pos = 0
+
+        kwargs = dict(kwargs)
+
+        # Add missing keyword arguments (unless already included in `args`)
+        missing_kwargs = spec.args[num_pos + num_extra_pos:]
+        kwargs.update(zip(missing_kwargs, defaults[num_extra_pos:]))
+
+        # Add missing position arguments as keywords (may already be in kwargs)
+        missing_args = spec.args[len(args):num_pos + num_extra_pos]
+        for x in missing_args:
+            kwargs[x] = None
+
+        # Convert call to use positional arguments
+        more_args = []
+        for key in spec.args[len(args):]:
+            more_args.append(kwargs.pop(key))
+        args = args + tuple(more_args)
+
+        if (
+            not spec.keywords and kwargs or
+            not spec.varargs and len(args) > len(spec.args) or
+            set(spec.args[:len(args)]) & set(kwargs)
+        ):
+            return False
+        else:
+            return True
+

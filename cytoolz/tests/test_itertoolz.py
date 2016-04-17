@@ -2,6 +2,7 @@ import itertools
 from itertools import starmap
 from cytoolz.utils import raises
 from functools import partial
+from random import Random
 from cytoolz.itertoolz import (remove, groupby, merge_sorted,
                              concat, concatv, interleave, unique,
                              isiterable, getter,
@@ -11,7 +12,7 @@ from cytoolz.itertoolz import (remove, groupby, merge_sorted,
                              reduceby, iterate, accumulate,
                              sliding_window, count, partition,
                              partition_all, take_nth, pluck, join,
-                             diff, topk, peek)
+                             diff, topk, peek, random_sample)
 from cytoolz.compatibility import range, filter
 from operator import add, mul
 
@@ -461,6 +462,8 @@ def test_topk():
     assert topk(2, [{'a': 1, 'b': 10}, {'a': 2, 'b': 9},
                     {'a': 10, 'b': 1}, {'a': 9, 'b': 2}], key='b') == \
         ({'a': 1, 'b': 10}, {'a': 2, 'b': 9})
+    assert topk(2, [(0, 4), (1, 3), (2, 2), (3, 1), (4, 0)], 0) == \
+        ((4, 0), (3, 1))
 
 
 def test_topk_is_stable():
@@ -469,8 +472,32 @@ def test_topk_is_stable():
 
 def test_peek():
     alist = ["Alice", "Bob", "Carol"]
-    element, blist  = peek(alist)
+    element, blist = peek(alist)
     element == alist[0]
     assert list(blist) == alist
 
     assert raises(StopIteration, lambda: peek([]))
+
+
+def test_random_sample():
+    alist = list(range(100))
+
+    assert list(random_sample(prob=1, seq=alist, random_state=2016)) == alist
+
+    mk_rsample = lambda rs=1: list(random_sample(prob=0.1,
+                                                 seq=alist,
+                                                 random_state=rs))
+    rsample1 = mk_rsample()
+    assert rsample1 == mk_rsample()
+
+    rsample2 = mk_rsample(1984)
+    randobj = Random(1984)
+    assert rsample2 == mk_rsample(randobj)
+
+    assert rsample1 != rsample2
+
+    assert mk_rsample(object) == mk_rsample(object)
+    assert mk_rsample(object) != mk_rsample(object())
+    assert mk_rsample(b"a") == mk_rsample(u"a")
+
+    assert raises(TypeError, lambda: mk_rsample([]))

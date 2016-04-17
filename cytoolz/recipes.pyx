@@ -1,4 +1,3 @@
-#cython: embedsignature=True
 from cpython.sequence cimport PySequence_Tuple
 from cytoolz.itertoolz cimport frequencies, pluck
 
