@@ -109,5 +109,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
     ],
+    install_requires=['toolz >= 0.8.0'],
     # zip_safe=False
 )
