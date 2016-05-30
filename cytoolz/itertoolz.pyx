@@ -888,7 +888,6 @@ cdef class iterate:
     4
     >>> next(powers_of_two)
     8
-
     """
     def __cinit__(self, object func, object x):
         self.func = func
@@ -1683,7 +1682,6 @@ cpdef object peek(object seq):
     0
     >>> list(seq)
     [0, 1, 2, 3, 4]
-
     """
     iterator = iter(seq)
     item = next(iterator)

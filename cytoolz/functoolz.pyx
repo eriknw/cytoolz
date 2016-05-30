@@ -12,16 +12,12 @@ from toolz.functoolz import (InstanceProperty, instanceproperty, is_arity,
                              is_valid_args, is_partial_args)
 
 from cpython.dict cimport PyDict_Merge, PyDict_New
-from cpython.exc cimport PyErr_Clear, PyErr_Occurred, PyErr_GivenExceptionMatches
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
-from cpython.ref cimport PyObject, Py_DECREF
+from cpython.ref cimport PyObject
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
-
-# Locally defined bindings that differ from `cython.cpython` bindings
-from cytoolz.cpython cimport PtrObject_Call
 
 
 __all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
@@ -221,7 +217,6 @@ cdef class curry:
         return PyObject_RichCompare(id(self), id(other), op)
 
     def __call__(self, *args, **kwargs):
-        cdef PyObject *obj
         cdef object val
 
         if PyTuple_GET_SIZE(args) == 0:
@@ -230,20 +225,12 @@ cdef class curry:
             args = PySequence_Concat(self.args, args)
         if self.keywords is not None:
             PyDict_Merge(kwargs, self.keywords, False)
-
-        obj = PtrObject_Call(self.func, args, kwargs)
-        if obj is not NULL:
-            val = <object>obj
-            Py_DECREF(val)
-            return val
-
-        val = <object>PyErr_Occurred()
-        PyErr_Clear()
-        if (PyErr_GivenExceptionMatches(val, TypeError) and
-            self._should_curry_internal(args, kwargs, val)
-        ):
-            return type(self)(self.func, *args, **kwargs)
-        raise val
+        try:
+            return self.func(*args, **kwargs)
+        except TypeError as val:
+            if self._should_curry_internal(args, kwargs, val):
+                return type(self)(self.func, *args, **kwargs)
+            raise
 
     def _should_curry_internal(self, args, kwargs, exc=None):
         func = self.func
@@ -278,7 +265,6 @@ cdef class curry:
         return type(self)(self, *args, **kwargs)
 
     def call(self, *args, **kwargs):
-        cdef PyObject *obj
         cdef object val
 
         if PyTuple_GET_SIZE(args) == 0:
@@ -287,16 +273,7 @@ cdef class curry:
             args = PySequence_Concat(self.args, args)
         if self.keywords is not None:
             PyDict_Merge(kwargs, self.keywords, False)
-
-        obj = PtrObject_Call(self.func, args, kwargs)
-        if obj is not NULL:
-            val = <object>obj
-            Py_DECREF(val)
-            return val
-
-        val = <object>PyErr_Occurred()
-        PyErr_Clear()
-        raise val
+        return self.func(*args, **kwargs)
 
     def __get__(self, instance, owner):
         if instance is None:
@@ -605,7 +582,7 @@ cdef object c_juxt(object funcs):
 
 def juxt(*funcs):
     """
-    Creates a function that calls several functions with the same arguments.
+    Creates a function that calls several functions with the same arguments
 
     Takes several functions and returns a function that applies its arguments
     to each of those functions then returns a tuple of the results.
@@ -647,7 +624,6 @@ cpdef object do(object func, object x):
     12
     >>> log
     [1, 11]
-
     """
     func(x)
     return x

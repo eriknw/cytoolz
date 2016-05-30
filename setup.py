@@ -15,8 +15,12 @@ automatically use Cython unless disabled via a command line argument.
 """
 import os.path
 import sys
-from distutils.core import setup
-from distutils.extension import Extension
+try:
+    from setuptools import setup
+    from setuptools import Extension
+except ImportError:
+    from distutils.core import setup
+    from distutils.extension import Extension
 
 info = {}
 filename = os.path.join('cytoolz', '_version.py')
@@ -57,7 +61,7 @@ else:
 ext_modules = []
 for modname in ['dicttoolz', 'functoolz', 'itertoolz',
                 'curried/exceptions', 'recipes', 'utils']:
-    ext_modules.append(Extension('cytoolz.' + modname,
+    ext_modules.append(Extension('cytoolz.' + modname.replace('/', '.'),
                                  ['cytoolz/' + modname + suffix]))
 
 if use_cython:
@@ -110,5 +114,5 @@ setup(
         'Topic :: Utilities',
     ],
     install_requires=['toolz >= 0.8.0'],
-    # zip_safe=False
+    zip_safe=False,
 )
