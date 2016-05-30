@@ -5,3 +5,6 @@ inplace:
 
 test: inplace
 	nosetests -s --with-doctest cytoolz/
+
+clean:
+	rm cytoolz/*.c cytoolz/*.so

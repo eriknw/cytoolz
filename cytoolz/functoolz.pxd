@@ -60,8 +60,3 @@ cdef class excepts:
     cdef public object func
     cdef public object handler
 
-
-cpdef object is_valid_args(object func, object args, object kwargs, object sigspec=*)
-
-
-cpdef object is_partial_args(object func, object args, object kwargs, object sigspec=*)
