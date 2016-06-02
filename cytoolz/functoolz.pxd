@@ -8,6 +8,8 @@ cdef object c_thread_last(object val, object forms)
 
 
 cdef class curry:
+    cdef readonly object _sigspec
+    cdef readonly object _has_unknown_args
     cdef readonly object func
     cdef readonly tuple args
     cdef readonly dict keywords
@@ -48,3 +50,13 @@ cdef object c_juxt(object funcs)
 
 
 cpdef object do(object func, object x)
+
+
+cpdef object return_none(object exc)
+
+
+cdef class excepts:
+    cdef public object exc
+    cdef public object func
+    cdef public object handler
+

@@ -74,7 +74,7 @@ def _curry_namespace(ns):
     ct = vars(cytoolz)
     return (
         'cytoolz.' + name + ','
-        for name, f in ns.items() if isinstance(f, toolz.curry) and name in ct
+        for name, f in sorted(ns.items()) if isinstance(f, toolz.curry) and name in ct
     )
 
 

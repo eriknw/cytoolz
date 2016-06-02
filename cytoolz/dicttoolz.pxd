@@ -35,6 +35,9 @@ cpdef object itemfilter(object predicate, object d, object factory=*)
 cpdef object assoc(object d, object key, object value, object factory=*)
 
 
+cpdef object assoc_in(object d, object keys, object value, object factory=*)
+
+
 cdef object c_dissoc(object d, object keys)
 
 

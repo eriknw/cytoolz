@@ -48,9 +48,14 @@ def test_curried_operator():
         if not isinstance(v, cytoolz.curry):
             try:
                 # Make sure it is unary
-                # We cannot use isunary because it might be defined in C.
                 v(1)
             except TypeError:
+                try:
+                    v('x')
+                except TypeError:
+                    pass
+                else:
+                    continue
                 raise AssertionError(
                     'cytoolz.curried.operator.%s is not curried!' % k,
                 )

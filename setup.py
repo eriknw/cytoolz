@@ -15,8 +15,7 @@ automatically use Cython unless disabled via a command line argument.
 """
 import os.path
 import sys
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup, Extension
 
 info = {}
 filename = os.path.join('cytoolz', '_version.py')
@@ -55,12 +54,14 @@ else:
     suffix = '.c'
 
 ext_modules = []
-for modname in ['dicttoolz', 'functoolz', 'itertoolz',
-                'curried/exceptions', 'recipes', 'utils']:
-    ext_modules.append(Extension('cytoolz.' + modname,
+for modname in ['dicttoolz', 'functoolz', 'itertoolz', 'recipes', 'utils']:
+    ext_modules.append(Extension('cytoolz.' + modname.replace('/', '.'),
                                  ['cytoolz/' + modname + suffix]))
 
 if use_cython:
+    from Cython.Compiler.Options import directive_defaults
+    directive_defaults['embedsignature'] = True
+    directive_defaults['binding'] = True
     ext_modules = cythonize(ext_modules)
 
 setup(
@@ -96,9 +97,9 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Software Development',
@@ -106,5 +107,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
     ],
-    # zip_safe=False
+    install_requires=['toolz >= 0.8.0'],
+    zip_safe=False,
 )

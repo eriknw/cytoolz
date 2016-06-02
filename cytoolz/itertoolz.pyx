@@ -1,4 +1,3 @@
-#cython: embedsignature=True
 from cpython.dict cimport PyDict_GetItem, PyDict_SetItem
 from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_GET_ITEM, PyList_GET_SIZE
@@ -15,6 +14,7 @@ from collections import deque
 from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice
 from operator import itemgetter
+from random import Random
 from cytoolz.compatibility import map, zip, zip_longest
 from cytoolz.utils import no_default
 
@@ -24,7 +24,7 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'first', 'second', 'nth', 'last', 'get', 'concat', 'concatv',
            'mapcat', 'cons', 'interpose', 'frequencies', 'reduceby', 'iterate',
            'sliding_window', 'partition', 'partition_all', 'count', 'pluck',
-           'join', 'tail', 'diff', 'topk', 'peek']
+           'join', 'tail', 'diff', 'topk', 'peek', 'random_sample']
 
 
 concatv = chain
@@ -100,7 +100,7 @@ cdef class accumulate:
 
     def __next__(self):
         if self.result is self:
-            if self.initial is not no_default:
+            if self.initial != no_default:
                 self.result = self.initial
             else:
                 self.result = next(self.iter_seq)
@@ -651,7 +651,7 @@ cpdef object get(object ind, object seq, object default=no_default):
         i = PyList_GET_SIZE(ind)
         result = PyTuple_New(i)
         # List of indices, no default
-        if default is no_default:
+        if default == no_default:
             for i, val in enumerate(ind):
                 val = seq[val]
                 Py_INCREF(val)
@@ -677,7 +677,7 @@ cpdef object get(object ind, object seq, object default=no_default):
     if obj is NULL:
         val = <object>PyErr_Occurred()
         PyErr_Clear()
-        if default is no_default:
+        if default == no_default:
             raise val
         if PyErr_GivenExceptionMatches(val, _get_exceptions):
             return default
@@ -839,7 +839,7 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
     cdef dict d = {}
     cdef object item, keyval
     cdef Py_ssize_t i, N
-    cdef bint skip_init = init is no_default
+    cdef bint skip_init = init == no_default
     cdef bint call_init = callable(init)
     if callable(key):
         for item in seq:
@@ -888,7 +888,6 @@ cdef class iterate:
     4
     >>> next(powers_of_two)
     8
-
     """
     def __cinit__(self, object func, object x):
         self.func = func
@@ -1153,12 +1152,12 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
         map
     """
     if isinstance(ind, list):
-        if default is not no_default:
+        if default != no_default:
             return _pluck_list_default(ind, seqs, default)
         if PyList_GET_SIZE(ind) < 10:
             return _pluck_list(ind, seqs)
         return map(itemgetter(*ind), seqs)
-    if default is no_default:
+    if default == no_default:
         return _pluck_index(ind, seqs)
     return _pluck_index_default(ind, seqs, default)
 
@@ -1683,8 +1682,59 @@ cpdef object peek(object seq):
     0
     >>> list(seq)
     [0, 1, 2, 3, 4]
-
     """
     iterator = iter(seq)
     item = next(iterator)
     return item, chain((item,), iterator)
+
+
+cdef class random_sample:
+    """ random_sample(prob, seq, random_state=None)
+
+    Return elements from a sequence with probability of prob
+
+    Returns a lazy iterator of random items from seq.
+
+    ``random_sample`` considers each item independently and without
+    replacement. See below how the first time it returned 13 items and the
+    next time it returned 6 items.
+
+    >>> seq = list(range(100))
+    >>> list(random_sample(0.1, seq)) # doctest: +SKIP
+    [6, 9, 19, 35, 45, 50, 58, 62, 68, 72, 78, 86, 95]
+    >>> list(random_sample(0.1, seq)) # doctest: +SKIP
+    [6, 44, 54, 61, 69, 94]
+
+    Providing an integer seed for ``random_state`` will result in
+    deterministic sampling. Given the same seed it will return the same sample
+    every time.
+
+    >>> list(random_sample(0.1, seq, random_state=2016))
+    [7, 9, 19, 25, 30, 32, 34, 48, 59, 60, 81, 98]
+    >>> list(random_sample(0.1, seq, random_state=2016))
+    [7, 9, 19, 25, 30, 32, 34, 48, 59, 60, 81, 98]
+
+    ``random_state`` can also be any object with a method ``random`` that
+    returns floats between 0.0 and 1.0 (exclusive).
+
+    >>> from random import Random
+    >>> randobj = Random(2016)
+    >>> list(random_sample(0.1, seq, random_state=randobj))
+    [7, 9, 19, 25, 30, 32, 34, 48, 59, 60, 81, 98]
+    """
+    def __cinit__(self, object prob, object seq, random_state=None):
+        float(prob)
+        self.prob = prob
+        self.iter_seq = iter(seq)
+        if not hasattr(random_state, 'random'):
+            random_state = Random(random_state)
+        self.random_func = random_state.random
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        while True:
+            if self.random_func() < self.prob:
+                return next(self.iter_seq)
+            next(self.iter_seq)

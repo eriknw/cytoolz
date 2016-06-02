@@ -1,21 +1,19 @@
-#cython: embedsignature=True
 from cpython.dict cimport (PyDict_Check, PyDict_CheckExact, PyDict_GetItem,
                            PyDict_Merge, PyDict_New, PyDict_Next,
                            PyDict_SetItem, PyDict_Update, PyDict_DelItem)
-from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
 from cpython.object cimport PyObject_SetItem
 from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
-#from cpython.type cimport PyType_Check
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from cytoolz.cpython cimport PtrObject_GetItem, PyDict_Next_Compat, PtrIter_Next
+from cytoolz.cpython cimport PyDict_Next_Compat, PtrIter_Next
 
 from copy import copy
 
 
 __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'itemmap', 'valfilter',
-           'keyfilter', 'itemfilter', 'assoc', 'dissoc', 'get_in', 'update_in']
+           'keyfilter', 'itemfilter', 'assoc', 'dissoc', 'assoc_in', 'get_in',
+           'update_in']
 
 
 cdef int PyMapping_Next(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *pval) except -1:
@@ -374,11 +372,54 @@ cpdef object assoc(object d, object key, object value, object factory=dict):
     return rv
 
 
+cpdef object assoc_in(object d, object keys, object value, object factory=dict):
+    """
+    Return a new dict with new, potentially nested, key value pair
+
+    >>> purchase = {'name': 'Alice',
+    ...             'order': {'items': ['Apple', 'Orange'],
+    ...                       'costs': [0.50, 1.25]},
+    ...             'credit card': '5555-1234-1234-1234'}
+    >>> assoc_in(purchase, ['order', 'costs'], [0.25, 1.00]) # doctest: +SKIP
+    {'credit card': '5555-1234-1234-1234',
+     'name': 'Alice',
+     'purchase': {'costs': [0.25, 1.00], 'items': ['Apple', 'Orange']}}
+    """
+    cdef object prevkey, key
+    cdef object rv, inner, dtemp
+    prevkey, keys = keys[0], keys[1:]
+    rv = factory()
+    if PyDict_CheckExact(rv):
+        PyDict_Update(rv, d)
+    else:
+        rv.update(d)
+    inner = rv
+
+    for key in keys:
+        if prevkey in d:
+            d = d[prevkey]
+            dtemp = factory()
+            if PyDict_CheckExact(dtemp):
+                PyDict_Update(dtemp, d)
+            else:
+                dtemp.update(d)
+        else:
+            d = factory()
+            dtemp = d
+        inner[prevkey] = dtemp
+        prevkey = key
+        inner = dtemp
+
+    inner[prevkey] = value
+    return rv
+
+
 cdef object c_dissoc(object d, object keys):
     cdef object rv, key
     rv = copy(d)
     for key in keys:
-        del rv[key]
+        if key in rv:
+            del rv[key]
     return rv
 
 
@@ -393,6 +434,8 @@ def dissoc(d, *keys):
     {'x': 1}
     >>> dissoc({'x': 1, 'y': 2}, 'y', 'x')
     {}
+    >>> dissoc({'x': 1}, 'y') # Ignores missing keys
+    {'x': 1}
     """
     return c_dissoc(d, keys)
 
@@ -491,7 +534,7 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
     >>> get_in(['purchase', 'items', 10], transaction)
     >>> get_in(['purchase', 'total'], transaction, 0)
     0
-    >>> get_in(['y'], {}, no_default=True)  # doctest: +SKIP
+    >>> get_in(['y'], {}, no_default=True)
     Traceback (most recent call last):
         ...
     KeyError: 'y'
@@ -501,16 +544,12 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
         operator.getitem
     """
     cdef object item
-    cdef PyObject *obj
-    for item in keys:
-        obj = PtrObject_GetItem(coll, item)
-        if obj is NULL:
-            item = <object>PyErr_Occurred()
-            PyErr_Clear()
-            if no_default or not PyErr_GivenExceptionMatches(item, _get_in_exceptions):
-                raise item
-            return default
-        Py_XDECREF(obj)
-        coll = <object>obj
-    return coll
+    try:
+        for item in keys:
+            coll = coll[item]
+        return coll
+    except _get_in_exceptions:
+        if no_default:
+            raise
+        return default
 
