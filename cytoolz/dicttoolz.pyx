@@ -1,14 +1,12 @@
 from cpython.dict cimport (PyDict_Check, PyDict_CheckExact, PyDict_GetItem,
                            PyDict_Merge, PyDict_New, PyDict_Next,
                            PyDict_SetItem, PyDict_Update, PyDict_DelItem)
-from cpython.exc cimport PyErr_Clear, PyErr_GivenExceptionMatches, PyErr_Occurred
 from cpython.list cimport PyList_Append, PyList_New
 from cpython.object cimport PyObject_SetItem
 from cpython.ref cimport PyObject, Py_DECREF, Py_INCREF, Py_XDECREF
-#from cpython.type cimport PyType_Check
 
 # Locally defined bindings that differ from `cython.cpython` bindings
-from cytoolz.cpython cimport PtrObject_GetItem, PyDict_Next_Compat, PtrIter_Next
+from cytoolz.cpython cimport PyDict_Next_Compat, PtrIter_Next
 
 from copy import copy
 
@@ -436,6 +434,8 @@ def dissoc(d, *keys):
     {'x': 1}
     >>> dissoc({'x': 1, 'y': 2}, 'y', 'x')
     {}
+    >>> dissoc({'x': 1}, 'y') # Ignores missing keys
+    {'x': 1}
     """
     return c_dissoc(d, keys)
 
@@ -534,7 +534,7 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
     >>> get_in(['purchase', 'items', 10], transaction)
     >>> get_in(['purchase', 'total'], transaction, 0)
     0
-    >>> get_in(['y'], {}, no_default=True)  # doctest: +SKIP
+    >>> get_in(['y'], {}, no_default=True)
     Traceback (most recent call last):
         ...
     KeyError: 'y'
@@ -544,16 +544,12 @@ cpdef object get_in(object keys, object coll, object default=None, object no_def
         operator.getitem
     """
     cdef object item
-    cdef PyObject *obj
-    for item in keys:
-        obj = PtrObject_GetItem(coll, item)
-        if obj is NULL:
-            item = <object>PyErr_Occurred()
-            PyErr_Clear()
-            if no_default or not PyErr_GivenExceptionMatches(item, _get_in_exceptions):
-                raise item
-            return default
-        Py_XDECREF(obj)
-        coll = <object>obj
-    return coll
+    try:
+        for item in keys:
+            coll = coll[item]
+        return coll
+    except _get_in_exceptions:
+        if no_default:
+            raise
+        return default
 
