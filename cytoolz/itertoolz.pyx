@@ -100,7 +100,7 @@ cdef class accumulate:
 
     def __next__(self):
         if self.result is self:
-            if self.initial is not no_default:
+            if self.initial != no_default:
                 self.result = self.initial
             else:
                 self.result = next(self.iter_seq)
@@ -651,7 +651,7 @@ cpdef object get(object ind, object seq, object default=no_default):
         i = PyList_GET_SIZE(ind)
         result = PyTuple_New(i)
         # List of indices, no default
-        if default is no_default:
+        if default == no_default:
             for i, val in enumerate(ind):
                 val = seq[val]
                 Py_INCREF(val)
@@ -677,7 +677,7 @@ cpdef object get(object ind, object seq, object default=no_default):
     if obj is NULL:
         val = <object>PyErr_Occurred()
         PyErr_Clear()
-        if default is no_default:
+        if default == no_default:
             raise val
         if PyErr_GivenExceptionMatches(val, _get_exceptions):
             return default
@@ -839,7 +839,7 @@ cpdef dict reduceby(object key, object binop, object seq, object init=no_default
     cdef dict d = {}
     cdef object item, keyval
     cdef Py_ssize_t i, N
-    cdef bint skip_init = init is no_default
+    cdef bint skip_init = init == no_default
     cdef bint call_init = callable(init)
     if callable(key):
         for item in seq:
@@ -1152,12 +1152,12 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
         map
     """
     if isinstance(ind, list):
-        if default is not no_default:
+        if default != no_default:
             return _pluck_list_default(ind, seqs, default)
         if PyList_GET_SIZE(ind) < 10:
             return _pluck_list(ind, seqs)
         return map(itemgetter(*ind), seqs)
-    if default is no_default:
+    if default == no_default:
         return _pluck_index(ind, seqs)
     return _pluck_index_default(ind, seqs, default)
 
