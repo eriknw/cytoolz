@@ -1054,6 +1054,7 @@ cdef class _pluck_index_default:
     def __cinit__(self, object ind, object seqs, object default):
         self.ind = ind
         self.iterseqs = iter(seqs)
+        self.default = default
 
     def __iter__(self):
         return self
