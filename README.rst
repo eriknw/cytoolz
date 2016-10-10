@@ -26,8 +26,8 @@ projects developed in Cython.  Since ``toolz`` is able to process very
 large (potentially infinite) data sets, the performance increase gained by
 using ``cytoolz`` can be significant.
 
-See the PyToolz documentation at http://toolz.readthedocs.org and the full
-`API Documentation <http://toolz.readthedocs.org/en/latest/api.html>`__
+See the PyToolz documentation at https://toolz.readthedocs.io and the full
+`API Documentation <https://toolz.readthedocs.io/en/latest/api.html>`__
 for more details.
 
 LICENSE
