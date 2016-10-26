@@ -58,6 +58,9 @@ cpdef object isdistinct(object seq)
 cpdef object take(Py_ssize_t n, object seq)
 
 
+cpdef object tail(Py_ssize_t n, object seq)
+
+
 cpdef object drop(Py_ssize_t n, object seq)
 
 
