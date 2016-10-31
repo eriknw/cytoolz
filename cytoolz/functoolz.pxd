@@ -24,9 +24,6 @@ cdef class c_memoize:
     cdef bint may_have_kwargs
 
 
-cpdef object memoize(object func=*, object cache=*, object key=*)
-
-
 cdef class Compose:
     cdef public object first
     cdef public tuple funcs
@@ -50,6 +47,9 @@ cdef object c_juxt(object funcs)
 
 
 cpdef object do(object func, object x)
+
+
+cpdef object c_flip(object func, object a, object b)
 
 
 cpdef object return_none(object exc)
