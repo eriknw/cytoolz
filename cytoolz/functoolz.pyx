@@ -164,7 +164,7 @@ cdef class curry:
 
     See Also:
         cytoolz.curried - namespace of curried functions
-                        http://toolz.readthedocs.org/en/latest/curry.html
+                        https://toolz.readthedocs.io/en/latest/curry.html
     """
 
     def __cinit__(self, *args, **kwargs):
