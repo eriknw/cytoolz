@@ -14,14 +14,21 @@ cpdef dict groupby(object key, object seq)
 
 
 cdef class _merge_sorted:
-    cdef list pq
-    cdef object shortcut
-
+    cdef object seq1
+    cdef object seq2
+    cdef object val1
+    cdef object val2
+    cdef Py_ssize_t loop
 
 cdef class _merge_sorted_key:
-    cdef list pq
+    cdef object seq1
+    cdef object seq2
+    cdef object val1
+    cdef object val2
     cdef object key
-    cdef object shortcut
+    cdef object key1
+    cdef object key2
+    cdef Py_ssize_t loop
 
 
 cdef object c_merge_sorted(object seqs, object key=*)
