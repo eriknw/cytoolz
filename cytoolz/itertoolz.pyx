@@ -167,123 +167,131 @@ cpdef dict groupby(object key, object seq):
     return d
 
 
-cdef class _merge_sorted:
-    def __cinit__(self, seqs):
-        cdef Py_ssize_t i
-        cdef object item, it
-        self.pq = []
-        self.shortcut = None
+cdef object _merge_sorted_binary(object seqs):
+    mid = len(seqs) // 2
+    L1 = seqs[:mid]
+    if len(L1) == 1:
+        seq1 = iter(L1[0])
+    else:
+        seq1 = _merge_sorted_binary(L1)
+    L2 = seqs[mid:]
+    if len(L2) == 1:
+        seq2 = iter(L2[0])
+    else:
+        seq2 = _merge_sorted_binary(L2)
+    try:
+        val2 = next(seq2)
+    except StopIteration:
+        return seq1
+    return _merge_sorted(seq1, seq2, val2)
 
-        for i, item in enumerate(seqs):
-            it = iter(item)
-            try:
-                item = next(it)
-                PyList_Append(self.pq, [item, i, it])
-            except StopIteration:
-                pass
-        i = PyList_GET_SIZE(self.pq)
-        if i == 0:
-            self.shortcut = iter([])
-        elif i == 1:
-            self.shortcut = True
-        else:
-            heapify(self.pq)
+
+cdef class _merge_sorted:
+    def __cinit__(self, seq1, seq2, val2):
+        self.seq1 = seq1
+        self.seq2 = seq2
+        self.val1 = None
+        self.val2 = val2
+        self.loop = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef list item
-        cdef object retval, it
-        # Fast when only a single iterator remains
-        if self.shortcut is not None:
-            if self.shortcut is True:
-                item = self.pq[0]
-                self.shortcut = item[2]
-                return item[0]
-            return next(self.shortcut)
+        if self.loop == 0:
+            try:
+                self.val1 = next(self.seq1)
+            except StopIteration:
+                self.loop = 2
+                return self.val2
+            if self.val2 < self.val1:
+                self.loop = 1
+                return self.val2
+            return self.val1
+        elif self.loop == 1:
+            try:
+                self.val2 = next(self.seq2)
+            except StopIteration:
+                self.loop = 3
+                return self.val1
+            if self.val2 < self.val1:
+                return self.val2
+            self.loop = 0
+            return self.val1
+        elif self.loop == 2:
+            return next(self.seq2)
+        return next(self.seq1)
 
-        item = self.pq[0]
-        retval = item[0]
-        it = item[2]
-        try:
-            item[0] = next(it)
-            heapreplace(self.pq, item)
-        except StopIteration:
-            heappop(self.pq)
-            if PyList_GET_SIZE(self.pq) == 1:
-                self.shortcut = True
-        return retval
 
+cdef object _merge_sorted_binary_key(object seqs, object key):
+    mid = len(seqs) // 2
+    L1 = seqs[:mid]
+    if len(L1) == 1:
+        seq1 = iter(L1[0])
+    else:
+        seq1 = _merge_sorted_binary_key(L1, key)
+    L2 = seqs[mid:]
+    if len(L2) == 1:
+        seq2 = iter(L2[0])
+    else:
+        seq2 = _merge_sorted_binary_key(L2, key)
+    try:
+        val2 = next(seq2)
+    except StopIteration:
+        return seq1
+    return _merge_sorted_key(seq1, seq2, val2, key)
 
-# Having `_merge_sorted` and `_merge_sorted_key` separate violates the DRY
-# principle.  The increased performance *barely* justifies this.
-# `_merge_sorted` is always faster (sometimes by only 15%), but it can be
-# more than 3x faster when a single iterable remains.
-#
-# The differences in implementation are that `_merge_sorted_key` calls a key
-# function on each item (of course), and the layout of the lists in the
-# priority queue are different:
-#     `_merge_sorted` uses `[item, itnum, iterator]`
-#     `_merge_sorted_key` uses `[key(item), itnum, item, iterator]`
 
 cdef class _merge_sorted_key:
-    def __cinit__(self, seqs, key):
-        cdef Py_ssize_t i
-        cdef object item, it, k
-        self.pq = []
+    def __cinit__(self, seq1, seq2, val2, key):
+        self.seq1 = seq1
+        self.seq2 = seq2
         self.key = key
-        self.shortcut = None
-
-        for i, item in enumerate(seqs):
-            it = iter(item)
-            try:
-                item = next(it)
-                k = key(item)
-                PyList_Append(self.pq, [k, i, item, it])
-            except StopIteration:
-                pass
-        i = PyList_GET_SIZE(self.pq)
-        if i == 0:
-            self.shortcut = iter([])
-        elif i == 1:
-            self.shortcut = True
-        else:
-            heapify(self.pq)
+        self.val1 = None
+        self.key1 = None
+        self.val2 = val2
+        self.key2 = key(val2)
+        self.loop = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef list item
-        cdef object retval, it, k
-        # Fast when only a single iterator remains
-        if self.shortcut is not None:
-            if self.shortcut is True:
-                item = self.pq[0]
-                self.shortcut = item[3]
-                return item[2]
-            return next(self.shortcut)
-
-        item = self.pq[0]
-        retval = item[2]
-        it = item[3]
-        try:
-            k = next(it)
-            item[2] = k
-            item[0] = self.key(k)
-            heapreplace(self.pq, item)
-        except StopIteration:
-            heappop(self.pq)
-            if PyList_GET_SIZE(self.pq) == 1:
-                self.shortcut = True
-        return retval
+        if self.loop == 0:
+            try:
+                self.val1 = next(self.seq1)
+            except StopIteration:
+                self.loop = 2
+                return self.val2
+            self.key1 = self.key(self.val1)
+            if self.key2 < self.key1:
+                self.loop = 1
+                return self.val2
+            return self.val1
+        elif self.loop == 1:
+            try:
+                self.val2 = next(self.seq2)
+            except StopIteration:
+                self.loop = 3
+                return self.val1
+            self.key2 = self.key(self.val2)
+            if self.key2 < self.key1:
+                return self.val2
+            self.loop = 0
+            return self.val1
+        elif self.loop == 2:
+            return next(self.seq2)
+        return next(self.seq1)
 
 
 cdef object c_merge_sorted(object seqs, object key=None):
-    if key is None:
-        return _merge_sorted(seqs)
-    return _merge_sorted_key(seqs, key)
+    if len(seqs) == 0:
+        return iter([])
+    elif len(seqs) == 1:
+        return iter(seqs[0])
+    elif key is None:
+        return _merge_sorted_binary(seqs)
+    return _merge_sorted_binary_key(seqs, key)
 
 
 def merge_sorted(*seqs, **kwargs):
