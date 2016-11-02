@@ -36,8 +36,8 @@ cytoolz_info['cytoolz.dicttoolz'] = dict(
 cytoolz_info['cytoolz.functoolz'] = dict(
     Compose=[
         lambda *funcs: None],
-    _flip=[
-        lambda f, a, b: None],
+    c_flip=[
+        lambda func, a, b: None],
     c_memoize=[
         lambda func, cache=None, key=None: None],
     complement=[
@@ -55,7 +55,7 @@ cytoolz_info['cytoolz.functoolz'] = dict(
     juxt=[
         lambda *funcs: None],
     memoize=[
-        lambda func=None, cache=None, key=None: None],
+        lambda func, cache=None, key=None: None],
     pipe=[
         lambda data, *funcs: None],
     return_none=[

@@ -89,7 +89,7 @@ cdef class accumulate:
     See Also:
         itertools.accumulate :  In standard itertools for Python 3.2+
     """
-    def __cinit__(self, object binop, object seq, object initial=no_default):
+    def __cinit__(self, object binop, object seq, object initial='__no__default__'):
         self.binop = binop
         self.iter_seq = iter(seq)
         self.result = self  # sentinel
@@ -413,7 +413,7 @@ cdef class _unique_identity:
         return item
 
 
-cpdef object unique(object seq, object key=identity):
+cpdef object unique(object seq, object key=None):
     """
     Return only unique elements of a sequence
 
@@ -427,7 +427,7 @@ cpdef object unique(object seq, object key=identity):
     >>> tuple(unique(['cat', 'mouse', 'dog', 'hen'], key=len))
     ('cat', 'mouse')
     """
-    if key is identity:
+    if key is None:
         return _unique_identity(seq)
     else:
         return _unique_key(seq, key)
@@ -594,7 +594,7 @@ cpdef object last(object seq):
     val = no_default
     for val in seq:
         pass
-    if val is no_default:
+    if val == no_default:
         raise IndexError
     return val
 
@@ -609,7 +609,7 @@ cdef tuple _get_exceptions = (IndexError, KeyError, TypeError)
 cdef tuple _get_list_exc = (IndexError, KeyError)
 
 
-cpdef object get(object ind, object seq, object default=no_default):
+cpdef object get(object ind, object seq, object default='__no__default__'):
     """
     Get element in a sequence or dict
 
@@ -774,7 +774,7 @@ cdef inline object _reduceby_core(dict d, object key, object item, object binop,
         PyDict_SetItem(d, key, binop(init, item))
 
 
-cpdef dict reduceby(object key, object binop, object seq, object init=no_default):
+cpdef dict reduceby(object key, object binop, object seq, object init='__no__default__'):
     """
     Perform a simultaneous groupby and reduction
 
@@ -952,7 +952,7 @@ cdef class sliding_window:
 no_pad = '__no__pad__'
 
 
-cpdef object partition(Py_ssize_t n, object seq, object pad=no_pad):
+cpdef object partition(Py_ssize_t n, object seq, object pad='__no__pad__'):
     """
     Partition sequence into tuples of length n
 
@@ -972,7 +972,7 @@ cpdef object partition(Py_ssize_t n, object seq, object pad=no_pad):
         partition_all
     """
     args = [iter(seq)] * n
-    if pad is no_pad:
+    if pad == '__no__pad__':
         return zip(*args)
     else:
         return zip_longest(*args, fillvalue=pad)
@@ -1127,7 +1127,7 @@ cdef class _pluck_list_default:
         return result
 
 
-cpdef object pluck(object ind, object seqs, object default=no_default):
+cpdef object pluck(object ind, object seqs, object default='__no__default__'):
     """
     plucks an element or several elements from each item in a sequence.
 
@@ -1206,8 +1206,8 @@ cpdef object getter(object index):
 
 cpdef object join(object leftkey, object leftseq,
                   object rightkey, object rightseq,
-                  object left_default=no_default,
-                  object right_default=no_default):
+                  object left_default='__no__default__',
+                  object right_default='__no__default__'):
     """
     Join two sequences on common attributes
 

@@ -9,7 +9,7 @@ from dev_skip_test import dev_skip_test
 @curry
 def isfrommod(modname, func):
     mod = getattr(func, '__module__', '') or ''
-    return modname in mod
+    return mod.startswith(modname) or 'toolz.functoolz.curry' in str(type(func))
 
 
 @dev_skip_test
@@ -45,8 +45,16 @@ def test_class_sigs():
                 # class
                 toolz_spec = inspect.getargspec(toolz_func.__init__)
 
+        # For Cython < 0.25
         toolz_sig = toolz_func.__name__ + inspect.formatargspec(*toolz_spec)
-        if toolz_sig not in cytoolz_func.__doc__:
+        doc = cytoolz_func.__doc__
+        # For Cython >= 0.25
+        toolz_sig_alt = toolz_func.__name__ + inspect.formatargspec(
+            *toolz_spec,
+            **{'formatvalue': lambda x: '=' + getattr(x, '__name__', repr(x))}
+        )
+        doc_alt = doc.replace('Py_ssize_t ', '')
+        if not (toolz_sig in doc or toolz_sig_alt in doc_alt):
             message = ('cytoolz.%s does not have correct function signature.'
                        '\n\nExpected: %s'
                        '\n\nDocstring in cytoolz is:\n%s'

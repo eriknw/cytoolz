@@ -11,6 +11,7 @@ from toolz.functoolz import (InstanceProperty, instanceproperty, is_arity,
                              num_required_args, has_varargs, has_keywords,
                              is_valid_args, is_partial_args)
 
+cimport cython
 from cpython.dict cimport PyDict_Merge, PyDict_New
 from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
                              PyObject_RichCompare, Py_EQ, Py_NE)
@@ -326,6 +327,44 @@ cdef class curry:
 
 
 cdef class c_memoize:
+    """ memoize(func, cache=None, key=None)
+
+    Cache a function's result for speedy future evaluation
+
+    Considerations:
+        Trades memory for speed.
+        Only use on pure functions.
+
+    >>> def add(x, y):  return x + y
+    >>> add = memoize(add)
+
+    Or use as a decorator
+
+    >>> @memoize
+    ... def add(x, y):
+    ...     return x + y
+
+    Use the ``cache`` keyword to provide a dict-like object as an initial cache
+
+    >>> @memoize(cache={(1, 2): 3})
+    ... def add(x, y):
+    ...     return x + y
+
+    Note that the above works as a decorator because ``memoize`` is curried.
+
+    It is also possible to provide a ``key(args, kwargs)`` function that
+    calculates keys used for the cache, which receives an ``args`` tuple and
+    ``kwargs`` dict as input, and must return a hashable value.  However,
+    the default key function should be sufficient most of the time.
+
+    >>> # Use key function that ignores extraneous keyword arguments
+    >>> @memoize(key=lambda args, kwargs: args)
+    ... def add(x, y, verbose=False):
+    ...     if verbose:
+    ...         print('Calculating %s + %s' % (x, y))
+    ...     return x + y
+    """
+
     property __doc__:
         def __get__(self):
             return self.func.__doc__
@@ -379,47 +418,7 @@ cdef class c_memoize:
         return curry(self, instance)
 
 
-cpdef object memoize(object func=None, object cache=None, object key=None):
-    """
-    Cache a function's result for speedy future evaluation
-
-    Considerations:
-        Trades memory for speed.
-        Only use on pure functions.
-
-    >>> def add(x, y):  return x + y
-    >>> add = memoize(add)
-
-    Or use as a decorator
-
-    >>> @memoize
-    ... def add(x, y):
-    ...     return x + y
-
-    Use the ``cache`` keyword to provide a dict-like object as an initial cache
-
-    >>> @memoize(cache={(1, 2): 3})
-    ... def add(x, y):
-    ...     return x + y
-
-    Note that the above works as a decorator because ``memoize`` is curried.
-
-    It is also possible to provide a ``key(args, kwargs)`` function that
-    calculates keys used for the cache, which receives an ``args`` tuple and
-    ``kwargs`` dict as input, and must return a hashable value.  However,
-    the default key function should be sufficient most of the time.
-
-    >>> # Use key function that ignores extraneous keyword arguments
-    >>> @memoize(key=lambda args, kwargs: args)
-    ... def add(x, y, verbose=False):
-    ...     if verbose:
-    ...         print('Calculating %s + %s' % (x, y))
-    ...     return x + y
-    """
-    # pseudo-curry
-    if func is None:
-        return curry(c_memoize, cache=cache, key=key)
-    return c_memoize(func, cache=cache, key=key)
+memoize = curry(c_memoize)
 
 
 cdef class Compose:
@@ -629,11 +628,36 @@ cpdef object do(object func, object x):
     return x
 
 
-cpdef object _flip(object f, object a, object b):
-    return PyObject_CallObject(f, (b, a))
+@cython.embedsignature(False)
+cpdef object c_flip(object func, object a, object b):
+    """ flip(func, a, b)
+
+    Call the function call with the arguments flipped
+
+    This function is curried.
+
+    >>> def div(a, b):
+    ...     return a / b
+    ...
+    >>> flip(div, 2, 1)
+    0.5
+    >>> div_by_two = flip(div, 2)
+    >>> div_by_two(4)
+    2.0
+
+    This is particularly useful for built in functions and functions defined
+    in C extensions that accept positional only arguments. For example:
+    isinstance, issubclass.
+
+    >>> data = [1, 'a', 'b', 2, 1.5, object(), 3]
+    >>> only_ints = list(filter(flip(isinstance, int), data))
+    >>> only_ints
+    [1, 2, 3]
+    """
+    return PyObject_CallObject(func, (b, a))
 
 
-flip = curry(_flip)
+flip = curry(c_flip)
 
 
 cpdef object return_none(object exc):
