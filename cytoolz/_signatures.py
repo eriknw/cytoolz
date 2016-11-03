@@ -48,12 +48,16 @@ cytoolz_info['cytoolz.functoolz'] = dict(
         lambda exc, func, handler=None: None],
     flip=[  # XXX: these are optional, but not keywords!
         lambda func=None, a=None, b=None: None],
+    _flip=[
+        lambda func, a, b: None],
     identity=[
         lambda x: None],
     juxt=[
         lambda *funcs: None],
     memoize=[  # XXX: func is optional, but not a keyword!
         lambda func=None, cache=None, key=None: None],
+    _memoize=[
+        lambda func, cache=None, key=None: None],
     pipe=[
         lambda data, *funcs: None],
     return_none=[
