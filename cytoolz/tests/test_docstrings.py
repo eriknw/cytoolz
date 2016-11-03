@@ -1,6 +1,5 @@
 import difflib
 import cytoolz
-import toolz
 
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
 from cytoolz.utils import raises
@@ -16,7 +15,7 @@ skipped_doctests = ['get_in']
 @curry
 def isfrommod(modname, func):
     mod = getattr(func, '__module__', '') or ''
-    return modname in mod
+    return mod.startswith(modname) or 'toolz.functoolz.curry' in str(type(func))
 
 
 def convertdoc(doc):
@@ -33,6 +32,7 @@ def convertdoc(doc):
 
 @dev_skip_test
 def test_docstrings_uptodate():
+    import toolz
     differ = difflib.Differ()
 
     # only consider items created in both `toolz` and `cytoolz`

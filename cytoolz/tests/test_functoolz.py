@@ -1,10 +1,10 @@
+import platform
+
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
-                             compose, pipe, complement, do, juxt)
-from cytoolz.functoolz import _num_required_args
+                             compose, pipe, complement, do, juxt, flip, excepts)
 from operator import add, mul, itemgetter
 from cytoolz.utils import raises
 from functools import partial
-from cytoolz.compatibility import reduce
 
 
 def iseven(x):
@@ -46,7 +46,7 @@ def test_memoize():
         return x + y
     mf = memoize(f)
 
-    assert mf(2, 3) == mf(2, 3)
+    assert mf(2, 3) is mf(2, 3)
     assert fn_calls == [1]  # function was only called once
     assert mf.__doc__ == f.__doc__
     assert raises(TypeError, lambda: mf(1, {}))
@@ -151,6 +151,17 @@ def test_memoize_key():
     assert f(1, 3) == 3
 
 
+def test_memoize_wrapped():
+
+    def foo():
+        """
+        Docstring
+        """
+        pass
+    memoized_foo = memoize(foo)
+    assert memoized_foo.__wrapped__ is foo
+
+
 def test_curry_simple():
     cmul = curry(mul)
     double = cmul(2)
@@ -161,6 +172,7 @@ def test_curry_simple():
     cmap = curry(map)
     assert list(cmap(inc)([1, 2, 3])) == [2, 3, 4]
 
+    assert raises(TypeError, lambda: curry())
     assert raises(TypeError, lambda: curry({1: 2}))
 
 
@@ -185,6 +197,16 @@ def test_curry_kwargs():
     assert cg(a=0, b=1) == 1
     assert cg(0) == 2  # pass "a" as arg, not kwarg
     assert raises(TypeError, lambda: cg(1, 2))  # pass "b" as arg AND kwarg
+
+    def h(x, func=int):
+        return func(x)
+
+    if platform.python_implementation() != 'PyPy'\
+            or platform.python_version_tuple()[0] != '3':  # Bug on PyPy3<2.5
+        # __init__ must not pick func as positional arg
+        assert curry(h)(0.0) == 0
+        assert curry(h)(func=str)(0.0) == '0.0'
+        assert curry(h, func=str)(0.0) == '0.0'
 
 
 def test_curry_passes_errors():
@@ -255,6 +277,9 @@ def test_curry_attributes_readonly():
     assert raises(AttributeError, lambda: setattr(f, 'args', (2,)))
     assert raises(AttributeError, lambda: setattr(f, 'keywords', {'c': 3}))
     assert raises(AttributeError, lambda: setattr(f, 'func', f))
+    assert raises(AttributeError, lambda: delattr(f, 'args'))
+    assert raises(AttributeError, lambda: delattr(f, 'keywords'))
+    assert raises(AttributeError, lambda: delattr(f, 'func'))
 
 
 def test_curry_attributes_writable():
@@ -313,14 +338,155 @@ def test_curry_doesnot_transmogrify():
     assert cf(y=1)(y=2)(y=3)(1) == f(1, 3)
 
 
-def test__num_required_args():
-    assert _num_required_args(map) != 0
-    assert _num_required_args(lambda x: x) == 1
-    assert _num_required_args(lambda x, y: x) == 2
+def test_curry_on_classmethods():
+    class A(object):
+        BASE = 10
 
-    def foo(x, y, z=2):
+        def __init__(self, base):
+            self.BASE = base
+
+        @curry
+        def addmethod(self, x, y):
+            return self.BASE + x + y
+
+        @classmethod
+        @curry
+        def addclass(cls, x, y):
+            return cls.BASE + x + y
+
+        @staticmethod
+        @curry
+        def addstatic(x, y):
+            return x + y
+
+    a = A(100)
+    assert a.addmethod(3, 4) == 107
+    assert a.addmethod(3)(4) == 107
+    assert A.addmethod(a, 3, 4) == 107
+    assert A.addmethod(a)(3)(4) == 107
+
+    assert a.addclass(3, 4) == 17
+    assert a.addclass(3)(4) == 17
+    assert A.addclass(3, 4) == 17
+    assert A.addclass(3)(4) == 17
+
+    assert a.addstatic(3, 4) == 7
+    assert a.addstatic(3)(4) == 7
+    assert A.addstatic(3, 4) == 7
+    assert A.addstatic(3)(4) == 7
+
+    # we want this to be of type curry
+    assert isinstance(a.addmethod, curry)
+    assert isinstance(A.addmethod, curry)
+
+
+def test_memoize_on_classmethods():
+    class A(object):
+        BASE = 10
+        HASH = 10
+
+        def __init__(self, base):
+            self.BASE = base
+
+        @memoize
+        def addmethod(self, x, y):
+            return self.BASE + x + y
+
+        @classmethod
+        @memoize
+        def addclass(cls, x, y):
+            return cls.BASE + x + y
+
+        @staticmethod
+        @memoize
+        def addstatic(x, y):
+            return x + y
+
+        def __hash__(self):
+            return self.HASH
+
+    a = A(100)
+    assert a.addmethod(3, 4) == 107
+    assert A.addmethod(a, 3, 4) == 107
+
+    a.BASE = 200
+    assert a.addmethod(3, 4) == 107
+    a.HASH = 200
+    assert a.addmethod(3, 4) == 207
+
+    assert a.addclass(3, 4) == 17
+    assert A.addclass(3, 4) == 17
+    A.BASE = 20
+    assert A.addclass(3, 4) == 17
+    A.HASH = 20  # hashing of class is handled by metaclass
+    assert A.addclass(3, 4) == 17  # hence, != 27
+
+    assert a.addstatic(3, 4) == 7
+    assert A.addstatic(3, 4) == 7
+
+
+def test_curry_call():
+    @curry
+    def add(x, y):
+        return x + y
+    assert raises(TypeError, lambda: add.call(1))
+    assert add(1)(2) == add.call(1, 2)
+    assert add(1)(2) == add(1).call(2)
+
+
+def test_curry_bind():
+    @curry
+    def add(x=1, y=2):
+        return x + y
+    assert add() == add(1, 2)
+    assert add.bind(10)(20) == add(10, 20)
+    assert add.bind(10).bind(20)() == add(10, 20)
+    assert add.bind(x=10)(y=20) == add(10, 20)
+    assert add.bind(x=10).bind(y=20)() == add(10, 20)
+
+
+def test_curry_unknown_args():
+    def add3(x, y, z):
+        return x + y + z
+
+    @curry
+    def f(*args):
+        return add3(*args)
+
+    assert f()(1)(2)(3) == 6
+    assert f(1)(2)(3) == 6
+    assert f(1, 2)(3) == 6
+    assert f(1, 2, 3) == 6
+    assert f(1, 2)(3, 4) == f(1, 2, 3, 4)
+
+
+def test_curry_bad_types():
+    assert raises(TypeError, lambda: curry(1))
+
+
+def test_curry_subclassable():
+    class mycurry(curry):
         pass
-    assert _num_required_args(foo) == 2
+
+    add = mycurry(lambda x, y: x+y)
+    assert isinstance(add, curry)
+    assert isinstance(add, mycurry)
+    assert isinstance(add(1), mycurry)
+    assert isinstance(add()(1), mycurry)
+    assert add(1)(2) == 3
+
+    # Should we make `_should_curry` public?
+    """
+    class curry2(curry):
+        def _should_curry(self, args, kwargs, exc=None):
+            return len(self.args) + len(args) < 2
+
+    add = curry2(lambda x, y: x+y)
+    assert isinstance(add(1), curry2)
+    assert add(1)(2) == 3
+    assert isinstance(add(1)(x=2), curry2)
+    assert raises(TypeError, lambda: add(1)(x=2)(3))
+    """
 
 
 def test_compose():
@@ -334,6 +500,24 @@ def test_compose():
         return (a + b) * c
 
     assert compose(str, inc, f)(1, 2, c=3) == '10'
+
+    # Define two functions with different names
+    def f(a):
+        return a
+
+    def g(a):
+        return a
+
+    composed = compose(f, g)
+    assert composed.__name__ == 'f_of_g'
+    assert composed.__doc__ == 'lambda *args, **kwargs: f(g(*args, **kwargs))'
+
+    # Create an object with no __name__.
+    h = object()
+
+    composed = compose(f, h)
+    assert composed.__name__ == 'Compose'
+    assert composed.__doc__ == 'A composition of functions'
 
 
 def test_pipe():
@@ -383,3 +567,72 @@ def test_juxt_generator_input():
     juxtfunc = juxt(itemgetter(2*i) for i in range(5))
     assert juxtfunc(data) == (0, 2, 4, 6, 8)
     assert juxtfunc(data) == (0, 2, 4, 6, 8)
+
+
+def test_flip():
+    def f(a, b):
+        return a, b
+
+    assert flip(f, 'a', 'b') == ('b', 'a')
+
+
+def test_excepts():
+    # These are descriptors, make sure this works correctly.
+    assert excepts.__name__ == 'excepts'
+    assert (
+        'A wrapper around a function to catch exceptions and\n'
+        '    dispatch to a handler.\n'
+    ) in excepts.__doc__
+
+    def idx(a):
+        """idx docstring
+        """
+        return [1, 2].index(a)
+
+    def handler(e):
+        """handler docstring
+        """
+        assert isinstance(e, ValueError)
+        return -1
+
+    excepting = excepts(ValueError, idx, handler)
+    assert excepting(1) == 0
+    assert excepting(2) == 1
+    assert excepting(3) == -1
+
+    assert excepting.__name__ == 'idx_excepting_ValueError'
+    assert 'idx docstring' in excepting.__doc__
+    assert 'ValueError' in excepting.__doc__
+    assert 'handler docstring' in excepting.__doc__
+
+    def getzero(a):
+        """getzero docstring
+        """
+        return a[0]
+
+    excepting = excepts((IndexError, KeyError), getzero)
+    assert excepting([]) is None
+    assert excepting([1]) == 1
+    assert excepting({}) is None
+    assert excepting({0: 1}) == 1
+
+    assert excepting.__name__ == 'getzero_excepting_IndexError_or_KeyError'
+    assert 'getzero docstring' in excepting.__doc__
+    assert 'return_none' in excepting.__doc__
+    assert 'Returns None' in excepting.__doc__
+
+    def raise_(a):
+        """A function that raises an instance of the exception type given.
+        """
+        raise a()
+
+    excepting = excepts((ValueError, KeyError), raise_)
+    assert excepting(ValueError) is None
+    assert excepting(KeyError) is None
+    assert raises(TypeError, lambda: excepting(TypeError))
+    assert raises(NotImplementedError, lambda: excepting(NotImplementedError))
+
+    excepting = excepts(object(), object(), object())
+    assert excepting.__name__ == 'excepting'
+    assert excepting.__doc__ == excepts.__doc__
+

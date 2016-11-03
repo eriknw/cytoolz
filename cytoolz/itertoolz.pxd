@@ -7,20 +7,28 @@ cdef class accumulate:
     cdef object binop
     cdef object iter_seq
     cdef object result
+    cdef object initial
 
 
 cpdef dict groupby(object key, object seq)
 
 
 cdef class _merge_sorted:
-    cdef list pq
-    cdef object shortcut
-
+    cdef object seq1
+    cdef object seq2
+    cdef object val1
+    cdef object val2
+    cdef Py_ssize_t loop
 
 cdef class _merge_sorted_key:
-    cdef list pq
+    cdef object seq1
+    cdef object seq2
+    cdef object val1
+    cdef object val2
     cdef object key
-    cdef object shortcut
+    cdef object key1
+    cdef object key2
+    cdef Py_ssize_t loop
 
 
 cdef object c_merge_sorted(object seqs, object key=*)
@@ -29,7 +37,6 @@ cdef object c_merge_sorted(object seqs, object key=*)
 cdef class interleave:
     cdef list iters
     cdef list newiters
-    cdef tuple pass_exceptions
     cdef Py_ssize_t i
     cdef Py_ssize_t n
 
@@ -55,6 +62,9 @@ cpdef object isdistinct(object seq)
 
 
 cpdef object take(Py_ssize_t n, object seq)
+
+
+cpdef object tail(Py_ssize_t n, object seq)
 
 
 cpdef object drop(Py_ssize_t n, object seq)
@@ -237,3 +247,29 @@ cdef class _outer_join_index(_outer_join):
 
 cdef class _outer_join_indices(_outer_join):
     pass
+
+
+cdef class _diff_key:
+    cdef Py_ssize_t N
+    cdef object iters
+    cdef object key
+
+
+cdef class _diff_identity:
+    cdef Py_ssize_t N
+    cdef object iters
+
+
+cdef object c_diff(object seqs, object default=*, object key=*)
+
+
+cpdef object topk(Py_ssize_t k, object seq, object key=*)
+
+
+cpdef object peek(object seq)
+
+
+cdef class random_sample:
+    cdef object iter_seq
+    cdef object prob
+    cdef object random_func

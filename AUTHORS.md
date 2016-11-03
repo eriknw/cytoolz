@@ -9,3 +9,5 @@ Lars Buitinck                                   [@larsmans](http://github.com/la
 scoder                                          [@scoder](https://github.com/scoder/)
 
 Phillip Cloud                                   [@cpcloud](https://github.com/cpcloud)
+
+Joe Jevnik                                      [@llllllllll](https://github.com/llllllllll)

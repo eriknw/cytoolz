@@ -1,7 +1,5 @@
 import cytoolz
 import cytoolz.curried
-import toolz
-import toolz.curried
 import types
 from dev_skip_test import dev_skip_test
 
@@ -11,13 +9,16 @@ from dev_skip_test import dev_skip_test
 
 @dev_skip_test
 def test_toolzcurry_is_class():
+    import toolz
     assert isinstance(toolz.curry, type) is True
     assert isinstance(toolz.curry, types.FunctionType) is False
 
 
 @dev_skip_test
 def test_cytoolz_like_toolz():
-    for key, val in toolz.curried.__dict__.items():
+    import toolz
+    import toolz.curried
+    for key, val in vars(toolz.curried).items():
         if isinstance(val, toolz.curry):
             if val.func is toolz.curry:  # XXX: Python 3.4 work-around!
                 continue
@@ -29,7 +30,9 @@ def test_cytoolz_like_toolz():
 
 @dev_skip_test
 def test_toolz_like_cytoolz():
-    for key, val in cytoolz.curried.__dict__.items():
+    import toolz
+    import toolz.curried
+    for key, val in vars(cytoolz.curried).items():
         if isinstance(val, cytoolz.curry):
             assert hasattr(toolz.curried, key), (
                     'cytoolz.curried.%s should not exist' % key)

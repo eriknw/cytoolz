@@ -15,8 +15,7 @@ automatically use Cython unless disabled via a command line argument.
 """
 import os.path
 import sys
-from distutils.core import setup
-from distutils.extension import Extension
+from setuptools import setup, Extension
 
 info = {}
 filename = os.path.join('cytoolz', '_version.py')
@@ -55,12 +54,19 @@ else:
     suffix = '.c'
 
 ext_modules = []
-for modname in ['dicttoolz', 'functoolz', 'itertoolz',
-                'curried_exceptions', 'recipes', 'utils']:
-    ext_modules.append(Extension('cytoolz.' + modname,
+for modname in ['dicttoolz', 'functoolz', 'itertoolz', 'recipes', 'utils']:
+    ext_modules.append(Extension('cytoolz.' + modname.replace('/', '.'),
                                  ['cytoolz/' + modname + suffix]))
 
 if use_cython:
+    try:
+        from Cython.Compiler.Options import get_directive_defaults
+        directive_defaults = get_directive_defaults()
+    except ImportError:
+        # for Cython < 0.25
+        from Cython.Compiler.Options import directive_defaults
+    directive_defaults['embedsignature'] = True
+    directive_defaults['binding'] = True
     ext_modules = cythonize(ext_modules)
 
 setup(
@@ -78,8 +84,8 @@ setup(
     maintainer='Erik Welch',
     maintainer_email='erik.n.welch@gmail.com',
     license = 'BSD',
-    packages=['cytoolz'],
-    package_data={'cytoolz': ['*.pxd', 'tests/*.py']},
+    packages=['cytoolz', 'cytoolz.curried'],
+    package_data={'cytoolz': ['*.pyx', '*.pxd', 'curried/*.pyx', 'tests/*.py']},
     # include_package_data = True,
     keywords=('functional utility itertools functools iterator generator '
                 'curry memoize lazy streaming bigdata cython toolz cytoolz'),
@@ -96,9 +102,9 @@ setup(
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.2',
         'Programming Language :: Python :: 3.3',
         'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Software Development',
@@ -106,5 +112,6 @@ setup(
         'Topic :: Software Development :: Libraries :: Python Modules',
         'Topic :: Utilities',
     ],
-    # zip_safe=False
+    install_requires=['toolz >= 0.8.0'],
+    zip_safe=False,
 )

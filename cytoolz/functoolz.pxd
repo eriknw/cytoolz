@@ -8,13 +8,15 @@ cdef object c_thread_last(object val, object forms)
 
 
 cdef class curry:
+    cdef readonly object _sigspec
+    cdef readonly object _has_unknown_args
     cdef readonly object func
     cdef readonly tuple args
     cdef readonly dict keywords
     cdef public object __doc__
     cdef public object __name__
 
-cdef class c_memoize:
+cdef class memoize:
     cdef object func
     cdef object cache
     cdef object key
@@ -22,12 +24,9 @@ cdef class c_memoize:
     cdef bint may_have_kwargs
 
 
-cpdef object memoize(object func=*, object cache=*, object key=*)
-
-
 cdef class Compose:
-    cdef object firstfunc
-    cdef tuple funcs
+    cdef public object first
+    cdef public tuple funcs
 
 
 cdef object c_compose(object funcs)
@@ -48,3 +47,16 @@ cdef object c_juxt(object funcs)
 
 
 cpdef object do(object func, object x)
+
+
+cpdef object flip(object func, object a, object b)
+
+
+cpdef object return_none(object exc)
+
+
+cdef class excepts:
+    cdef public object exc
+    cdef public object func
+    cdef public object handler
+

@@ -1,4 +1,5 @@
 from cytoolz import *
+import cytoolz
 import pickle
 
 
@@ -28,3 +29,29 @@ def test_complement():
     g = pickle.loads(pickle.dumps(f))
     assert f(True) == g(True)
     assert f(False) == g(False)
+
+
+def test_instanceproperty():
+    p = cytoolz.functoolz.InstanceProperty(bool)
+    assert p.__get__(None) is None
+    assert p.__get__(0) is False
+    assert p.__get__(1) is True
+    p2 = pickle.loads(pickle.dumps(p))
+    assert p2.__get__(None) is None
+    assert p2.__get__(0) is False
+    assert p2.__get__(1) is True
+
+
+def f(x, y):
+    return x, y
+
+
+def test_flip():
+    flip = pickle.loads(pickle.dumps(cytoolz.functoolz.flip))
+    assert flip is cytoolz.functoolz.flip
+    g1 = flip(f)
+    g2 = pickle.loads(pickle.dumps(g1))
+    assert g1(1, 2) == g2(1, 2) == f(2, 1)
+    g1 = flip(f)(1)
+    g2 = pickle.loads(pickle.dumps(g1))
+    assert g1(2) == g2(2) == f(2, 1)
