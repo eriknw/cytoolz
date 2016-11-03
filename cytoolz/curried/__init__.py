@@ -48,7 +48,6 @@ _curry_set = frozenset([
     cytoolz.get,
     cytoolz.get_in,
     cytoolz.groupby,
-    cytoolz.interleave,
     cytoolz.interpose,
     cytoolz.itemfilter,
     cytoolz.itemmap,

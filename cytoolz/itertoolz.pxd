@@ -37,7 +37,6 @@ cdef object c_merge_sorted(object seqs, object key=*)
 cdef class interleave:
     cdef list iters
     cdef list newiters
-    cdef tuple pass_exceptions
     cdef Py_ssize_t i
     cdef Py_ssize_t n
 
@@ -93,6 +92,9 @@ cpdef object get(object ind, object seq, object default=*)
 
 
 cpdef object cons(object el, object seq)
+
+
+cpdef object concat(object seqs)
 
 
 cpdef object mapcat(object func, object seqs)

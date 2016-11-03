@@ -4,7 +4,7 @@ from functools import partial
 from operator import attrgetter
 from textwrap import dedent
 from cytoolz.utils import no_default
-from cytoolz.compatibility import PY3, PY34, filter as ifilter, map as imap, reduce
+from cytoolz.compatibility import PY3, PY34, filter as ifilter, map as imap, reduce, import_module
 import cytoolz._signatures as _sigs
 
 from toolz.functoolz import (InstanceProperty, instanceproperty, is_arity,
@@ -233,6 +233,15 @@ cdef class curry:
                 return type(self)(self.func, *args, **kwargs)
             raise
 
+    def _should_curry(self, args, kwargs, exc=None):
+        if PyTuple_GET_SIZE(args) == 0:
+            args = self.args
+        elif PyTuple_GET_SIZE(self.args) != 0:
+            args = PySequence_Concat(self.args, args)
+        if self.keywords is not None:
+            PyDict_Merge(kwargs, self.keywords, False)
+        return self._should_curry_internal(args, kwargs)
+
     def _should_curry_internal(self, args, kwargs, exc=None):
         func = self.func
 
@@ -281,12 +290,6 @@ cdef class curry:
             return self
         return type(self)(self, instance)
 
-    def __reduce__(self):
-        return (type(self), (self.func,), (self.args, self.keywords))
-
-    def __setstate__(self, state):
-        self.args, self.keywords = state
-
     property __signature__:
         def __get__(self):
             sig = inspect.signature(self.func)
@@ -325,8 +328,33 @@ cdef class curry:
 
             return sig.replace(parameters=newparams)
 
+    def __reduce__(self):
+        func = self.func
+        modname = getattr(func, '__module__', None)
+        funcname = getattr(func, '__name__', None)
+        if modname and funcname:
+            module = import_module(modname)
+            obj = getattr(module, funcname, None)
+            if obj is self:
+                return funcname
+            elif isinstance(obj, curry) and obj.func is func:
+                func = '%s.%s' % (modname, funcname)
 
-cdef class c_memoize:
+        state = (type(self), func, self.args, self.keywords)
+        return (_restore_curry, state)
+
+
+cpdef object _restore_curry(cls, func, args, kwargs):
+    if isinstance(func, str):
+        modname, funcname = func.rsplit('.', 1)
+        module = import_module(modname)
+        func = getattr(module, funcname).func
+    obj = cls(func, *args, **(kwargs or {}))
+    return obj
+
+
+
+cdef class memoize:
     """ memoize(func, cache=None, key=None)
 
     Cache a function's result for speedy future evaluation
@@ -418,7 +446,7 @@ cdef class c_memoize:
         return curry(self, instance)
 
 
-memoize = curry(c_memoize)
+_memoize = memoize  # uncurried
 
 
 cdef class Compose:
@@ -628,22 +656,20 @@ cpdef object do(object func, object x):
     return x
 
 
-@cython.embedsignature(False)
-cpdef object c_flip(object func, object a, object b):
-    """ flip(func, a, b)
-
+cpdef object flip(object func, object a, object b):
+    """
     Call the function call with the arguments flipped
 
     This function is curried.
 
     >>> def div(a, b):
-    ...     return a / b
+    ...     return a // b
     ...
-    >>> flip(div, 2, 1)
-    0.5
+    >>> flip(div, 2, 6)
+    3
     >>> div_by_two = flip(div, 2)
     >>> div_by_two(4)
-    2.0
+    2
 
     This is particularly useful for built in functions and functions defined
     in C extensions that accept positional only arguments. For example:
@@ -657,7 +683,7 @@ cpdef object c_flip(object func, object a, object b):
     return PyObject_CallObject(func, (b, a))
 
 
-flip = curry(c_flip)
+_flip = flip  # uncurried
 
 
 cpdef object return_none(object exc):

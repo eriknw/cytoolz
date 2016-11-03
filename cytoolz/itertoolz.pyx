@@ -27,10 +27,6 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'join', 'tail', 'diff', 'topk', 'peek', 'random_sample']
 
 
-concatv = chain
-concat = chain.from_iterable
-
-
 cpdef object identity(object x):
     return x
 
@@ -317,7 +313,7 @@ def merge_sorted(*seqs, **kwargs):
 
 
 cdef class interleave:
-    """ interleave(seqs, pass_exceptions=())
+    """ interleave(seqs)
 
     Interleave a sequence of sequences
 
@@ -331,10 +327,9 @@ cdef class interleave:
 
     Returns a lazy iterator
     """
-    def __cinit__(self, seqs, pass_exceptions=()):
+    def __cinit__(self, seqs):
         self.iters = [iter(seq) for seq in seqs]
         self.newiters = []
-        self.pass_exceptions = tuple(pass_exceptions)
         self.i = 0
         self.n = PyList_GET_SIZE(self.iters)
 
@@ -359,13 +354,15 @@ cdef class interleave:
         self.i += 1
         obj = PtrIter_Next(val)
 
+        # TODO: optimization opportunity.  Previously, it was possible to
+        # continue on given exceptions, `self.pass_exceptions`, which is
+        # why this code is structured this way.  Time to clean up?
         while obj is NULL:
             obj = PyErr_Occurred()
             if obj is not NULL:
                 val = <object>obj
                 PyErr_Clear()
-                if not PyErr_GivenExceptionMatches(val, self.pass_exceptions):
-                    raise val
+                raise val
 
             if self.i == self.n:
                 self.n = PyList_GET_SIZE(self.newiters)
@@ -692,6 +689,38 @@ cpdef object get(object ind, object seq, object default='__no__default__'):
         raise val
     Py_XDECREF(obj)
     return <object>obj
+
+
+cpdef object concat(object seqs):
+    """
+    Concatenate zero or more iterables, any of which may be infinite.
+
+    An infinite sequence will prevent the rest of the arguments from
+    being included.
+
+    We use chain.from_iterable rather than ``chain(*seqs)`` so that seqs
+    can be a generator.
+
+    >>> list(concat([[], [1], [2, 3]]))
+    [1, 2, 3]
+
+    See also:
+        itertools.chain.from_iterable  equivalent
+    """
+    return chain.from_iterable(seqs)
+
+
+def concatv(*seqs):
+    """
+    Variadic version of concat
+
+    >>> list(concatv([], ["a"], ["b", "c"]))
+    ['a', 'b', 'c']
+
+    See also:
+        itertools.chain
+    """
+    return chain.from_iterable(seqs)
 
 
 cpdef object mapcat(object func, object seqs):
@@ -1144,8 +1173,7 @@ cpdef object pluck(object ind, object seqs, object default='__no__default__'):
 
     This is equivalent to running `map(curried.get(ind), seqs)`
 
-    ``ind`` can be either a single string/index or a sequence of
-    strings/indices.
+    ``ind`` can be either a single string/index or a list of strings/indices.
     ``seqs`` should be sequence containing sequences or dicts.
 
     e.g.
