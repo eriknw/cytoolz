@@ -27,10 +27,6 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'join', 'tail', 'diff', 'topk', 'peek', 'random_sample']
 
 
-concatv = chain
-concat = chain.from_iterable
-
-
 cpdef object identity(object x):
     return x
 
@@ -695,6 +691,38 @@ cpdef object get(object ind, object seq, object default='__no__default__'):
     return <object>obj
 
 
+cpdef object concat(object seqs):
+    """
+    Concatenate zero or more iterables, any of which may be infinite.
+
+    An infinite sequence will prevent the rest of the arguments from
+    being included.
+
+    We use chain.from_iterable rather than ``chain(*seqs)`` so that seqs
+    can be a generator.
+
+    >>> list(concat([[], [1], [2, 3]]))
+    [1, 2, 3]
+
+    See also:
+        itertools.chain.from_iterable  equivalent
+    """
+    return chain.from_iterable(seqs)
+
+
+def concatv(*seqs):
+    """
+    Variadic version of concat
+
+    >>> list(concatv([], ["a"], ["b", "c"]))
+    ['a', 'b', 'c']
+
+    See also:
+        itertools.chain
+    """
+    return chain.from_iterable(seqs)
+
+
 cpdef object mapcat(object func, object seqs):
     """
     Apply func to each sequence in seqs, concatenating results.
@@ -1145,8 +1173,7 @@ cpdef object pluck(object ind, object seqs, object default='__no__default__'):
 
     This is equivalent to running `map(curried.get(ind), seqs)`
 
-    ``ind`` can be either a single string/index or a sequence of
-    strings/indices.
+    ``ind`` can be either a single string/index or a list of strings/indices.
     ``seqs`` should be sequence containing sequences or dicts.
 
     e.g.

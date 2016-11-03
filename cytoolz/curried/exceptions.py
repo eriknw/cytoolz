@@ -1,5 +1,4 @@
 import cytoolz
-#from cytoolz import curry, merge as _merge, merge_with as _merge_with
 
 __all__ = ['merge', 'merge_with']
 

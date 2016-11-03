@@ -71,6 +71,10 @@ cytoolz_info['cytoolz.functoolz'] = dict(
 cytoolz_info['cytoolz.itertoolz'] = dict(
     accumulate=[
         lambda binop, seq, initial='__no__default__': None],
+    concat=[
+        lambda seqs: None],
+    concatv=[
+        lambda *seqs: None],
     cons=[
         lambda el, seq: None],
     count=[

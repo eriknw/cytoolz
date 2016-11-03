@@ -94,6 +94,9 @@ cpdef object get(object ind, object seq, object default=*)
 cpdef object cons(object el, object seq)
 
 
+cpdef object concat(object seqs)
+
+
 cpdef object mapcat(object func, object seqs)
 
 
