@@ -446,6 +446,9 @@ cdef class memoize:
         return curry(self, instance)
 
 
+_memoize = memoize  # uncurried
+
+
 cdef class Compose:
     """ Compose(self, *funcs)
 
@@ -678,6 +681,9 @@ cpdef object flip(object func, object a, object b):
     [1, 2, 3]
     """
     return PyObject_CallObject(func, (b, a))
+
+
+_flip = flip  # uncurried
 
 
 cpdef object return_none(object exc):
