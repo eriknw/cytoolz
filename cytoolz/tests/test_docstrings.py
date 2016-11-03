@@ -15,7 +15,7 @@ skipped_doctests = ['get_in']
 @curry
 def isfrommod(modname, func):
     mod = getattr(func, '__module__', '') or ''
-    return modname in mod
+    return mod.startswith(modname) or 'toolz.functoolz.curry' in str(type(func))
 
 
 def convertdoc(doc):

@@ -7,8 +7,8 @@ from cytoolz.itertoolz cimport (
 
 
 from cytoolz.functoolz cimport (
-    c_compose, c_juxt, c_memoize, c_pipe, c_thread_first, c_thread_last,
-    complement, curry, do, identity, excepts, c_flip)
+    c_compose, c_juxt, memoize, c_pipe, c_thread_first, c_thread_last,
+    complement, curry, do, identity, excepts, flip)
 
 
 from cytoolz.dicttoolz cimport (

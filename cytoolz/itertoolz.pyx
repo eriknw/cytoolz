@@ -317,7 +317,7 @@ def merge_sorted(*seqs, **kwargs):
 
 
 cdef class interleave:
-    """ interleave(seqs, pass_exceptions=())
+    """ interleave(seqs)
 
     Interleave a sequence of sequences
 
@@ -331,10 +331,9 @@ cdef class interleave:
 
     Returns a lazy iterator
     """
-    def __cinit__(self, seqs, pass_exceptions=()):
+    def __cinit__(self, seqs):
         self.iters = [iter(seq) for seq in seqs]
         self.newiters = []
-        self.pass_exceptions = tuple(pass_exceptions)
         self.i = 0
         self.n = PyList_GET_SIZE(self.iters)
 
@@ -359,13 +358,15 @@ cdef class interleave:
         self.i += 1
         obj = PtrIter_Next(val)
 
+        # TODO: optimization opportunity.  Previously, it was possible to
+        # continue on given exceptions, `self.pass_exceptions`, which is
+        # why this code is structured this way.  Time to clean up?
         while obj is NULL:
             obj = PyErr_Occurred()
             if obj is not NULL:
                 val = <object>obj
                 PyErr_Clear()
-                if not PyErr_GivenExceptionMatches(val, self.pass_exceptions):
-                    raise val
+                raise val
 
             if self.i == self.n:
                 self.n = PyList_GET_SIZE(self.newiters)
