@@ -11,7 +11,9 @@ clean:
 	rm -rf build/ cytoolz/__pycache__/ cytoolz/*/__pycache__/
 
 curried:
-	$(PYTHON) etc/generate_curried.py > cytoolz/curried/__init__.py
+	sed -e 's/toolz/cytoolz/g' -e 's/itercytoolz/itertoolz/' \
+		-e 's/dictcytoolz/dicttoolz/g' -e 's/funccytoolz/functoolz/g' \
+		../toolz/toolz/curried/__init__.py > cytoolz/curried/__init__.py
 
 copytests:
 	for f in ../toolz/toolz/tests/test*py; \
