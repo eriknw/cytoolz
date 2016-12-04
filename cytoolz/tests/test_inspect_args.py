@@ -8,7 +8,7 @@ from cytoolz.functoolz import (curry, is_valid_args, is_partial_args, is_arity,
 from cytoolz._signatures import builtins
 import cytoolz._signatures as _sigs
 from cytoolz.compatibility import PY3, PY33
-from cytoolz.utils_test import raises
+from cytoolz.utils import raises
 
 
 def make_func(param_string, raise_if_called=True):

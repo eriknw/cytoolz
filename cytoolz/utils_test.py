@@ -2,15 +2,7 @@ import doctest
 import inspect
 
 
-__all__ = ['raises', 'module_doctest']
-
-
-def raises(err, lamda):
-    try:
-        lamda()
-        return False
-    except err:
-        return True
+__all__ = ['module_doctest']
 
 
 # The utilities below were obtained from:

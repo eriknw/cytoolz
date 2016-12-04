@@ -1,5 +1,4 @@
-from cytoolz.utils import consume
-from cytoolz.utils_test import raises
+from cytoolz.utils import consume, raises
 
 
 def test_raises():

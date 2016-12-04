@@ -2,7 +2,7 @@ import os.path
 import cytoolz
 
 
-__all__ = ['no_default', 'include_dirs', 'consume']
+__all__ = ['raises', 'no_default', 'include_dirs', 'consume']
 
 
 try:
@@ -10,6 +10,14 @@ try:
     from toolz.utils import no_default
 except ImportError:
     no_default = '__no__default__'
+
+
+def raises(err, lamda):
+    try:
+        lamda()
+        return False
+    except err:
+        return True
 
 
 def include_dirs():
