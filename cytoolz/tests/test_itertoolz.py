@@ -1,6 +1,6 @@
 import itertools
 from itertools import starmap
-from cytoolz.utils import raises
+from cytoolz.utils_test import raises
 from functools import partial
 from random import Random
 from pickle import dumps, loads

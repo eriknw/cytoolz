@@ -2,7 +2,7 @@ from collections import defaultdict as _defaultdict
 from cytoolz.dicttoolz import (merge, merge_with, valmap, keymap, update_in,
                              assoc, dissoc, keyfilter, valfilter, itemmap,
                              itemfilter, assoc_in)
-from cytoolz.utils import raises
+from cytoolz.utils_test import raises
 from cytoolz.compatibility import PY3
 
 

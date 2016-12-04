@@ -20,7 +20,7 @@ reasonably well-behaved and don't cause SystemErrors.
 # XXX: This file could be back-ported to `toolz` once unified testing exists.
 import cytoolz
 from cytoolz import *
-from cytoolz.utils import raises
+from cytoolz.utils_test import raises
 from operator import add
 
 
