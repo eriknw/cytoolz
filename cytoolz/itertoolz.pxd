@@ -14,14 +14,21 @@ cpdef dict groupby(object key, object seq)
 
 
 cdef class _merge_sorted:
-    cdef list pq
-    cdef object shortcut
-
+    cdef object seq1
+    cdef object seq2
+    cdef object val1
+    cdef object val2
+    cdef Py_ssize_t loop
 
 cdef class _merge_sorted_key:
-    cdef list pq
+    cdef object seq1
+    cdef object seq2
+    cdef object val1
+    cdef object val2
     cdef object key
-    cdef object shortcut
+    cdef object key1
+    cdef object key2
+    cdef Py_ssize_t loop
 
 
 cdef object c_merge_sorted(object seqs, object key=*)
@@ -30,7 +37,6 @@ cdef object c_merge_sorted(object seqs, object key=*)
 cdef class interleave:
     cdef list iters
     cdef list newiters
-    cdef tuple pass_exceptions
     cdef Py_ssize_t i
     cdef Py_ssize_t n
 
@@ -58,6 +64,9 @@ cpdef object isdistinct(object seq)
 cpdef object take(Py_ssize_t n, object seq)
 
 
+cpdef object tail(Py_ssize_t n, object seq)
+
+
 cpdef object drop(Py_ssize_t n, object seq)
 
 
@@ -83,6 +92,9 @@ cpdef object get(object ind, object seq, object default=*)
 
 
 cpdef object cons(object el, object seq)
+
+
+cpdef object concat(object seqs)
 
 
 cpdef object mapcat(object func, object seqs)

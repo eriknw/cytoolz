@@ -86,6 +86,13 @@ def test_merge_sorted():
             [(9, 1), (9, 8), (9, 9)]]
     assert list(merge_sorted(*data, key=lambda x: x[1])) == [
         (9, 1), (1, 2), (5, 3), (0, 4), (6, 5), (3, 6), (8, 8), (9, 8), (9, 9)]
+    assert list(merge_sorted()) == []
+    assert list(merge_sorted([1, 2, 3])) == [1, 2, 3]
+    assert list(merge_sorted([1, 4, 5], [2, 3])) == [1, 2, 3, 4, 5]
+    assert list(merge_sorted([1, 4, 5], [2, 3], key=identity)) == [
+        1, 2, 3, 4, 5]
+    assert list(merge_sorted([1, 5], [2], [4, 7], [3, 6], key=identity)) == [
+        1, 2, 3, 4, 5, 6, 7]
 
 
 def test_interleave():
@@ -328,11 +335,10 @@ def test_pluck():
 
     data = [{'id': 1, 'name': 'cheese'}, {'id': 2, 'name': 'pies', 'price': 1}]
     assert list(pluck('id', data)) == [1, 2]
-    assert list(pluck('price', data, None)) == [None, 1]
+    assert list(pluck('price', data, 0)) == [0, 1]
     assert list(pluck(['id', 'name'], data)) == [(1, 'cheese'), (2, 'pies')]
     assert list(pluck(['name'], data)) == [('cheese',), ('pies',)]
-    assert list(pluck(['price', 'other'], data, None)) == [(None, None),
-                                                           (1, None)]
+    assert list(pluck(['price', 'other'], data, 0)) == [(0, 0), (1, 0)]
 
     assert raises(IndexError, lambda: list(pluck(1, [[0]])))
     assert raises(KeyError, lambda: list(pluck('name', [{'id': 1}])))

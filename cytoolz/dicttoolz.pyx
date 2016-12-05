@@ -383,7 +383,7 @@ cpdef object assoc_in(object d, object keys, object value, object factory=dict):
     >>> assoc_in(purchase, ['order', 'costs'], [0.25, 1.00]) # doctest: +SKIP
     {'credit card': '5555-1234-1234-1234',
      'name': 'Alice',
-     'purchase': {'costs': [0.25, 1.00], 'items': ['Apple', 'Orange']}}
+     'order': {'costs': [0.25, 1.00], 'items': ['Apple', 'Orange']}}
     """
     cdef object prevkey, key
     cdef object rv, inner, dtemp

@@ -27,10 +27,6 @@ __all__ = ['remove', 'accumulate', 'groupby', 'merge_sorted', 'interleave',
            'join', 'tail', 'diff', 'topk', 'peek', 'random_sample']
 
 
-concatv = chain
-concat = chain.from_iterable
-
-
 cpdef object identity(object x):
     return x
 
@@ -89,7 +85,7 @@ cdef class accumulate:
     See Also:
         itertools.accumulate :  In standard itertools for Python 3.2+
     """
-    def __cinit__(self, object binop, object seq, object initial=no_default):
+    def __cinit__(self, object binop, object seq, object initial='__no__default__'):
         self.binop = binop
         self.iter_seq = iter(seq)
         self.result = self  # sentinel
@@ -167,123 +163,131 @@ cpdef dict groupby(object key, object seq):
     return d
 
 
-cdef class _merge_sorted:
-    def __cinit__(self, seqs):
-        cdef Py_ssize_t i
-        cdef object item, it
-        self.pq = []
-        self.shortcut = None
+cdef object _merge_sorted_binary(object seqs):
+    mid = len(seqs) // 2
+    L1 = seqs[:mid]
+    if len(L1) == 1:
+        seq1 = iter(L1[0])
+    else:
+        seq1 = _merge_sorted_binary(L1)
+    L2 = seqs[mid:]
+    if len(L2) == 1:
+        seq2 = iter(L2[0])
+    else:
+        seq2 = _merge_sorted_binary(L2)
+    try:
+        val2 = next(seq2)
+    except StopIteration:
+        return seq1
+    return _merge_sorted(seq1, seq2, val2)
 
-        for i, item in enumerate(seqs):
-            it = iter(item)
-            try:
-                item = next(it)
-                PyList_Append(self.pq, [item, i, it])
-            except StopIteration:
-                pass
-        i = PyList_GET_SIZE(self.pq)
-        if i == 0:
-            self.shortcut = iter([])
-        elif i == 1:
-            self.shortcut = True
-        else:
-            heapify(self.pq)
+
+cdef class _merge_sorted:
+    def __cinit__(self, seq1, seq2, val2):
+        self.seq1 = seq1
+        self.seq2 = seq2
+        self.val1 = None
+        self.val2 = val2
+        self.loop = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef list item
-        cdef object retval, it
-        # Fast when only a single iterator remains
-        if self.shortcut is not None:
-            if self.shortcut is True:
-                item = self.pq[0]
-                self.shortcut = item[2]
-                return item[0]
-            return next(self.shortcut)
+        if self.loop == 0:
+            try:
+                self.val1 = next(self.seq1)
+            except StopIteration:
+                self.loop = 2
+                return self.val2
+            if self.val2 < self.val1:
+                self.loop = 1
+                return self.val2
+            return self.val1
+        elif self.loop == 1:
+            try:
+                self.val2 = next(self.seq2)
+            except StopIteration:
+                self.loop = 3
+                return self.val1
+            if self.val2 < self.val1:
+                return self.val2
+            self.loop = 0
+            return self.val1
+        elif self.loop == 2:
+            return next(self.seq2)
+        return next(self.seq1)
 
-        item = self.pq[0]
-        retval = item[0]
-        it = item[2]
-        try:
-            item[0] = next(it)
-            heapreplace(self.pq, item)
-        except StopIteration:
-            heappop(self.pq)
-            if PyList_GET_SIZE(self.pq) == 1:
-                self.shortcut = True
-        return retval
 
+cdef object _merge_sorted_binary_key(object seqs, object key):
+    mid = len(seqs) // 2
+    L1 = seqs[:mid]
+    if len(L1) == 1:
+        seq1 = iter(L1[0])
+    else:
+        seq1 = _merge_sorted_binary_key(L1, key)
+    L2 = seqs[mid:]
+    if len(L2) == 1:
+        seq2 = iter(L2[0])
+    else:
+        seq2 = _merge_sorted_binary_key(L2, key)
+    try:
+        val2 = next(seq2)
+    except StopIteration:
+        return seq1
+    return _merge_sorted_key(seq1, seq2, val2, key)
 
-# Having `_merge_sorted` and `_merge_sorted_key` separate violates the DRY
-# principle.  The increased performance *barely* justifies this.
-# `_merge_sorted` is always faster (sometimes by only 15%), but it can be
-# more than 3x faster when a single iterable remains.
-#
-# The differences in implementation are that `_merge_sorted_key` calls a key
-# function on each item (of course), and the layout of the lists in the
-# priority queue are different:
-#     `_merge_sorted` uses `[item, itnum, iterator]`
-#     `_merge_sorted_key` uses `[key(item), itnum, item, iterator]`
 
 cdef class _merge_sorted_key:
-    def __cinit__(self, seqs, key):
-        cdef Py_ssize_t i
-        cdef object item, it, k
-        self.pq = []
+    def __cinit__(self, seq1, seq2, val2, key):
+        self.seq1 = seq1
+        self.seq2 = seq2
         self.key = key
-        self.shortcut = None
-
-        for i, item in enumerate(seqs):
-            it = iter(item)
-            try:
-                item = next(it)
-                k = key(item)
-                PyList_Append(self.pq, [k, i, item, it])
-            except StopIteration:
-                pass
-        i = PyList_GET_SIZE(self.pq)
-        if i == 0:
-            self.shortcut = iter([])
-        elif i == 1:
-            self.shortcut = True
-        else:
-            heapify(self.pq)
+        self.val1 = None
+        self.key1 = None
+        self.val2 = val2
+        self.key2 = key(val2)
+        self.loop = 0
 
     def __iter__(self):
         return self
 
     def __next__(self):
-        cdef list item
-        cdef object retval, it, k
-        # Fast when only a single iterator remains
-        if self.shortcut is not None:
-            if self.shortcut is True:
-                item = self.pq[0]
-                self.shortcut = item[3]
-                return item[2]
-            return next(self.shortcut)
-
-        item = self.pq[0]
-        retval = item[2]
-        it = item[3]
-        try:
-            k = next(it)
-            item[2] = k
-            item[0] = self.key(k)
-            heapreplace(self.pq, item)
-        except StopIteration:
-            heappop(self.pq)
-            if PyList_GET_SIZE(self.pq) == 1:
-                self.shortcut = True
-        return retval
+        if self.loop == 0:
+            try:
+                self.val1 = next(self.seq1)
+            except StopIteration:
+                self.loop = 2
+                return self.val2
+            self.key1 = self.key(self.val1)
+            if self.key2 < self.key1:
+                self.loop = 1
+                return self.val2
+            return self.val1
+        elif self.loop == 1:
+            try:
+                self.val2 = next(self.seq2)
+            except StopIteration:
+                self.loop = 3
+                return self.val1
+            self.key2 = self.key(self.val2)
+            if self.key2 < self.key1:
+                return self.val2
+            self.loop = 0
+            return self.val1
+        elif self.loop == 2:
+            return next(self.seq2)
+        return next(self.seq1)
 
 
 cdef object c_merge_sorted(object seqs, object key=None):
-    if key is None:
-        return _merge_sorted(seqs)
-    return _merge_sorted_key(seqs, key)
+    if len(seqs) == 0:
+        return iter([])
+    elif len(seqs) == 1:
+        return iter(seqs[0])
+    elif key is None:
+        return _merge_sorted_binary(seqs)
+    return _merge_sorted_binary_key(seqs, key)
 
 
 def merge_sorted(*seqs, **kwargs):
@@ -309,7 +313,7 @@ def merge_sorted(*seqs, **kwargs):
 
 
 cdef class interleave:
-    """ interleave(seqs, pass_exceptions=())
+    """ interleave(seqs)
 
     Interleave a sequence of sequences
 
@@ -323,10 +327,9 @@ cdef class interleave:
 
     Returns a lazy iterator
     """
-    def __cinit__(self, seqs, pass_exceptions=()):
+    def __cinit__(self, seqs):
         self.iters = [iter(seq) for seq in seqs]
         self.newiters = []
-        self.pass_exceptions = tuple(pass_exceptions)
         self.i = 0
         self.n = PyList_GET_SIZE(self.iters)
 
@@ -351,13 +354,15 @@ cdef class interleave:
         self.i += 1
         obj = PtrIter_Next(val)
 
+        # TODO: optimization opportunity.  Previously, it was possible to
+        # continue on given exceptions, `self.pass_exceptions`, which is
+        # why this code is structured this way.  Time to clean up?
         while obj is NULL:
             obj = PyErr_Occurred()
             if obj is not NULL:
                 val = <object>obj
                 PyErr_Clear()
-                if not PyErr_GivenExceptionMatches(val, self.pass_exceptions):
-                    raise val
+                raise val
 
             if self.i == self.n:
                 self.n = PyList_GET_SIZE(self.newiters)
@@ -413,7 +418,7 @@ cdef class _unique_identity:
         return item
 
 
-cpdef object unique(object seq, object key=identity):
+cpdef object unique(object seq, object key=None):
     """
     Return only unique elements of a sequence
 
@@ -427,7 +432,7 @@ cpdef object unique(object seq, object key=identity):
     >>> tuple(unique(['cat', 'mouse', 'dog', 'hen'], key=len))
     ('cat', 'mouse')
     """
-    if key is identity:
+    if key is None:
         return _unique_identity(seq)
     else:
         return _unique_key(seq, key)
@@ -594,7 +599,7 @@ cpdef object last(object seq):
     val = no_default
     for val in seq:
         pass
-    if val is no_default:
+    if val == no_default:
         raise IndexError
     return val
 
@@ -609,7 +614,7 @@ cdef tuple _get_exceptions = (IndexError, KeyError, TypeError)
 cdef tuple _get_list_exc = (IndexError, KeyError)
 
 
-cpdef object get(object ind, object seq, object default=no_default):
+cpdef object get(object ind, object seq, object default='__no__default__'):
     """
     Get element in a sequence or dict
 
@@ -684,6 +689,38 @@ cpdef object get(object ind, object seq, object default=no_default):
         raise val
     Py_XDECREF(obj)
     return <object>obj
+
+
+cpdef object concat(object seqs):
+    """
+    Concatenate zero or more iterables, any of which may be infinite.
+
+    An infinite sequence will prevent the rest of the arguments from
+    being included.
+
+    We use chain.from_iterable rather than ``chain(*seqs)`` so that seqs
+    can be a generator.
+
+    >>> list(concat([[], [1], [2, 3]]))
+    [1, 2, 3]
+
+    See also:
+        itertools.chain.from_iterable  equivalent
+    """
+    return chain.from_iterable(seqs)
+
+
+def concatv(*seqs):
+    """
+    Variadic version of concat
+
+    >>> list(concatv([], ["a"], ["b", "c"]))
+    ['a', 'b', 'c']
+
+    See also:
+        itertools.chain
+    """
+    return chain.from_iterable(seqs)
 
 
 cpdef object mapcat(object func, object seqs):
@@ -774,7 +811,7 @@ cdef inline object _reduceby_core(dict d, object key, object item, object binop,
         PyDict_SetItem(d, key, binop(init, item))
 
 
-cpdef dict reduceby(object key, object binop, object seq, object init=no_default):
+cpdef dict reduceby(object key, object binop, object seq, object init='__no__default__'):
     """
     Perform a simultaneous groupby and reduction
 
@@ -952,7 +989,7 @@ cdef class sliding_window:
 no_pad = '__no__pad__'
 
 
-cpdef object partition(Py_ssize_t n, object seq, object pad=no_pad):
+cpdef object partition(Py_ssize_t n, object seq, object pad='__no__pad__'):
     """
     Partition sequence into tuples of length n
 
@@ -972,7 +1009,7 @@ cpdef object partition(Py_ssize_t n, object seq, object pad=no_pad):
         partition_all
     """
     args = [iter(seq)] * n
-    if pad is no_pad:
+    if pad == '__no__pad__':
         return zip(*args)
     else:
         return zip_longest(*args, fillvalue=pad)
@@ -1054,6 +1091,7 @@ cdef class _pluck_index_default:
     def __cinit__(self, object ind, object seqs, object default):
         self.ind = ind
         self.iterseqs = iter(seqs)
+        self.default = default
 
     def __iter__(self):
         return self
@@ -1126,7 +1164,7 @@ cdef class _pluck_list_default:
         return result
 
 
-cpdef object pluck(object ind, object seqs, object default=no_default):
+cpdef object pluck(object ind, object seqs, object default='__no__default__'):
     """
     plucks an element or several elements from each item in a sequence.
 
@@ -1135,8 +1173,7 @@ cpdef object pluck(object ind, object seqs, object default=no_default):
 
     This is equivalent to running `map(curried.get(ind), seqs)`
 
-    ``ind`` can be either a single string/index or a sequence of
-    strings/indices.
+    ``ind`` can be either a single string/index or a list of strings/indices.
     ``seqs`` should be sequence containing sequences or dicts.
 
     e.g.
@@ -1205,8 +1242,8 @@ cpdef object getter(object index):
 
 cpdef object join(object leftkey, object leftseq,
                   object rightkey, object rightseq,
-                  object left_default=no_default,
-                  object right_default=no_default):
+                  object left_default='__no__default__',
+                  object right_default='__no__default__'):
     """
     Join two sequences on common attributes
 

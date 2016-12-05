@@ -2,6 +2,7 @@ import cytoolz
 import cytoolz.curried
 from cytoolz.curried import (take, first, second, sorted, merge_with, reduce,
                            merge, operator as cop)
+from cytoolz.compatibility import import_module
 from collections import defaultdict
 from operator import add
 
@@ -62,3 +63,51 @@ def test_curried_operator():
 
     # Make sure this isn't totally empty.
     assert len(set(vars(cop)) & set(['add', 'sub', 'mul'])) == 3
+
+
+def test_curried_namespace():
+    exceptions = import_module('cytoolz.curried.exceptions')
+    namespace = {}
+
+    def should_curry(func):
+        if not callable(func) or isinstance(func, cytoolz.curry):
+            return False
+        nargs = cytoolz.functoolz.num_required_args(func)
+        if nargs is None or nargs > 1:
+            return True
+        return nargs == 1 and cytoolz.functoolz.has_keywords(func)
+
+
+    def curry_namespace(ns):
+        return dict(
+            (name, cytoolz.curry(f) if should_curry(f) else f)
+            for name, f in ns.items() if '__' not in name
+        )
+
+    from_cytoolz = curry_namespace(vars(cytoolz))
+    from_exceptions = curry_namespace(vars(exceptions))
+    namespace.update(cytoolz.merge(from_cytoolz, from_exceptions))
+
+    namespace = cytoolz.valfilter(callable, namespace)
+    curried_namespace = cytoolz.valfilter(callable, cytoolz.curried.__dict__)
+
+    if namespace != curried_namespace:
+        missing = set(namespace) - set(curried_namespace)
+        if missing:
+            raise AssertionError('There are missing functions in cytoolz.curried:\n    %s'
+                                 % '    \n'.join(sorted(missing)))
+        extra = set(curried_namespace) - set(namespace)
+        if extra:
+            raise AssertionError('There are extra functions in cytoolz.curried:\n    %s'
+                                 % '    \n'.join(sorted(extra)))
+        unequal = cytoolz.merge_with(list, namespace, curried_namespace)
+        unequal = cytoolz.valfilter(lambda x: x[0] != x[1], unequal)
+        messages = []
+        for name, (orig_func, auto_func) in sorted(unequal.items()):
+            if name in from_exceptions:
+                messages.append('%s should come from cytoolz.curried.exceptions' % name)
+            elif should_curry(getattr(cytoolz, name)):
+                messages.append('%s should be curried from cytoolz' % name)
+            else:
+                messages.append('%s should come from cytoolz and NOT be curried' % name)
+        raise AssertionError('\n'.join(messages))

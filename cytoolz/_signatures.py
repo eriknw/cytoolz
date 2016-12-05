@@ -36,10 +36,6 @@ cytoolz_info['cytoolz.dicttoolz'] = dict(
 cytoolz_info['cytoolz.functoolz'] = dict(
     Compose=[
         lambda *funcs: None],
-    _flip=[
-        lambda f, a, b: None],
-    c_memoize=[
-        lambda func, cache=None, key=None: None],
     complement=[
         lambda func: None],
     compose=[
@@ -50,12 +46,18 @@ cytoolz_info['cytoolz.functoolz'] = dict(
         lambda func, x: None],
     excepts=[
         lambda exc, func, handler=None: None],
+    flip=[  # XXX: these are optional, but not keywords!
+        lambda func=None, a=None, b=None: None],
+    _flip=[
+        lambda func, a, b: None],
     identity=[
         lambda x: None],
     juxt=[
         lambda *funcs: None],
-    memoize=[
+    memoize=[  # XXX: func is optional, but not a keyword!
         lambda func=None, cache=None, key=None: None],
+    _memoize=[
+        lambda func, cache=None, key=None: None],
     pipe=[
         lambda data, *funcs: None],
     return_none=[
@@ -69,6 +71,10 @@ cytoolz_info['cytoolz.functoolz'] = dict(
 cytoolz_info['cytoolz.itertoolz'] = dict(
     accumulate=[
         lambda binop, seq, initial='__no__default__': None],
+    concat=[
+        lambda seqs: None],
+    concatv=[
+        lambda *seqs: None],
     cons=[
         lambda el, seq: None],
     count=[
@@ -90,7 +96,7 @@ cytoolz_info['cytoolz.itertoolz'] = dict(
     identity=[
         lambda x: None],
     interleave=[
-        lambda seqs, pass_exceptions=(): None],
+        lambda seqs: None],
     interpose=[
         lambda el, seq: None],
     isdistinct=[

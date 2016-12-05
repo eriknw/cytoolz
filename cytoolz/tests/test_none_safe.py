@@ -282,7 +282,7 @@ def test_itertoolz():
     tested.append('take_nth')
 
     assert raises(TypeError, lambda: list(unique(None)))
-    assert raises(TypeError, lambda: list(unique([1, 1, 2], key=None)))
+    assert list(unique([1, 1, 2], key=None)) == [1, 2]
     tested.append('unique')
 
     assert raises(TypeError, lambda: join(first, None, second, (1, 2, 3)))
