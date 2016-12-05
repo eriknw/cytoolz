@@ -32,7 +32,7 @@ def test_class_sigs():
 
     d = merge_with(identity, toolz_dict, cytoolz_dict)
     for key, (toolz_func, cytoolz_func) in d.items():
-        if key in ['excepts', 'juxt']:
+        if key in ['excepts', 'juxt', 'memoize', 'flip']:
             continue
         try:
             # function
