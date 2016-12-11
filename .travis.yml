@@ -7,7 +7,7 @@ python:
     - "3.5"
 
 before_install:
-    - pip install toolz==0.8.1
+    - pip install toolz==0.8.2
 
 install:
     - python setup.py build_ext --inplace --without-cython
