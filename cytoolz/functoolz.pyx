@@ -4,7 +4,7 @@ from functools import partial
 from operator import attrgetter
 from textwrap import dedent
 from cytoolz.utils import no_default
-from cytoolz.compatibility import PY3, PY34, filter as ifilter, map as imap, reduce, import_module
+from cytoolz.compatibility import PY3, PY33, PY34, filter as ifilter, map as imap, reduce, import_module
 import cytoolz._signatures as _sigs
 
 from toolz.functoolz import (InstanceProperty, instanceproperty, is_arity,
@@ -194,6 +194,8 @@ cdef class curry:
         self.keywords = kwargs if kwargs else _empty_kwargs()
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
+        self.__module__ = getattr(func, '__module__', None)
+        self.__qualname__ = getattr(func, '__qualname__', None)
         self._sigspec = None
         self._has_unknown_args = None
 
@@ -292,7 +294,13 @@ cdef class curry:
 
     property __signature__:
         def __get__(self):
-            sig = inspect.signature(self.func)
+            try:
+                sig = inspect.signature(self.func)
+            except TypeError:
+                if PY33 and (getattr(self.func, '__module__') or '').startswith('cytoolz.'):
+                    raise ValueError('callable %r is not supported by signature' % self.func)
+                raise
+
             args = self.args or ()
             keywords = self.keywords or {}
             if is_partial_args(self.func, args, keywords, sig) is False:
@@ -331,27 +339,41 @@ cdef class curry:
     def __reduce__(self):
         func = self.func
         modname = getattr(func, '__module__', None)
-        funcname = getattr(func, '__name__', None)
-        if modname and funcname:
-            module = import_module(modname)
-            obj = getattr(module, funcname, None)
-            if obj is self:
-                return funcname
-            elif isinstance(obj, curry) and obj.func is func:
-                func = '%s.%s' % (modname, funcname)
+        qualname = getattr(func, '__qualname__', None)
+        if qualname is None:
+            qualname = getattr(func, '__name__', None)
+        is_decorated = None
+        if modname and qualname:
+            attrs = []
+            obj = import_module(modname)
+            for attr in qualname.split('.'):
+                if isinstance(obj, curry):
+                    attrs.append('func')
+                    obj = obj.func
+                obj = getattr(obj, attr, None)
+                if obj is None:
+                    break
+                attrs.append(attr)
+            if isinstance(obj, curry) and obj.func is func:
+                is_decorated = obj is self
+                qualname = '.'.join(attrs)
+                func = '%s:%s' % (modname, qualname)
 
-        state = (type(self), func, self.args, self.keywords)
+        state = (type(self), func, self.args, self.keywords, is_decorated)
         return (_restore_curry, state)
 
 
-cpdef object _restore_curry(cls, func, args, kwargs):
+cpdef object _restore_curry(cls, func, args, kwargs, is_decorated):
     if isinstance(func, str):
-        modname, funcname = func.rsplit('.', 1)
-        module = import_module(modname)
-        func = getattr(module, funcname).func
+        modname, qualname = func.rsplit(':', 1)
+        obj = import_module(modname)
+        for attr in qualname.split('.'):
+            obj = getattr(obj, attr)
+        if is_decorated:
+            return obj
+        func = obj.func
     obj = cls(func, *args, **(kwargs or {}))
     return obj
-
 
 
 cdef class memoize:
