@@ -72,9 +72,9 @@ Community
 See our `mailing list <https://groups.google.com/forum/#!forum/pytoolz>`__.
 We're friendly.
 
-.. |Build Status| image:: https://travis-ci.org/pytoolz/cytoolz.png
+.. |Build Status| image:: https://travis-ci.org/pytoolz/cytoolz.svg?branch=master
    :target: https://travis-ci.org/pytoolz/cytoolz
-.. |Version Status| image:: https://pypip.in/v/cytoolz/badge.png
-   :target: https://pypi.python.org/pypi/cytoolz/
-.. |Downloads| image:: https://pypip.in/d/cytoolz/badge.png
+.. |Version Status| image:: https://badge.fury.io/py/cytoolz.svg
+   :target: http://badge.fury.io/py/cytoolz
+.. |Downloads| image:: https://img.shields.io/pypi/dm/cytoolz.svg
    :target: https://pypi.python.org/pypi/cytoolz/

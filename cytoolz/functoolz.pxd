@@ -15,6 +15,8 @@ cdef class curry:
     cdef readonly dict keywords
     cdef public object __doc__
     cdef public object __name__
+    cdef public object __module__
+    cdef public object __qualname__
 
 cdef class memoize:
     cdef object func
