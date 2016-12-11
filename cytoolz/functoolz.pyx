@@ -4,7 +4,7 @@ from functools import partial
 from operator import attrgetter
 from textwrap import dedent
 from cytoolz.utils import no_default
-from cytoolz.compatibility import PY3, PY34, filter as ifilter, map as imap, reduce, import_module
+from cytoolz.compatibility import PY3, PY33, PY34, filter as ifilter, map as imap, reduce, import_module
 import cytoolz._signatures as _sigs
 
 from toolz.functoolz import (InstanceProperty, instanceproperty, is_arity,
@@ -294,7 +294,13 @@ cdef class curry:
 
     property __signature__:
         def __get__(self):
-            sig = inspect.signature(self.func)
+            try:
+                sig = inspect.signature(self.func)
+            except TypeError:
+                if PY33 and (getattr(self.func, '__module__') or '').startswith('cytoolz.'):
+                    raise ValueError('callable %r is not supported by signature' % self.func)
+                raise
+
             args = self.args or ()
             keywords = self.keywords or {}
             if is_partial_args(self.func, args, keywords, sig) is False:
