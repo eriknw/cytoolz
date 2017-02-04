@@ -17,9 +17,9 @@ install:
 # commands to run tests
 script:
     - nosetests --with-doctest cytoolz
-   # For convenience, make sure simple test commands work
-   - py.test
-   - nosetests
+    # For convenience, make sure simple test commands work
+    - py.test
+    - nosetests
 
 notifications:
   email: false
