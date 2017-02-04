@@ -9,7 +9,7 @@ python:
 
 before_install:
     - pip install git+https://github.com/pytoolz/toolz.git
-    - pip install cython
+    - pip install cython pytest
 
 install:
     - python setup.py build_ext --inplace --with-cython
@@ -17,6 +17,9 @@ install:
 # commands to run tests
 script:
     - nosetests --with-doctest cytoolz
+   # For convenience, make sure simple test commands work
+   - py.test
+   - nosetests
 
 notifications:
   email: false
