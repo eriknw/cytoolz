@@ -687,8 +687,9 @@ cpdef object get(object ind, object seq, object default='__no__default__'):
         if PyErr_GivenExceptionMatches(val, _get_exceptions):
             return default
         raise val
+    val = <object>obj
     Py_XDECREF(obj)
-    return <object>obj
+    return val
 
 
 cpdef object concat(object seqs):
@@ -1107,8 +1108,9 @@ cdef class _pluck_index_default:
             if not PyErr_GivenExceptionMatches(val, _get_exceptions):
                 raise val
             return self.default
+        val = <object>obj
         Py_XDECREF(obj)
-        return <object>obj
+        return val
 
 
 cdef class _pluck_list:
