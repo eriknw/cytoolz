@@ -479,6 +479,9 @@ cdef class Compose:
     See Also:
         compose
     """
+    # fix for #103, note: we cannot use __name__ at module-scope in cython
+    __module__ = 'cytooz.functoolz'
+
     def __cinit__(self, *funcs):
         self.first = funcs[-1]
         self.funcs = tuple(reversed(funcs[:-1]))

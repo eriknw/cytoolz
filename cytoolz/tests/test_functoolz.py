@@ -530,6 +530,11 @@ def test_compose():
     assert composed.__doc__ == 'A composition of functions'
 
 
+def test_compose_module():
+    # regression test for #103
+    assert compose().__module__ == 'cytoolz.functoolz'
+
+
 def test_pipe():
     assert pipe(1, inc) == 2
     assert pipe(1, inc, inc) == 3
