@@ -1,0 +1,6 @@
+python3:Depends=python3 (<< 3.7), python3 (>= 3.6~), python3-toolz, python3:any (>= 3.3.2-2~)
+python3:Provides=python3.6-cytoolz
+python3:Versions=3.6
+shlibs:Depends=libc6 (>= 2.4)
+misc:Depends=
+misc:Pre-Depends=
