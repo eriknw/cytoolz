@@ -6,6 +6,10 @@ inplace:
 
 test: inplace
 	nosetests -s --with-doctest cytoolz/
+	echo 'cimport cytoolz ; from cytoolz.functoolz cimport memoize' > try_cimport_cytoolz.pyx
+	cythonize -i try_cimport_cytoolz.pyx
+	python -c 'import try_cimport_cytoolz'
+	rm try_cimport_cytoolz.pyx
 
 clean:
 	rm -f cytoolz/*.c cytoolz/*.so cytoolz/*/*.c cytoolz/*/*.so
