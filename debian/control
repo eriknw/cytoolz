@@ -1,0 +1,20 @@
+# ------------------------------------------------------------------------- #
+# DEBIAN PACKAGE CONTROL FILE                                               #
+#                                                                           #
+# This file is a Debian control file. For more information on the config in #
+# this file, please run `man deb-control`.                                  #
+# ------------------------------------------------------------------------- #
+
+Source: python3-cytoolz
+Section: contrib/python
+Priority: extra
+Maintainer: Jeff Cliff  <jeffrey.cliff@gmail.com>
+Build-Depends: debhelper(>= 9), cython3, python3, dh-python, python3-nose
+Standards-Version: 3.9.5
+
+Package: python3-cytoolz
+Architecture: any
+Pre-Depends: dpkg (>= 1.16.1), cython3, python3
+Depends: make,  python3-nose, ${shlibs:Depends}
+Description:  Cython implementation of Toolz
+	High performance functional utilities 
