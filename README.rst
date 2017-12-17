@@ -1,7 +1,7 @@
 CyToolz
 =======
 
-|Build Status| |Version Status| |Downloads|
+|Build Status| |Version Status|
 
 Cython implementation of the
 |literal toolz|_ `package, <https://pypi.python.org/pypi/toolz/>`__ which
@@ -48,7 +48,7 @@ Install
 Dependencies
 ------------
 
-``cytoolz`` supports Python 2.6+ and Python 3.2+ with a common codebase.
+``cytoolz`` supports Python 2.6+ and Python 3.3+ with a common codebase.
 It is developed in Cython, but requires no dependecies other than CPython
 and a C compiler.  Like ``toolz``, it is a light weight dependency.
 
@@ -76,5 +76,3 @@ We're friendly.
    :target: https://travis-ci.org/pytoolz/cytoolz
 .. |Version Status| image:: https://badge.fury.io/py/cytoolz.svg
    :target: http://badge.fury.io/py/cytoolz
-.. |Downloads| image:: https://img.shields.io/pypi/dm/cytoolz.svg
-   :target: https://pypi.python.org/pypi/cytoolz/

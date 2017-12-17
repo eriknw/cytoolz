@@ -9,7 +9,7 @@ test: inplace
 	echo 'cimport cytoolz ; from cytoolz.functoolz cimport memoize' > try_cimport_cytoolz.pyx
 	cythonize -i try_cimport_cytoolz.pyx
 	python -c 'import try_cimport_cytoolz'
-	rm try_cimport_cytoolz.pyx
+	rm try_cimport_cytoolz.*
 
 clean:
 	rm -f cytoolz/*.c cytoolz/*.so cytoolz/*/*.c cytoolz/*/*.so
