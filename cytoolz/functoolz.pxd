@@ -18,7 +18,11 @@ cdef class curry:
     cdef public object __module__
     cdef public object __qualname__
 
-cdef class memoize:
+
+cpdef object memoize(object func, object cache=*, object key=*)
+
+
+cdef class _memoize:
     cdef object func
     cdef object cache
     cdef object key

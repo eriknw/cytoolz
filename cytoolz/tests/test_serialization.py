@@ -1,6 +1,6 @@
 from cytoolz import *
 import cytoolz
-import cytoolz.curried.exceptions
+import cytoolz.curried
 import pickle
 from cytoolz.compatibility import PY3, PY33, PY34
 from cytoolz.utils import raises
@@ -62,8 +62,8 @@ def test_flip():
 
 def test_curried_exceptions():
     # This tests a global curried object that isn't defined in cytoolz.functoolz
-    merge = pickle.loads(pickle.dumps(cytoolz.curried.exceptions.merge))
-    assert merge is cytoolz.curried.exceptions.merge
+    merge = pickle.loads(pickle.dumps(cytoolz.curried.merge))
+    assert merge is cytoolz.curried.merge
 
 
 @cytoolz.curry

@@ -376,9 +376,8 @@ cpdef object _restore_curry(cls, func, args, kwargs, is_decorated):
     return obj
 
 
-cdef class memoize:
-    """ memoize(func, cache=None, key=None)
-
+cpdef object memoize(object func, object cache=None, object key=None):
+    """
     Cache a function's result for speedy future evaluation
 
     Considerations:
@@ -414,6 +413,10 @@ cdef class memoize:
     ...         print('Calculating %s + %s' % (x, y))
     ...     return x + y
     """
+    return _memoize(func, cache, key)
+
+
+cdef class _memoize:
 
     property __doc__:
         def __get__(self):
@@ -427,7 +430,7 @@ cdef class memoize:
         def __get__(self):
             return self.func
 
-    def __cinit__(self, func, cache=None, key=None):
+    def __cinit__(self, func, cache, key):
         self.func = func
         if cache is None:
             self.cache = PyDict_New()
@@ -468,9 +471,6 @@ cdef class memoize:
         return curry(self, instance)
 
 
-_memoize = memoize  # uncurried
-
-
 cdef class Compose:
     """ Compose(self, *funcs)
 
@@ -479,6 +479,9 @@ cdef class Compose:
     See Also:
         compose
     """
+    # fix for #103, note: we cannot use __name__ at module-scope in cython
+    __module__ = 'cytooz.functoolz'
+
     def __cinit__(self, *funcs):
         self.first = funcs[-1]
         self.funcs = tuple(reversed(funcs[:-1]))

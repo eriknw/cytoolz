@@ -5,9 +5,16 @@ python:
     - "3.3"
     - "3.4"
     - "3.5"
+    - "3.6"
+    - "3.7-dev"
+
+matrix:
+    allow_failures:
+        - python: "3.7-dev"
 
 before_install:
-    - pip install toolz==0.8.2
+    - pip install toolz==0.9.0
+    - pip install pytest
 
 install:
     - python setup.py build_ext --inplace --without-cython
@@ -15,6 +22,13 @@ install:
 # commands to run tests
 script:
     - nosetests --with-doctest cytoolz
+    # For convenience, make sure simple test commands work
+    - py.test
+    - nosetests
+    # Make sure we can cimport cytoolz
+    - echo 'cimport cytoolz ; from cytoolz.functoolz cimport memoize' > try_cimport_cytoolz.pyx
+    - cythonize -i try_cimport_cytoolz.pyx
+    - python -c 'import try_cimport_cytoolz'
 
 notifications:
   email: false
