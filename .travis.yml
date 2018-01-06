@@ -18,6 +18,7 @@ before_install:
 
 install:
     - python setup.py build_ext --inplace --with-cython
+    - pip install -e .
 
 # commands to run tests
 script:
