@@ -964,8 +964,7 @@ cdef class sliding_window:
         cdef Py_ssize_t i
         self.iterseq = iter(seq)
         self.prev = PyTuple_New(n)
-        for i in range(1, n):
-            seq = next(self.iterseq)
+        for i, seq in enumerate(islice(self.iterseq, n-1), 1):
             Py_INCREF(seq)
             PyTuple_SET_ITEM(self.prev, i, seq)
         self.n = n
@@ -977,14 +976,15 @@ cdef class sliding_window:
         cdef tuple current
         cdef object item
         cdef Py_ssize_t i
+
+        item = next(self.iterseq)
         current = PyTuple_New(self.n)
+        Py_INCREF(item)
+        PyTuple_SET_ITEM(current, self.n-1, item)
         for i in range(1, self.n):
             item = self.prev[i]
             Py_INCREF(item)
             PyTuple_SET_ITEM(current, i-1, item)
-        item = next(self.iterseq)
-        Py_INCREF(item)
-        PyTuple_SET_ITEM(current, self.n-1, item)
         self.prev = current
         return current
 
