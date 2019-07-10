@@ -1,4 +1,5 @@
 import inspect
+import cytoolz
 from cytoolz.functoolz import (thread_first, thread_last, memoize, curry,
                              compose, compose_left, pipe, complement, do, juxt,
                              flip, excepts, apply)
@@ -591,8 +592,6 @@ def test_compose_metadata():
     assert composed.__name__ == 'Compose'
     assert composed.__doc__ == 'A composition of functions'
 
-    # print(repr(composed))
-    # print('Compose({!r}, {!r})'.format(f, h))
     assert repr(composed) == 'Compose({!r}, {!r})'.format(f, h)
 
     assert composed == compose(f, h)
@@ -629,7 +628,8 @@ def test_compose_metadata():
     assert MyClass().my_static_method(0, 1) == '2'
 
     assert compose(f, h).__wrapped__ is h
-    # assert compose(f, h).__class__.__wrapped__ is None
+    if hasattr(cytoolz, 'sandbox'):  # only test this with Python version (i.e., not Cython)
+        assert compose(f, h).__class__.__wrapped__ is None
 
     # __signature__ is python3 only
     if PY3:

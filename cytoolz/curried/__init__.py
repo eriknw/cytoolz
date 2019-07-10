@@ -57,7 +57,6 @@ from cytoolz import (
 from .exceptions import merge, merge_with
 
 accumulate = cytoolz.curry(cytoolz.accumulate)
-apply - cytoolz.curry(cytoolz.apply)
 assoc = cytoolz.curry(cytoolz.assoc)
 assoc_in = cytoolz.curry(cytoolz.assoc_in)
 cons = cytoolz.curry(cytoolz.cons)

@@ -35,7 +35,7 @@ cytoolz_info['cytoolz.dicttoolz'] = dict(
 
 cytoolz_info['cytoolz.functoolz'] = dict(
     apply=[
-        lambda *func_and_args, **kwargs],
+        lambda *func_and_args, **kwargs: None],
     Compose=[
         lambda *funcs: None],
     complement=[
