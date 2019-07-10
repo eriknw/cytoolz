@@ -36,7 +36,6 @@ from cytoolz import (
     count,
     curry,
     diff,
-    dissoc,
     first,
     flip,
     frequencies,
