@@ -414,16 +414,24 @@ cpdef object assoc_in(object d, object keys, object value, object factory=dict):
     return rv
 
 
-cdef object c_dissoc(object d, object keys):
-    cdef object rv, key
-    rv = copy(d)
-    for key in keys:
-        if key in rv:
-            del rv[key]
+cdef object c_dissoc(object d, object keys, object factory=dict):
+    # implementation copied from toolz.  Not benchmarked.
+    cdef object rv
+    rv = factory()
+    if len(keys) < len(d) * 0.6:
+        rv.update(d)
+        for key in keys:
+            if key in rv:
+                del rv[key]
+    else:
+        remaining = set(d)
+        remaining.difference_update(keys)
+        for k in remaining:
+            rv[k] = d[k]
     return rv
 
 
-def dissoc(d, *keys):
+def dissoc(d, *keys, **kwargs):
     """
     Return a new dict with the given key(s) removed.
 
@@ -437,7 +445,7 @@ def dissoc(d, *keys):
     >>> dissoc({'x': 1}, 'y') # Ignores missing keys
     {'x': 1}
     """
-    return c_dissoc(d, keys)
+    return c_dissoc(d, keys, get_factory('dissoc', kwargs))
 
 
 cpdef object update_in(object d, object keys, object func, object default=None, object factory=dict):
