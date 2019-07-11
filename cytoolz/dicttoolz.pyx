@@ -16,6 +16,20 @@ __all__ = ['merge', 'merge_with', 'valmap', 'keymap', 'itemmap', 'valfilter',
            'update_in']
 
 
+cdef class _iter_mapping:
+    """ Keep a handle on the current item to prevent memory clean up too early"""
+    def __cinit__(self, object it):
+        self.it = it
+        self.cur = None
+
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        self.cur = next(self.it)
+        return self.cur
+
+
 cdef int PyMapping_Next(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *pval) except -1:
     """Mimic "PyDict_Next" interface, but for any mapping"""
     cdef PyObject *obj
@@ -24,7 +38,7 @@ cdef int PyMapping_Next(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *
         return 0
     pkey[0] = <PyObject*>(<object>obj)[0]
     pval[0] = <PyObject*>(<object>obj)[1]
-    Py_XDECREF(obj)
+    Py_XDECREF(obj)  # removing this results in memory leak
     return 1
 
 
@@ -53,10 +67,10 @@ cdef f_map_next get_map_iter(object d, PyObject* *ptr) except NULL:
         val = d
         rv = &PyDict_Next_Compat
     elif hasattr(d, 'iteritems'):
-        val = iter(d.iteritems())
+        val = _iter_mapping(iter(d.iteritems()))
         rv = &PyMapping_Next
     else:
-        val = iter(d.items())
+        val = _iter_mapping(iter(d.items()))
         rv = &PyMapping_Next
     Py_INCREF(val)
     ptr[0] = <PyObject*>val
