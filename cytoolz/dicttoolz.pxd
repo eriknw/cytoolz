@@ -1,6 +1,10 @@
 from cpython.ref cimport PyObject
 
 # utility functions to perform iteration over dicts or generic mapping
+cdef class _iter_mapping:
+    cdef object it
+    cdef object cur
+
 ctypedef int (*f_map_next)(object p, Py_ssize_t *ppos, PyObject* *pkey, PyObject* *pval) except -1
 
 cdef f_map_next get_map_iter(object d, PyObject* *ptr) except NULL
