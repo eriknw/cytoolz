@@ -30,7 +30,8 @@ except ImportError:
     has_cython = False
 
 use_cython = True
-force_cython = 'dev' in VERSION
+is_dev = 'dev' in VERSION
+strict_cython = is_dev
 if '--no-cython' in sys.argv:
     use_cython = False
     sys.argv.remove('--no-cython')
@@ -38,14 +39,14 @@ if '--without-cython' in sys.argv:
     use_cython = False
     sys.argv.remove('--without-cython')
 if '--cython' in sys.argv:
-    force_cython = True
+    strict_cython = True
     sys.argv.remove('--cython')
 if '--with-cython' in sys.argv:
-    force_cython = True
+    strict_cython = True
     sys.argv.remove('--with-cython')
 
 if use_cython and not has_cython:
-    if force_cython:
+    if strict_cython:
         raise RuntimeError('Cython required to build dev version of cytoolz.')
     print('ALERT: Cython not installed.  Building without Cython.')
     use_cython = False
@@ -70,7 +71,9 @@ if use_cython:
     directive_defaults['embedsignature'] = True
     directive_defaults['binding'] = True
     directive_defaults['language_level'] = 2  # TODO: drop Python 2.7 and update this (and code) to 3
-    ext_modules = cythonize(ext_modules)
+    # The distributed *.c files may not be forward compatible.
+    # If we are cythonizing a non-dev version, then force everything to cythonize.
+    ext_modules = cythonize(ext_modules, force=not is_dev)
 
 setup(
     name='cytoolz',
