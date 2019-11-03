@@ -12,6 +12,17 @@ Pass "--no-cython" or "--without-cython" to disable usage of Cython.
 For convenience, developmental versions (with 'dev' in the version number)
 automatically use Cython unless disabled via a command line argument.
 
+To summarize differently, the rules are as follows (apply first applicable rule):
+
+  1. If `--no-cython` or `--without-cython` are used, then only build from `.*c` files.
+  2. If this is a dev version, then cythonize only the files that have changed.
+  3. If `--cython` or `--with-cython` are used, then force cythonize all files.
+  4. If no arguments are passed, then force cythonize all files if Cython is available,
+     else build from `*.c` files.  This is default when installing via pip.
+
+By forcing cythonization of all files (except in dev) if Cython is available,
+we avoid the case where the generated `*.c` files are not forward-compatible.
+
 """
 import os.path
 import sys
