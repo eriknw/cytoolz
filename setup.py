@@ -1,11 +1,11 @@
 """ Build ``cytoolz`` with or without Cython.
 
-Deployed versions of CyToolz do not rely on Cython by default even if the
-user has Cython installed.  A C compiler is used to compile the distributed
-*.c files instead.
+By default, CyToolz will be built using Cython if available.
+If Cython is not available, then the default C compiler will be used
+to compile the distributed *.c files instead.
 
-Pass "--cython" or "--with-cython" as a command line argument to setup.py
-to build the project using Cython.
+Pass "--cython" or "--with-cython" as a command line argument to setup.py to
+force the project to build using Cython (and fail if Cython is unavailable).
 
 Pass "--no-cython" or "--without-cython" to disable usage of Cython.
 
@@ -29,8 +29,8 @@ try:
 except ImportError:
     has_cython = False
 
-is_dev = 'dev' in VERSION
-use_cython = is_dev or '--cython' in sys.argv or '--with-cython' in sys.argv
+use_cython = True
+force_cython = 'dev' in VERSION
 if '--no-cython' in sys.argv:
     use_cython = False
     sys.argv.remove('--no-cython')
@@ -38,14 +38,16 @@ if '--without-cython' in sys.argv:
     use_cython = False
     sys.argv.remove('--without-cython')
 if '--cython' in sys.argv:
+    force_cython = True
     sys.argv.remove('--cython')
 if '--with-cython' in sys.argv:
+    force_cython = True
     sys.argv.remove('--with-cython')
 
 if use_cython and not has_cython:
-    if is_dev:
+    if force_cython:
         raise RuntimeError('Cython required to build dev version of cytoolz.')
-    print('WARNING: Cython not installed.  Building without Cython.')
+    print('ALERT: Cython not installed.  Building without Cython.')
     use_cython = False
 
 if use_cython:
@@ -67,6 +69,7 @@ if use_cython:
         from Cython.Compiler.Options import directive_defaults
     directive_defaults['embedsignature'] = True
     directive_defaults['binding'] = True
+    directive_defaults['language_level'] = 2  # TODO: drop Python 2.7 and update this (and code) to 3
     ext_modules = cythonize(ext_modules)
 
 setup(
@@ -105,6 +108,7 @@ setup(
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
         'Topic :: Scientific/Engineering',
         'Topic :: Scientific/Engineering :: Information Analysis',
         'Topic :: Software Development',
@@ -113,5 +117,6 @@ setup(
         'Topic :: Utilities',
     ],
     install_requires=['toolz >= 0.8.0'],
+    extras_require={'cython': ['cython']},
     zip_safe=False,
 )
