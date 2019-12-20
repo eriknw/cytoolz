@@ -1,7 +1,7 @@
 CyToolz
 =======
 
-|Build Status| |Version Status| |Downloads|
+|Build Status| |Version Status|
 
 Cython implementation of the
 |literal toolz|_ `package, <https://pypi.python.org/pypi/toolz/>`__ which
@@ -20,14 +20,14 @@ usage is achieved by using the iterator protocol and returning iterators
 whenever possible.
 
 ``cytoolz`` implements the same API as ``toolz``.  The main differences are
-that ``cytoolz`` is faster (typically 2-5x faster with a few spectactular
+that ``cytoolz`` is faster (typically 2-5x faster with a few spectacular
 exceptions) and ``cytoolz`` offers a C API that is accessible to other
 projects developed in Cython.  Since ``toolz`` is able to process very
 large (potentially infinite) data sets, the performance increase gained by
 using ``cytoolz`` can be significant.
 
-See the PyToolz documentation at http://toolz.readthedocs.org and the full
-`API Documentation <http://toolz.readthedocs.org/en/latest/api.html>`__
+See the PyToolz documentation at https://toolz.readthedocs.io and the full
+`API Documentation <https://toolz.readthedocs.io/en/latest/api.html>`__
 for more details.
 
 LICENSE
@@ -48,7 +48,7 @@ Install
 Dependencies
 ------------
 
-``cytoolz`` supports Python 2.6+ and Python 3.2+ with a common codebase.
+``cytoolz`` supports Python 2.7+ and Python 3.4+ with a common codebase.
 It is developed in Cython, but requires no dependecies other than CPython
 and a C compiler.  Like ``toolz``, it is a light weight dependency.
 
@@ -66,9 +66,13 @@ Please take a look at our issue pages for
 `cytoolz <https://github.com/pytoolz/cytoolz/issues>`__
 for contribution ideas.
 
-.. |Build Status| image:: https://travis-ci.org/pytoolz/cytoolz.png
+Community
+---------
+
+See our `mailing list <https://groups.google.com/forum/#!forum/pytoolz>`__.
+We're friendly.
+
+.. |Build Status| image:: https://travis-ci.org/pytoolz/cytoolz.svg?branch=master
    :target: https://travis-ci.org/pytoolz/cytoolz
-.. |Version Status| image:: https://pypip.in/v/cytoolz/badge.png
-   :target: https://pypi.python.org/pypi/cytoolz/
-.. |Downloads| image:: https://pypip.in/d/cytoolz/badge.png
-   :target: https://pypi.python.org/pypi/cytoolz/
+.. |Version Status| image:: https://badge.fury.io/py/cytoolz.svg
+   :target: http://badge.fury.io/py/cytoolz

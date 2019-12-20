@@ -1,21 +1,23 @@
 import inspect
 import cytoolz
-import toolz
 
 from types import BuiltinFunctionType
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
+from dev_skip_test import dev_skip_test
 
 
 @curry
 def isfrommod(modname, func):
     mod = getattr(func, '__module__', '') or ''
-    return modname in mod
+    return mod.startswith(modname) or 'toolz.functoolz.curry' in str(type(func))
 
 
+@dev_skip_test
 def test_class_sigs():
     """ Test that all ``cdef class`` extension types in ``cytoolz`` have
         correctly embedded the function signature as done in ``toolz``.
     """
+    import toolz
     # only consider items created in both `toolz` and `cytoolz`
     toolz_dict = valfilter(isfrommod('toolz'), toolz.__dict__)
     cytoolz_dict = valfilter(isfrommod('cytoolz'), cytoolz.__dict__)
@@ -30,6 +32,8 @@ def test_class_sigs():
 
     d = merge_with(identity, toolz_dict, cytoolz_dict)
     for key, (toolz_func, cytoolz_func) in d.items():
+        if key in ['excepts', 'juxt', 'memoize', 'flip']:
+            continue
         try:
             # function
             toolz_spec = inspect.getargspec(toolz_func)
@@ -41,8 +45,16 @@ def test_class_sigs():
                 # class
                 toolz_spec = inspect.getargspec(toolz_func.__init__)
 
+        # For Cython < 0.25
         toolz_sig = toolz_func.__name__ + inspect.formatargspec(*toolz_spec)
-        if toolz_sig not in cytoolz_func.__doc__:
+        doc = cytoolz_func.__doc__
+        # For Cython >= 0.25
+        toolz_sig_alt = toolz_func.__name__ + inspect.formatargspec(
+            *toolz_spec,
+            **{'formatvalue': lambda x: '=' + getattr(x, '__name__', repr(x))}
+        )
+        doc_alt = doc.replace('Py_ssize_t ', '')
+        if not (toolz_sig in doc or toolz_sig_alt in doc_alt):
             message = ('cytoolz.%s does not have correct function signature.'
                        '\n\nExpected: %s'
                        '\n\nDocstring in cytoolz is:\n%s'
@@ -54,6 +66,7 @@ skip_sigs = ['identity']
 aliases = {'comp': 'compose'}
 
 
+@dev_skip_test
 def test_sig_at_beginning():
     """ Test that the function signature is at the beginning of the docstring
         and is followed by exactly one blank line.

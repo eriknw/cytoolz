@@ -1,4 +1,4 @@
-from cytoolz.utils import module_doctest
+from cytoolz.utils_test import module_doctest
 
 import cytoolz
 import cytoolz.dicttoolz

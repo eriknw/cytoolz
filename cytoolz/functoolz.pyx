@@ -1,23 +1,51 @@
-#cython: embedsignature=True
 import inspect
+import sys
+from functools import partial
+from operator import attrgetter
+from textwrap import dedent
+from types import MethodType
+from cytoolz.utils import no_default
+from cytoolz.compatibility import PY3, PY34, filter as ifilter, map as imap, reduce, import_module
+import cytoolz._signatures as _sigs
+
+from toolz.functoolz import (InstanceProperty, instanceproperty, is_arity,
+                             num_required_args, has_varargs, has_keywords,
+                             is_valid_args, is_partial_args)
+
+cimport cython
 from cpython.dict cimport PyDict_Merge, PyDict_New
-from cpython.exc cimport PyErr_Clear, PyErr_ExceptionMatches, PyErr_Occurred
-from cpython.object cimport PyCallable_Check, PyObject_Call, PyObject_CallObject
+from cpython.object cimport (PyCallable_Check, PyObject_Call, PyObject_CallObject,
+                             PyObject_RichCompare, Py_EQ, Py_NE)
 from cpython.ref cimport PyObject
 from cpython.sequence cimport PySequence_Concat
 from cpython.set cimport PyFrozenSet_New
 from cpython.tuple cimport PyTuple_Check, PyTuple_GET_SIZE
 
-# Locally defined bindings that differ from `cython.cpython` bindings
-from .cpython cimport PyObject_Call as CyObject_Call
 
-
-__all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose',
-           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize']
+__all__ = ['identity', 'thread_first', 'thread_last', 'memoize', 'compose', 'compose_left',
+           'pipe', 'complement', 'juxt', 'do', 'curry', 'memoize', 'flip',
+           'excepts', 'apply']
 
 
 cpdef object identity(object x):
     return x
+
+
+def apply(*func_and_args, **kwargs):
+    """
+    Applies a function and returns the results
+
+    >>> def double(x): return 2*x
+    >>> def inc(x):    return x + 1
+    >>> apply(double, 5)
+    10
+
+    >>> tuple(map(apply, [double, inc, double], [10, 500, 8000]))
+    (20, 501, 16000)
+    """
+    if not func_and_args:
+        raise TypeError('func argument is required')
+    return func_and_args[0](*func_and_args[1:], **kwargs)
 
 
 cdef object c_thread_first(object val, object forms):
@@ -109,35 +137,26 @@ def thread_last(val, *forms):
     return c_thread_last(val, forms)
 
 
-cpdef object _num_required_args(object func):
-    """
-    Number of args for func
+cdef struct partialobject:
+    PyObject _
+    PyObject *fn
+    PyObject *args
+    PyObject *kw
+    PyObject *dict
+    PyObject *weakreflist
 
-    >>> def foo(a, b, c=None):
-    ...     return a + b + c
 
-    >>> _num_required_args(foo)
-    2
+cdef object _partial = partial(lambda: None)
 
-    >>> def bar(*args):
-    ...     return sum(args)
 
-    >>> print(_num_required_args(bar))
-    None
-    """
-    try:
-        spec = inspect.getargspec(func)
-        if spec.varargs:
-            return None
-        num_defaults = len(spec.defaults) if spec.defaults else 0
-        return len(spec.args) - num_defaults
-    except TypeError:
-        pass
-    return None
+cdef object _empty_kwargs():
+    if <object> (<partialobject*> _partial).kw is None:
+        return None
+    return PyDict_New()
 
 
 cdef class curry:
-    """ curry(self, func, *args, **kwargs)
+    """ curry(self, *args, **kwargs)
 
     Curry a callable function
 
@@ -164,23 +183,21 @@ cdef class curry:
 
     See Also:
         cytoolz.curried - namespace of curried functions
-                        http://toolz.readthedocs.org/en/latest/curry.html
+                        https://toolz.readthedocs.io/en/latest/curry.html
     """
-    property __doc__:
-        def __get__(self):
-            return self.func.__doc__
 
-    property __name__:
-        def __get__(self):
-            return self.func.__name__
-
-    def __cinit__(self, func, *args, **kwargs):
+    def __cinit__(self, *args, **kwargs):
+        if not args:
+            raise TypeError('__init__() takes at least 2 arguments (1 given)')
+        func, args = args[0], args[1:]
         if not PyCallable_Check(func):
             raise TypeError("Input must be callable")
 
         # curry- or functools.partial-like object?  Unpack and merge arguments
-        if (hasattr(func, 'func') and hasattr(func, 'args')
-                and hasattr(func, 'keywords')):
+        if (hasattr(func, 'func')
+                and hasattr(func, 'args')
+                and hasattr(func, 'keywords')
+                and isinstance(func.args, tuple)):
             if func.keywords:
                 PyDict_Merge(kwargs, func.keywords, False)
                 ## Equivalent to:
@@ -192,7 +209,13 @@ cdef class curry:
 
         self.func = func
         self.args = args
-        self.keywords = kwargs if kwargs else None
+        self.keywords = kwargs if kwargs else _empty_kwargs()
+        self.__doc__ = getattr(func, '__doc__', None)
+        self.__name__ = getattr(func, '__name__', '<curry>')
+        self.__module__ = getattr(func, '__module__', None)
+        self.__qualname__ = getattr(func, '__qualname__', None)
+        self._sigspec = None
+        self._has_unknown_args = None
 
     def __str__(self):
         return str(self.func)
@@ -200,8 +223,21 @@ cdef class curry:
     def __repr__(self):
         return repr(self.func)
 
+    def __hash__(self):
+        return hash((self.func, self.args,
+                     frozenset(self.keywords.items()) if self.keywords
+                     else None))
+
+    def __richcmp__(self, other, int op):
+        is_equal = (isinstance(other, curry) and self.func == other.func and
+                self.args == other.args and self.keywords == other.keywords)
+        if op == Py_EQ:
+            return is_equal
+        if op == Py_NE:
+            return not is_equal
+        return PyObject_RichCompare(id(self), id(other), op)
+
     def __call__(self, *args, **kwargs):
-        cdef PyObject *obj
         cdef object val
 
         if PyTuple_GET_SIZE(args) == 0:
@@ -210,71 +246,149 @@ cdef class curry:
             args = PySequence_Concat(self.args, args)
         if self.keywords is not None:
             PyDict_Merge(kwargs, self.keywords, False)
-
-        obj = CyObject_Call(self.func, args, kwargs)
-        if obj is not NULL:
-            val = <object>obj
-            return val
-
-        val = <object>PyErr_Occurred()
-        if PyErr_ExceptionMatches(TypeError):
-            PyErr_Clear()
-            required_args = _num_required_args(self.func)
-            # If there was a genuine TypeError
-            if required_args is None or len(args) < required_args:
-                return curry(self.func, *args, **kwargs)
-        raise val
-
-
-cdef class c_memoize:
-    property __doc__:
-        def __get__(self):
-            return self.func.__doc__
-
-    property __name__:
-        def __get__(self):
-            return self.func.__name__
-
-    def __cinit__(self, func, cache=None, key=None):
-        self.func = func
-        if cache is None:
-            self.cache = PyDict_New()
-        else:
-            self.cache = cache
-        self.key = key
-
         try:
-            spec = inspect.getargspec(func)
-            self.may_have_kwargs = bool(not spec or spec.keywords or
-                                        spec.defaults)
-            # Is unary function (single arg, no variadic argument or keywords)?
-            self.is_unary = (spec and spec.varargs is None and
-                             not self.may_have_kwargs and len(spec.args) == 1)
-        except TypeError:
-            self.is_unary = False
-            self.may_have_kwargs = True
+            return self.func(*args, **kwargs)
+        except TypeError as val:
+            if self._should_curry_internal(args, kwargs, val):
+                return type(self)(self.func, *args, **kwargs)
+            raise
 
-    def __call__(self, *args, **kwargs):
-        cdef object key
-        if self.key is not None:
-            key = self.key(args, kwargs)
-        elif self.is_unary:
-            key = args[0]
-        elif self.may_have_kwargs:
-            key = (args or None,
-                   PyFrozenSet_New(kwargs.items()) if kwargs else None)
+    def _should_curry(self, args, kwargs, exc=None):
+        if PyTuple_GET_SIZE(args) == 0:
+            args = self.args
+        elif PyTuple_GET_SIZE(self.args) != 0:
+            args = PySequence_Concat(self.args, args)
+        if self.keywords is not None:
+            PyDict_Merge(kwargs, self.keywords, False)
+        return self._should_curry_internal(args, kwargs)
+
+    def _should_curry_internal(self, args, kwargs, exc=None):
+        func = self.func
+
+        # `toolz` has these three lines
+        #args = self.args + args
+        #if self.keywords:
+        #    kwargs = dict(self.keywords, **kwargs)
+
+        if self._sigspec is None:
+            sigspec = self._sigspec = _sigs.signature_or_spec(func)
+            self._has_unknown_args = has_varargs(func, sigspec) is not False
         else:
-            key = args
+            sigspec = self._sigspec
 
-        if key in self.cache:
-            return self.cache[key]
+        if is_partial_args(func, args, kwargs, sigspec) is False:
+            # Nothing can make the call valid
+            return False
+        elif self._has_unknown_args:
+            # The call may be valid and raised a TypeError, but we curry
+            # anyway because the function may have `*args`.  This is useful
+            # for decorators with signature `func(*args, **kwargs)`.
+            return True
+        elif not is_valid_args(func, args, kwargs, sigspec):
+            # Adding more arguments may make the call valid
+            return True
         else:
-            result = PyObject_Call(self.func, args, kwargs)
-            self.cache[key] = result
-            return result
+            # There was a genuine TypeError
+            return False
+
+    def bind(self, *args, **kwargs):
+        return type(self)(self, *args, **kwargs)
+
+    def call(self, *args, **kwargs):
+        cdef object val
+
+        if PyTuple_GET_SIZE(args) == 0:
+            args = self.args
+        elif PyTuple_GET_SIZE(self.args) != 0:
+            args = PySequence_Concat(self.args, args)
+        if self.keywords is not None:
+            PyDict_Merge(kwargs, self.keywords, False)
+        return self.func(*args, **kwargs)
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return type(self)(self, instance)
+
+    property __signature__:
+        def __get__(self):
+            sig = inspect.signature(self.func)
+            args = self.args or ()
+            keywords = self.keywords or {}
+            if is_partial_args(self.func, args, keywords, sig) is False:
+                raise TypeError('curry object has incorrect arguments')
+
+            params = list(sig.parameters.values())
+            skip = 0
+            for param in params[:len(args)]:
+                if param.kind == param.VAR_POSITIONAL:
+                    break
+                skip += 1
+
+            kwonly = False
+            newparams = []
+            for param in params[skip:]:
+                kind = param.kind
+                default = param.default
+                if kind == param.VAR_KEYWORD:
+                    pass
+                elif kind == param.VAR_POSITIONAL:
+                    if kwonly:
+                        continue
+                elif param.name in keywords:
+                    default = keywords[param.name]
+                    kind = param.KEYWORD_ONLY
+                    kwonly = True
+                else:
+                    if kwonly:
+                        kind = param.KEYWORD_ONLY
+                    if default is param.empty:
+                        default = no_default
+                newparams.append(param.replace(default=default, kind=kind))
+
+            return sig.replace(parameters=newparams)
+
+    def __reduce__(self):
+        func = self.func
+        modname = getattr(func, '__module__', None)
+        qualname = getattr(func, '__qualname__', None)
+        if qualname is None:
+            qualname = getattr(func, '__name__', None)
+        is_decorated = None
+        if modname and qualname:
+            attrs = []
+            obj = import_module(modname)
+            for attr in qualname.split('.'):
+                if isinstance(obj, curry):
+                    attrs.append('func')
+                    obj = obj.func
+                obj = getattr(obj, attr, None)
+                if obj is None:
+                    break
+                attrs.append(attr)
+            if isinstance(obj, curry) and obj.func is func:
+                is_decorated = obj is self
+                qualname = '.'.join(attrs)
+                func = '%s:%s' % (modname, qualname)
+
+        state = (type(self), func, self.args, self.keywords, is_decorated)
+        return (_restore_curry, state)
 
 
-cpdef object memoize(object func=None, object cache=None, object key=None):
+cpdef object _restore_curry(cls, func, args, kwargs, is_decorated):
+    if isinstance(func, str):
+        modname, qualname = func.rsplit(':', 1)
+        obj = import_module(modname)
+        for attr in qualname.split('.'):
+            obj = getattr(obj, attr)
+        if is_decorated:
+            return obj
+        func = obj.func
+    obj = cls(func, *args, **(kwargs or {}))
+    return obj
+
+
+cpdef object memoize(object func, object cache=None, object key=None):
     """
     Cache a function's result for speedy future evaluation
 
@@ -311,10 +425,62 @@ cpdef object memoize(object func=None, object cache=None, object key=None):
     ...         print('Calculating %s + %s' % (x, y))
     ...     return x + y
     """
-    # pseudo-curry
-    if func is None:
-        return curry(c_memoize, cache=cache, key=key)
-    return c_memoize(func, cache=cache, key=key)
+    return _memoize(func, cache, key)
+
+
+cdef class _memoize:
+
+    property __doc__:
+        def __get__(self):
+            return self.func.__doc__
+
+    property __name__:
+        def __get__(self):
+            return self.func.__name__
+
+    property __wrapped__:
+        def __get__(self):
+            return self.func
+
+    def __cinit__(self, func, cache, key):
+        self.func = func
+        if cache is None:
+            self.cache = PyDict_New()
+        else:
+            self.cache = cache
+        self.key = key
+
+        try:
+            self.may_have_kwargs = has_keywords(func) is not False
+            # Is unary function (single arg, no variadic argument or keywords)?
+            self.is_unary = is_arity(1, func)
+        except TypeError:
+            self.is_unary = False
+            self.may_have_kwargs = True
+
+    def __call__(self, *args, **kwargs):
+        cdef object key
+        if self.key is not None:
+            key = self.key(args, kwargs)
+        elif self.is_unary:
+            key = args[0]
+        elif self.may_have_kwargs:
+            key = (args or None,
+                   PyFrozenSet_New(kwargs.items()) if kwargs else None)
+        else:
+            key = args
+
+        if key in self.cache:
+            return self.cache[key]
+        else:
+            result = PyObject_Call(self.func, args, kwargs)
+            self.cache[key] = result
+            return result
+
+    def __get__(self, instance, owner):
+        if instance is None:
+            return self
+        return curry(self, instance)
 
 
 cdef class Compose:
@@ -325,16 +491,89 @@ cdef class Compose:
     See Also:
         compose
     """
+    # fix for #103, note: we cannot use __name__ at module-scope in cython
+    __module__ = 'cytooz.functoolz'
+
     def __cinit__(self, *funcs):
-        self.firstfunc = funcs[-1]
+        self.first = funcs[-1]
         self.funcs = tuple(reversed(funcs[:-1]))
 
     def __call__(self, *args, **kwargs):
         cdef object func, ret
-        ret = PyObject_Call(self.firstfunc, args, kwargs)
+        ret = PyObject_Call(self.first, args, kwargs)
         for func in self.funcs:
             ret = func(ret)
         return ret
+
+    def __reduce__(self):
+        return (Compose, (self.first,), self.funcs)
+
+    def __setstate__(self, state):
+        self.funcs = state
+
+    def __repr__(self):
+        return '{.__class__.__name__}{!r}'.format(
+            self, tuple(reversed((self.first, ) + self.funcs)))
+
+    def __eq__(self, other):
+        if isinstance(other, Compose):
+            return other.first == self.first and other.funcs == self.funcs
+        return NotImplemented
+
+    def __ne__(self, other):
+        if isinstance(other, Compose):
+            return other.first != self.first or other.funcs != self.funcs
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.first) ^ hash(self.funcs)
+
+    def __get__(self, obj, objtype):
+        if obj is None:
+            return self
+        elif PY3:
+            return MethodType(self, obj)
+        else:
+            return MethodType(self, obj, objtype)
+
+    property __wrapped__:
+        def __get__(self):
+            return self.first
+
+    property __signature__:
+        def __get__(self):
+            base = inspect.signature(self.first)
+            last = inspect.signature(self.funcs[-1])
+            return base.replace(return_annotation=last.return_annotation)
+
+    property __name__:
+        def __get__(self):
+            try:
+                return '_of_'.join(
+                    f.__name__ for f in reversed((self.first,) + self.funcs)
+                )
+            except AttributeError:
+                return type(self).__name__
+
+    property __doc__:
+        def __get__(self):
+            def composed_doc(*fs):
+                """Generate a docstring for the composition of fs.
+                """
+                if not fs:
+                    # Argument name for the docstring.
+                    return '*args, **kwargs'
+
+                return '{f}({g})'.format(f=fs[0].__name__, g=composed_doc(*fs[1:]))
+
+            try:
+                return (
+                    'lambda *args, **kwargs: ' +
+                    composed_doc(*reversed((self.first,) + self.funcs))
+                )
+            except AttributeError:
+                # One of our callables does not have a `__name__`, whatever.
+                return 'A composition of functions'
 
 
 cdef object c_compose(object funcs):
@@ -362,9 +601,41 @@ def compose(*funcs):
     '4'
 
     See Also:
+        compose_left
         pipe
     """
     return c_compose(funcs)
+
+
+cdef object c_compose_left(object funcs):
+    if not funcs:
+        return identity
+    elif len(funcs) == 1:
+        return funcs[0]
+    else:
+        return Compose(*reversed(funcs))
+
+
+def compose_left(*funcs):
+    """
+    Compose functions to operate in series.
+
+    Returns a function that applies other functions in sequence.
+
+    Functions are applied from left to right so that
+    ``compose_left(f, g, h)(x, y)`` is the same as ``h(g(f(x, y)))``.
+
+    If no arguments are provided, the identity function (f(x) = x) is returned.
+
+    >>> inc = lambda i: i + 1
+    >>> compose_left(inc, str)(3)
+    '4'
+
+    See Also:
+        compose
+        pipe
+    """
+    return c_compose_left(funcs)
 
 
 cdef object c_pipe(object data, object funcs):
@@ -391,6 +662,7 @@ def pipe(data, *funcs):
 
     See Also:
         compose
+        compose_left
         thread_first
         thread_last
     """
@@ -418,16 +690,22 @@ cdef class complement:
     def __call__(self, *args, **kwargs):
         return not PyObject_Call(self.func, args, kwargs)  # use PyObject_Not?
 
+    def __reduce__(self):
+        return (complement, (self.func,))
+
 
 cdef class _juxt_inner:
     def __cinit__(self, funcs):
-        self.funcs = funcs
+        self.funcs = tuple(funcs)
 
     def __call__(self, *args, **kwargs):
         if kwargs:
-            return (PyObject_Call(func, args, kwargs) for func in self.funcs)
+            return tuple(PyObject_Call(func, args, kwargs) for func in self.funcs)
         else:
-            return (PyObject_CallObject(func, args) for func in self.funcs)
+            return tuple(PyObject_CallObject(func, args) for func in self.funcs)
+
+    def __reduce__(self):
+        return (_juxt_inner, (self.funcs,))
 
 
 cdef object c_juxt(object funcs):
@@ -436,25 +714,24 @@ cdef object c_juxt(object funcs):
 
 def juxt(*funcs):
     """
-    Creates a function that calls several functions with the same arguments.
+    Creates a function that calls several functions with the same arguments
 
     Takes several functions and returns a function that applies its arguments
-    to each of those functions then returns a sequence of the results.
+    to each of those functions then returns a tuple of the results.
 
     Name comes from juxtaposition: the fact of two things being seen or placed
     close together with contrasting effect.
 
     >>> inc = lambda x: x + 1
     >>> double = lambda x: x * 2
-    >>> list(juxt(inc, double)(10))
-    [11, 20]
-    >>> list(juxt([inc, double])(10))
-    [11, 20]
+    >>> juxt(inc, double)(10)
+    (11, 20)
+    >>> juxt([inc, double])(10)
+    (11, 20)
     """
     if len(funcs) == 1 and not PyCallable_Check(funcs[0]):
-        funcs = tuple(funcs[0])
+        funcs = funcs[0]
     return c_juxt(funcs)
-
 
 
 cpdef object do(object func, object x):
@@ -479,7 +756,128 @@ cpdef object do(object func, object x):
     12
     >>> log
     [1, 11]
-
     """
     func(x)
     return x
+
+
+cpdef object flip(object func, object a, object b):
+    """
+    Call the function call with the arguments flipped
+
+    This function is curried.
+
+    >>> def div(a, b):
+    ...     return a // b
+    ...
+    >>> flip(div, 2, 6)
+    3
+    >>> div_by_two = flip(div, 2)
+    >>> div_by_two(4)
+    2
+
+    This is particularly useful for built in functions and functions defined
+    in C extensions that accept positional only arguments. For example:
+    isinstance, issubclass.
+
+    >>> data = [1, 'a', 'b', 2, 1.5, object(), 3]
+    >>> only_ints = list(filter(flip(isinstance, int), data))
+    >>> only_ints
+    [1, 2, 3]
+    """
+    return PyObject_CallObject(func, (b, a))
+
+
+_flip = flip  # uncurried
+
+
+cpdef object return_none(object exc):
+    """
+    Returns None.
+    """
+    return None
+
+
+cdef class excepts:
+    """
+    A wrapper around a function to catch exceptions and
+    dispatch to a handler.
+
+    This is like a functional try/except block, in the same way that
+    ifexprs are functional if/else blocks.
+
+    Examples
+    --------
+    >>> excepting = excepts(
+    ...     ValueError,
+    ...     lambda a: [1, 2].index(a),
+    ...     lambda _: -1,
+    ... )
+    >>> excepting(1)
+    0
+    >>> excepting(3)
+    -1
+
+    Multiple exceptions and default except clause.
+    >>> excepting = excepts((IndexError, KeyError), lambda a: a[0])
+    >>> excepting([])
+    >>> excepting([1])
+    1
+    >>> excepting({})
+    >>> excepting({0: 1})
+    1
+    """
+
+    def __init__(self, exc, func, handler=return_none):
+        self.exc = exc
+        self.func = func
+        self.handler = handler
+
+    def __call__(self, *args, **kwargs):
+        try:
+            return self.func(*args, **kwargs)
+        except self.exc as e:
+            return self.handler(e)
+
+    property __name__:
+        def __get__(self):
+            exc = self.exc
+            try:
+                if isinstance(exc, tuple):
+                    exc_name = '_or_'.join(map(attrgetter('__name__'), exc))
+                else:
+                    exc_name = exc.__name__
+                return '%s_excepting_%s' % (self.func.__name__, exc_name)
+            except AttributeError:
+                return 'excepting'
+
+    property __doc__:
+        def __get__(self):
+            exc = self.exc
+            try:
+                if isinstance(exc, tuple):
+                    exc_name = '(%s)' % ', '.join(
+                        map(attrgetter('__name__'), exc),
+                    )
+                else:
+                    exc_name = exc.__name__
+
+                return dedent(
+                    """\
+                    A wrapper around {inst.func.__name__!r} that will except:
+                    {exc}
+                    and handle any exceptions with {inst.handler.__name__!r}.
+
+                    Docs for {inst.func.__name__!r}:
+                    {inst.func.__doc__}
+
+                    Docs for {inst.handler.__name__!r}:
+                    {inst.handler.__doc__}
+                    """
+                ).format(
+                    inst=self,
+                    exc=exc_name,
+                )
+            except AttributeError:
+                return type(self).__doc__
+

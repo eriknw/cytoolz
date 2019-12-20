@@ -1,9 +1,9 @@
 import difflib
 import cytoolz
-import toolz
 
 from cytoolz import curry, identity, keyfilter, valfilter, merge_with
 from cytoolz.utils import raises
+from dev_skip_test import dev_skip_test
 
 
 # `cytoolz` functions for which "# doctest: +SKIP" were added.
@@ -15,7 +15,7 @@ skipped_doctests = ['get_in']
 @curry
 def isfrommod(modname, func):
     mod = getattr(func, '__module__', '') or ''
-    return modname in mod
+    return mod.startswith(modname) or 'toolz.functoolz.curry' in str(type(func))
 
 
 def convertdoc(doc):
@@ -30,7 +30,9 @@ def convertdoc(doc):
     return doc
 
 
+@dev_skip_test
 def test_docstrings_uptodate():
+    import toolz
     differ = difflib.Differ()
 
     # only consider items created in both `toolz` and `cytoolz`

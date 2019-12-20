@@ -1,15 +1,14 @@
-#cython: embedsignature=True
 from cpython.sequence cimport PySequence_Tuple
-from .itertoolz cimport frequencies
+from cytoolz.itertoolz cimport frequencies, pluck
 
 from itertools import groupby
-from .compatibility import map
+from cytoolz.compatibility import map
 
 
 __all__ = ['countby', 'partitionby']
 
 
-cpdef object countby(object func, object seq):
+cpdef object countby(object key, object seq):
     """
     Count elements of a collection by a key function
 
@@ -23,7 +22,9 @@ cpdef object countby(object func, object seq):
     See Also:
         groupby
     """
-    return frequencies(map(func, seq))
+    if not callable(key):
+        return frequencies(pluck(key, seq))
+    return frequencies(map(key, seq))
 
 
 cdef class partitionby:

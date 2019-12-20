@@ -4,7 +4,7 @@ Typed Cython objects (like dict) may also be None.  Using functions from
 Python's C API that expect a specific type but receive None instead can cause
 problems such as throwing an uncatchable SystemError (and some systems may
 segfault instead).  We obviously don't what that to happen!  As the tests
-below discovered, this turned out to be a rare occurence.  The only changes
+below discovered, this turned out to be a rare occurrence.  The only changes
 required were to use `d.copy()` instead of `PyDict_Copy(d)`, and to always
 return Python objects from functions instead of int or bint (so exceptions
 can propagate).
@@ -43,6 +43,9 @@ def test_dicttoolz():
     assert raises((TypeError, AttributeError), lambda: assoc(None, 1, 2))
     tested.append('assoc')
 
+    assert raises((TypeError, AttributeError), lambda: dissoc(None, 1))
+    tested.append('dissoc')
+
     # XXX
     assert (raises(TypeError, lambda: get_in(None, {})) or
             get_in(None, {}) is None)
@@ -53,13 +56,13 @@ def test_dicttoolz():
     tested.append('get_in')
 
     assert raises(TypeError, lambda: keyfilter(None, {1: 2}))
-    assert raises(TypeError, lambda: keyfilter(identity, None))
+    assert raises((AttributeError, TypeError), lambda: keyfilter(identity, None))
     tested.append('keyfilter')
 
     # XXX
     assert (raises(TypeError, lambda: keymap(None, {1: 2})) or
             keymap(None, {1: 2}) == {(1,): 2})
-    assert raises(TypeError, lambda: keymap(identity, None))
+    assert raises((AttributeError, TypeError), lambda: keymap(identity, None))
     tested.append('keymap')
 
     assert raises(TypeError, lambda: merge(None))
@@ -79,14 +82,27 @@ def test_dicttoolz():
     tested.append('update_in')
 
     assert raises(TypeError, lambda: valfilter(None, {1: 2}))
-    assert raises(TypeError, lambda: valfilter(identity, None))
+    assert raises((AttributeError, TypeError), lambda: valfilter(identity, None))
     tested.append('valfilter')
 
     # XXX
     assert (raises(TypeError, lambda: valmap(None, {1: 2})) or
             valmap(None, {1: 2}) == {1: (2,)})
-    assert raises(TypeError, lambda: valmap(identity, None))
+    assert raises((AttributeError, TypeError), lambda: valmap(identity, None))
     tested.append('valmap')
+
+    assert (raises(TypeError, lambda: itemmap(None, {1: 2})) or
+            itemmap(None, {1: 2}) == {1: (2,)})
+    assert raises((AttributeError, TypeError), lambda: itemmap(identity, None))
+    tested.append('itemmap')
+
+    assert raises(TypeError, lambda: itemfilter(None, {1: 2}))
+    assert raises((AttributeError, TypeError), lambda: itemfilter(identity, None))
+    tested.append('itemfilter')
+
+    assert raises((AttributeError, TypeError), lambda: assoc_in(None, [2, 2], 3))
+    assert raises(TypeError, lambda: assoc_in({}, None, 3))
+    tested.append('assoc_in')
 
     s1 = set(tested)
     s2 = set(cytoolz.dicttoolz.__all__)
@@ -101,6 +117,10 @@ def test_functoolz():
     assert compose(None) is None
     assert raises(TypeError, lambda: compose(None, None)())
     tested.append('compose')
+
+    assert compose_left(None) is None
+    assert raises(TypeError, lambda: compose_left(None, None)())
+    tested.append('compose_left')
 
     assert raises(TypeError, lambda: curry(None))
     tested.append('curry')
@@ -127,6 +147,17 @@ def test_functoolz():
 
     assert thread_last(1, None) is None
     tested.append('thread_last')
+
+    assert flip(lambda a, b: (a, b))(None)(None) == (None, None)
+    tested.append('flip')
+
+    assert apply(identity, None) is None
+    assert raises(TypeError, lambda: apply(None))
+    tested.append('apply')
+
+    excepts(None, lambda x: x)
+    excepts(TypeError, None)
+    tested.append('excepts')
 
     s1 = set(tested)
     s2 = set(cytoolz.functoolz.__all__)
@@ -247,14 +278,45 @@ def test_itertoolz():
     tested.append('take')
 
     # XXX
+    assert (raises(TypeError, lambda: list(tail(None, [1, 2])) == [1, 2]) or
+            list(tail(None, [1, 2])) == [1, 2])
+    assert raises(TypeError, lambda: list(tail(1, None)))
+    tested.append('tail')
+
+    # XXX
     assert (raises(TypeError, lambda: list(take_nth(None, [1, 2]))) or
             list(take_nth(None, [1, 2])) == [1, 2])
     assert raises(TypeError, lambda: list(take_nth(1, None)))
     tested.append('take_nth')
 
     assert raises(TypeError, lambda: list(unique(None)))
-    assert raises(TypeError, lambda: list(unique([1, 1, 2], key=None)))
+    assert list(unique([1, 1, 2], key=None)) == [1, 2]
     tested.append('unique')
+
+    assert raises(TypeError, lambda: join(first, None, second, (1, 2, 3)))
+    assert raises(TypeError, lambda: join(first, (1, 2, 3), second, None))
+    tested.append('join')
+
+    assert raises(TypeError, lambda: topk(None, [1, 2, 3]))
+    assert raises(TypeError, lambda: topk(3, None))
+    tested.append('topk')
+
+    assert raises(TypeError, lambda: list(diff(None, [1, 2, 3])))
+    assert raises(TypeError, lambda: list(diff(None)))
+    assert raises(TypeError, lambda: list(diff([None])))
+    assert raises(TypeError, lambda: list(diff([None, None])))
+    tested.append('diff')
+
+    assert raises(TypeError, lambda: peek(None))
+    tested.append('peek')
+
+    assert raises(TypeError, lambda: peekn(None, [1, 2, 3]))
+    assert raises(TypeError, lambda: peekn(3, None))
+    tested.append('peekn')
+
+    assert raises(TypeError, lambda: list(random_sample(None, [1])))
+    assert raises(TypeError, lambda: list(random_sample(0.1, None)))
+    tested.append('random_sample')
 
     s1 = set(tested)
     s2 = set(cytoolz.itertoolz.__all__)

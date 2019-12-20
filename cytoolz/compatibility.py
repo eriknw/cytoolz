@@ -1,9 +1,10 @@
 import operator
 import sys
 PY3 = sys.version_info[0] > 2
+PY34 = sys.version_info[0] == 3 and sys.version_info[1] == 4
 
 __all__ = ['PY3', 'map', 'filter', 'range', 'zip', 'reduce', 'zip_longest',
-           'iteritems', 'iterkeys', 'itervalues']
+           'iteritems', 'iterkeys', 'itervalues', 'import_module']
 
 if PY3:
     map = map
@@ -25,3 +26,10 @@ else:
     iteritems = operator.methodcaller('iteritems')
     iterkeys = operator.methodcaller('iterkeys')
     itervalues = operator.methodcaller('itervalues')
+
+try:
+    from importlib import import_module
+except ImportError:
+    def import_module(name):
+        __import__(name)
+        return sys.modules[name]
