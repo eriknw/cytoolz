@@ -4,7 +4,7 @@ Typed Cython objects (like dict) may also be None.  Using functions from
 Python's C API that expect a specific type but receive None instead can cause
 problems such as throwing an uncatchable SystemError (and some systems may
 segfault instead).  We obviously don't what that to happen!  As the tests
-below discovered, this turned out to be a rare occurence.  The only changes
+below discovered, this turned out to be a rare occurrence.  The only changes
 required were to use `d.copy()` instead of `PyDict_Copy(d)`, and to always
 return Python objects from functions instead of int or bint (so exceptions
 can propagate).
