@@ -1,4 +1,8 @@
 language: python
+arch:
+    - amd64
+    - arm64
+
 python:
     - "2.7"
     - "3.4"
