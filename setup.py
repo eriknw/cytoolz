@@ -129,5 +129,6 @@ setup(
     ],
     install_requires=['toolz >= 0.8.0'],
     extras_require={'cython': ['cython']},
+    python_requires=">=3.5",
     zip_safe=False,
 )
