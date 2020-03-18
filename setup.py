@@ -81,7 +81,7 @@ if use_cython:
         from Cython.Compiler.Options import directive_defaults
     directive_defaults['embedsignature'] = True
     directive_defaults['binding'] = True
-    directive_defaults['language_level'] = 2  # TODO: drop Python 2.7 and update this (and code) to 3
+    directive_defaults['language_level'] = '3'  # TODO: drop Python 2.7 and update this (and code) to 3
     # The distributed *.c files may not be forward compatible.
     # If we are cythonizing a non-dev version, then force everything to cythonize.
     ext_modules = cythonize(ext_modules, force=not is_dev)
@@ -115,10 +115,7 @@ setup(
         'Operating System :: OS Independent',
         'Programming Language :: Cython',
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
