@@ -2,6 +2,7 @@ language: python
 arch:
     - amd64
     - arm64
+    - ppc64le
 
 python:
     - "3.5"
