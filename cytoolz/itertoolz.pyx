@@ -1055,6 +1055,8 @@ cdef class partition_all:
         # iterable exhausted before filling the tuple
         if i == 0:
             raise StopIteration
+        for j in range(i, self.n):
+            PyTuple_SET_ITEM(result, j, None)
         return PyTuple_GetSlice(result, 0, i)
 
 
