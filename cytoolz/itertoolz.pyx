@@ -963,8 +963,8 @@ cdef class sliding_window:
         cdef Py_ssize_t i
         self.iterseq = iter(seq)
         self.prev = PyTuple_New(n)
-        Py_INCREF(Py_None)
-        PyTuple_SET_ITEM(self.prev, 0, Py_None)
+        Py_INCREF(None)
+        PyTuple_SET_ITEM(self.prev, 0, None)
         for i, seq in enumerate(islice(self.iterseq, n-1), 1):
             Py_INCREF(seq)
             PyTuple_SET_ITEM(self.prev, i, seq)
@@ -1057,8 +1057,8 @@ cdef class partition_all:
         if i == 0:
             raise StopIteration
         for j in range(i, self.n):
-            Py_INCREF(Py_None)
-            PyTuple_SET_ITEM(result, j, Py_None)
+            Py_INCREF(None)
+            PyTuple_SET_ITEM(result, j, None)
         return PyTuple_GetSlice(result, 0, i)
 
 
