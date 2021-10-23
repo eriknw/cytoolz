@@ -16,7 +16,6 @@ __all__ = ('map', 'filter', 'range', 'zip', 'reduce', 'zip_longest',
            'iteritems', 'iterkeys', 'itervalues', 'filterfalse',
            'PY3', 'PY34', 'PYPY')
 
-
 map = map
 filter = filter
 range = range

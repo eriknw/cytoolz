@@ -2,6 +2,7 @@ language: python
 arch:
     - amd64
     - arm64
+    - ppc64le
 
 python:
     - "3.5"
@@ -16,6 +17,7 @@ before_install:
 
 install:
     - python setup.py build_ext --inplace --with-cython
+    - pip install -e .
 
 # commands to run tests
 script:
