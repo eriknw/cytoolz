@@ -14,7 +14,6 @@ from collections import deque
 from heapq import heapify, heappop, heapreplace
 from itertools import chain, islice, zip_longest
 from operator import itemgetter
-from random import Random
 from cytoolz.utils import no_default
 
 
@@ -1796,6 +1795,8 @@ cdef class random_sample:
         self.prob = prob
         self.iter_seq = iter(seq)
         if not hasattr(random_state, 'random'):
+            from random import Random
+
             random_state = Random(random_state)
         self.random_func = random_state.random
 

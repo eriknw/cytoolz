@@ -3,7 +3,6 @@ import sys
 from functools import partial
 from importlib import import_module
 from operator import attrgetter
-from textwrap import dedent
 from types import MethodType
 from cytoolz.utils import no_default
 import cytoolz._signatures as _sigs
@@ -851,6 +850,8 @@ cdef class excepts:
 
     property __doc__:
         def __get__(self):
+            from textwrap import dedent
+
             exc = self.exc
             try:
                 if isinstance(exc, tuple):
