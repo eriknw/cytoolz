@@ -3,8 +3,8 @@ name: Build wheels
 on:
   # TODO" delete pull_request below when this is working
   pull_request:
-  tags:
   push:
+    tags:
     branches:
       - master
 
