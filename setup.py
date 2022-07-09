@@ -42,7 +42,7 @@ except ImportError:
 
 use_cython = True
 is_dev = 'dev' in VERSION
-strict_cython = is_dev
+strict_cython = is_dev or os.environ.get('CIBUILDWHEEL', '0') != '1'
 if '--no-cython' in sys.argv:
     use_cython = False
     sys.argv.remove('--no-cython')
