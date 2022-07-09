@@ -106,10 +106,10 @@ jobs:
 
     steps:
       - name: Setup QEMU
-        if: matrix.os == 'ubuntu'
+        if: ${{ matrix.os == "ubuntu" }}
         uses: docker/setup-qemu-action@v2
         with:
-          platforms: arm64
+          platforms: all
       - name: Checkout
         uses: actions/checkout@v3
         with:
@@ -131,4 +131,4 @@ jobs:
         with:
           name: dist
           path: wheelhouse/*.whl
-          retention-days: 1
+          retention-days: 3
