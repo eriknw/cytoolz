@@ -106,7 +106,7 @@ jobs:
 
     steps:
       - name: Setup QEMU
-        if: ${{ matrix.os == "ubuntu" }}
+        if: ${{ matrix.os == 'ubuntu' }}
         uses: docker/setup-qemu-action@v2
         with:
           platforms: all
