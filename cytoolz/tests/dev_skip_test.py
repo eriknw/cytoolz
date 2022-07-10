@@ -23,7 +23,7 @@ except ImportError:
 
 if do_toolz_tests:
     do_toolz_tests = toolz.__version__.startswith(cytoolz.__toolz_version__)
-    do_toolz_tests &= 'dev' not in cytoolz.__version__
+    do_toolz_tests &= '+' not in cytoolz.__version__
 
 # Decorator used to skip tests for developmental versions of CyToolz
 if do_toolz_tests:

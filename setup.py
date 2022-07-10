@@ -28,11 +28,9 @@ import os.path
 import sys
 from setuptools import setup, Extension
 
-info = {}
-filename = os.path.join('cytoolz', '_version.py')
-exec(compile(open(filename, "rb").read().replace(b'\r\n', b'\n'),
-             filename, 'exec'), info)
-VERSION = info['__version__']
+import versioneer
+
+VERSION = versioneer.get_version()
 
 try:
     from Cython.Build import cythonize
@@ -41,7 +39,7 @@ except ImportError:
     has_cython = False
 
 use_cython = True
-is_dev = 'dev' in VERSION
+is_dev = '+' in VERSION
 strict_cython = is_dev or os.environ.get('CIBUILDWHEEL', '0') != '1'
 if '--no-cython' in sys.argv:
     use_cython = False
@@ -89,6 +87,7 @@ if use_cython:
 setup(
     name='cytoolz',
     version=VERSION,
+    cmdclass=versioneer.get_cmdclass(),
     description=('Cython implementation of Toolz: '
                     'High performance functional utilities'),
     ext_modules=ext_modules,
