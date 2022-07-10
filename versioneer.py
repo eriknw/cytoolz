@@ -287,7 +287,6 @@ import os
 import re
 import subprocess
 import sys
-from typing import Callable, Dict
 import functools
 
 
@@ -367,8 +366,8 @@ class NotThisMethod(Exception):
 
 
 # these dictionaries contain VCS-specific tools
-LONG_VERSION_PY: Dict[str, str] = {}
-HANDLERS: Dict[str, Dict[str, Callable]] = {}
+LONG_VERSION_PY = {}
+HANDLERS = {}
 
 
 def register_vcs_handler(vcs, method):  # decorator
@@ -440,7 +439,6 @@ import os
 import re
 import subprocess
 import sys
-from typing import Callable, Dict
 import functools
 
 
@@ -479,8 +477,8 @@ class NotThisMethod(Exception):
     """Exception raised if a method is not valid for the current scenario."""
 
 
-LONG_VERSION_PY: Dict[str, str] = {}
-HANDLERS: Dict[str, Dict[str, Callable]] = {}
+LONG_VERSION_PY = {}
+HANDLERS = {}
 
 
 def register_vcs_handler(vcs, method):  # decorator
@@ -1342,7 +1340,7 @@ def do_vcs_install(manifest_in, versionfile_source, ipy):
         pass
     if not present:
         with open(".gitattributes", "a+") as fobj:
-            fobj.write(f"{versionfile_source} export-subst\n")
+            fobj.write(versionfile_source + " export-subst\n")
         files.append(".gitattributes")
     run_command(GITS, ["add", "--"] + files)
 
