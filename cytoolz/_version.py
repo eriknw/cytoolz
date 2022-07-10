@@ -18,10 +18,6 @@ import sys
 import functools
 
 
-# What version of toolz does cytoolz implement?  Placed here compatibility.
-__toolz_version__ = '0.12.0'
-
-
 def get_keywords():
     """Get the keywords needed to look up the version information."""
     # these strings will be replaced by git during git-archive.
@@ -659,6 +655,3 @@ def get_versions():
     return {"version": "0+unknown", "full-revisionid": None,
             "dirty": None,
             "error": "unable to compute version", "date": None}
-
-
-__version__ = get_versions()['version']
