@@ -24,10 +24,13 @@ jobs:
           # # Archs: https://cibuildwheel.readthedocs.io/en/stable/options/#archs
           # # This probably isn't the preferred way to do things :shrug:
           #
+          # # PyPy may have issues.  Intermittent failures have been seen on:
+          # # pp37-manylinux_aarch64 pp38-win_amd64
+          #
           # pys = ['cp36', 'cp37', 'cp38', 'cp39', 'cp310']
           # pys_arm = ['cp38', 'cp39', 'cp310']
           # pypys = ['pp37', 'pp38', 'pp39']
-          # SKIP = {"pp37-manylinux_aarch64"}
+          # SKIP = set()  # {"pp37-manylinux_aarch64", "pp38-win_amd64"}
           # combos = []
           #
           # # Linux
@@ -121,8 +124,8 @@ jobs:
           - {"os": "ubuntu", "build": "cp310-musllinux_ppc64le", "arch": "ppc64le"}
           - {"os": "ubuntu", "build": "cp310-musllinux_s390x", "arch": "s390x"}
           - {"os": "ubuntu", "build": "cp310-musllinux_x86_64", "arch": "x86_64"}
-          # Segfault in test_dicttoolz.py:test_merge_with
-          # - {"os": "ubuntu", "build": "pp37-manylinux_aarch64", "arch": "aarch64"}
+          # Intermittent segfault on pp37-manylinux_aarch64 in test_dicttoolz.py:test_merge_with
+          - {"os": "ubuntu", "build": "pp37-manylinux_aarch64", "arch": "aarch64"}
           - {"os": "ubuntu", "build": "pp37-manylinux_i686", "arch": "i686"}
           - {"os": "ubuntu", "build": "pp37-manylinux_x86_64", "arch": "x86_64"}
           - {"os": "ubuntu", "build": "pp38-manylinux_aarch64", "arch": "aarch64"}
