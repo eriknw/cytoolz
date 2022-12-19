@@ -17,4 +17,4 @@ Architecture: any
 Pre-Depends: dpkg (>= 1.16.1), cython3, python3
 Depends: make,  python3-nose, ${shlibs:Depends}
 Description:  Cython implementation of Toolz
-	High performance functional utilities 
+	High performance functional utilities
