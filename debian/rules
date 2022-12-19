@@ -5,6 +5,3 @@ export PYBUILD_NAME = foo
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
-
-
-

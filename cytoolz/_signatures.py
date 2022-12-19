@@ -167,4 +167,3 @@ cytoolz_info['cytoolz.recipes'] = dict(
 def update_signature_registry():
     create_signature_registry(cytoolz_info)
     module_info.update(cytoolz_info)
-

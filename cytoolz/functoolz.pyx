@@ -873,4 +873,3 @@ cdef class excepts:
                 )
             except AttributeError:
                 return type(self).__doc__
-

@@ -65,4 +65,3 @@ cdef class excepts:
     cdef public object exc
     cdef public object func
     cdef public object handler
-
