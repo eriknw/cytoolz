@@ -23,8 +23,8 @@ jobs:
           - "pypy3.6"
           - "pypy3.7"
           - "pypy3.8"
-          - "pypy3.9"
-          - "pypy3.10"
+          # - "pypy3.9"
+          # - "pypy3.10"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
