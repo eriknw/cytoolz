@@ -1,7 +1,7 @@
 name: Build wheels
 
 on:
-  pull_request:  # Uncomment to debug wheel building in a PR
+  # pull_request:  # Uncomment to debug wheel building in a PR
   push:
     branches:
       - master
@@ -237,7 +237,7 @@ jobs:
         run: |
           ls -al dist/
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.8
+        uses: pypa/gh-action-pypi-publish@v1.8.8
         if: startsWith(github.ref, 'refs/tags/')
         with:
           user: __token__

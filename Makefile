@@ -13,7 +13,7 @@ test: inplace
 
 clean:
 	rm -f cytoolz/*.c cytoolz/*.so cytoolz/*/*.c cytoolz/*/*.so
-	rm -rf build/ cytoolz/__pycache__/ cytoolz/*/__pycache__/
+	rm -rf build/ __pycache__/ cytoolz/__pycache__/ cytoolz/*/__pycache__/
 
 curried:
 	sed -e 's/toolz/cytoolz/g' -e 's/itercytoolz/itertoolz/' \
