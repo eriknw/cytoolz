@@ -211,10 +211,24 @@ cdef class curry:
         self.keywords = kwargs if kwargs else _empty_kwargs()
         self.__doc__ = getattr(func, '__doc__', None)
         self.__name__ = getattr(func, '__name__', '<curry>')
-        self.__module__ = getattr(func, '__module__', None)
-        self.__qualname__ = getattr(func, '__qualname__', None)
+        self._module = getattr(func, '__module__', None)
+        self._qualname = getattr(func, '__qualname__', None)
         self._sigspec = None
         self._has_unknown_args = None
+
+    property __module__:
+        def __get__(self):
+            return self._module
+
+        def __set__(self, val):
+            self._module = val
+
+    property __qualname__:
+        def __get__(self):
+            return self._qualname
+
+        def __set__(self, val):
+            self._qualname = val
 
     def __str__(self):
         return str(self.func)
