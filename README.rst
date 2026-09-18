@@ -12,7 +12,7 @@ and dictionaries.
 .. _literal toolz: https://github.com/pytoolz/toolz
 
 ``toolz`` is a pure Python package that borrows heavily from contemporary
-functional languanges.  It is designed to interoperate seamlessly with other
+functional languages.  It is designed to interoperate seamlessly with other
 libraries including ``itertools``, ``functools``, and third party libraries.
 High performance functional data analysis is possible with builtin types
 like ``list`` and ``dict``, and user-defined data structures; and low memory
@@ -55,7 +55,7 @@ Dependencies
 ------------
 
 ``cytoolz`` supports Python 3.9+ with a common codebase.
-It is developed in Cython, but requires no dependecies other than CPython
+It is developed in Cython, but requires no dependencies other than CPython
 and a C compiler.  Like ``toolz``, it is a light weight dependency.
 
 Contributions Welcome

@@ -52,6 +52,7 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
+  "Programming Language :: Python :: 3.15",
   "Programming Language :: Python :: Implementation :: CPython",
   "Programming Language :: Python :: Implementation :: PyPy",
   "Programming Language :: Python :: Free Threading :: 1 - Unstable",
@@ -68,13 +69,17 @@ dependencies = [
 
 [project.optional-dependencies]
 cython = ["cython >=0.29"]
-test = ["pytest"]
 
 [project.urls]
 homepage = "https://github.com/pytoolz/cytoolz"
 repository = "https://github.com/pytoolz/cytoolz"
 documentation = "https://toolz.readthedocs.io/en/latest/"
 changelog = "https://github.com/pytoolz/cytoolz/releases"
+
+[dependency-groups]
+test = [
+  "pytest",
+]
 
 [tool.setuptools]
 packages = [
@@ -89,7 +94,7 @@ dev_template = "{tag}+{ccount}.g{sha}"
 dirty_template = "{tag}+{ccount}.g{sha}.dirty"
 
 [tool.cibuildwheel]
-test-requires = ["pytest", "toolz"]
+test-groups = ["test"]
 test-command = "python -m pytest --pyargs cytoolz"
 
 [tool.pytest.ini_options]
@@ -97,8 +102,8 @@ minversion = "6.0"
 testpaths = ["cytoolz"]
 xfail_strict = true
 addopts = [
-  "--strict-config",  # Force error if config is mispelled
-  "--strict-markers", # Force error if marker is mispelled (must be defined in config)
+  "--strict-config",  # Force error if config is misspelled
+  "--strict-markers", # Force error if marker is misspelled (must be defined in config)
   "-ra",              # Print summary of all fails/errors
 ]
 log_cli_level = "info"
@@ -106,3 +111,7 @@ filterwarnings = [
   "error",
   "ignore:The toolz.compatibility module is no longer needed:DeprecationWarning:",
 ]
+
+[tool.codespell]
+ignore-words-list = "juxt,lamda"
+skip = "*.c,./build,./cytoolz.egg-info"

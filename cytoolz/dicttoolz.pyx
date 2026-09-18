@@ -52,7 +52,7 @@ cdef f_map_next get_map_iter(object d, PyObject* *ptr) except NULL:
     """Return function pointer to perform iteration over object returned in ptr.
 
     The returned function signature matches "PyDict_Next".  If ``d`` is a dict,
-    then the returned function *is* PyDict_Next, so iteration wil be very fast.
+    then the returned function *is* PyDict_Next, so iteration will be very fast.
 
     The object returned through ``ptr`` needs to have its reference count
     reduced by one once the caller "owns" the object.
