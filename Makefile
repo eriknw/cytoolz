@@ -1,5 +1,17 @@
 SHELL= /bin/bash
 PYTHON ?= python
+TOOLZ = ../toolz/toolz
+
+# Rewrite toolz source as cytoolz source
+TOOLZ2CYTOOLZ = sed -e 's/toolz/cytoolz/g' -e 's/itercytoolz/itertoolz/g' \
+	-e 's/dictcytoolz/dicttoolz/g' -e 's/funccytoolz/functoolz/g'
+
+# Tests copied from toolz, except those cytoolz maintains by hand
+NOCOPY = test_utils.py test_curried_doctests.py test_tlz.py
+TESTS = $(filter-out $(NOCOPY),$(notdir $(wildcard $(TOOLZ)/tests/test*.py)))
+
+# cytoolz-specific edits to the copied tests; `copytests` re-applies it
+TESTPATCH = copytests.patch
 
 inplace:
 	$(PYTHON) setup.py build_ext --inplace --cython
@@ -18,19 +30,19 @@ clean:
 	rm -rf build/ __pycache__/ cytoolz/__pycache__/ cytoolz/*/__pycache__/
 
 curried:
-	sed -e 's/toolz/cytoolz/g' -e 's/itercytoolz/itertoolz/' \
-		-e 's/dictcytoolz/dicttoolz/g' -e 's/funccytoolz/functoolz/g' \
-		../toolz/toolz/curried/__init__.py > cytoolz/curried/__init__.py
+	$(TOOLZ2CYTOOLZ) $(TOOLZ)/curried/__init__.py > cytoolz/curried/__init__.py
 
+# Copy tests from toolz, then re-apply $(TESTPATCH)
 copytests:
-	for f in ../toolz/toolz/tests/test*py; \
-	do \
-		if [[ $$f == *test_utils* ]]; then continue ; fi;  \
-		if [[ $$f == *test_curried_doctests* ]]; then continue ; fi;  \
-		if [[ $$f == *test_tlz* ]]; then continue ; fi;  \
-		newf=`echo $$f | sed 's/...toolz.toolz/cytoolz/g'`; \
-		sed -e 's/toolz/cytoolz/g' -e 's/itercytoolz/itertoolz/' \
-			-e 's/dictcytoolz/dicttoolz/g' -e 's/funccytoolz/functoolz/g' \
-			$$f > $$newf; \
-		echo $$f $$newf; \
+	for f in $(TESTS); do $(TOOLZ2CYTOOLZ) $(TOOLZ)/tests/$$f > cytoolz/tests/$$f; done
+	git apply --verbose --allow-empty $(TESTPATCH)
+
+# Save cytoolz-specific edits to the copied tests as $(TESTPATCH)
+testpatch:
+	: > $(TESTPATCH)
+	for f in $(TESTS); do \
+		$(TOOLZ2CYTOOLZ) $(TOOLZ)/tests/$$f \
+		| diff -u --label a/cytoolz/tests/$$f --label b/cytoolz/tests/$$f - cytoolz/tests/$$f \
+		>> $(TESTPATCH) || true; \
 	done
+	git apply --stat --allow-empty $(TESTPATCH)
