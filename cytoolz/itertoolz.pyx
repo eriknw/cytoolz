@@ -775,6 +775,8 @@ cdef class interpose:
 
     >>> list(interpose("a", [1, 2, 3]))
     [1, 'a', 2, 'a', 3]
+    >>> list(interpose("a", []))
+    []
     """
     def __cinit__(self, object el, object seq):
         self.el = el
@@ -1294,6 +1296,7 @@ cpdef object join(object leftkey, object leftseq,
     This is a semi-streaming operation.  The LEFT sequence is fully evaluated
     and placed into memory.  The RIGHT sequence is evaluated lazily and so can
     be arbitrarily large.
+
     (Note: If right_default is defined, then unique keys of rightseq
         will also be stored in memory.)
 

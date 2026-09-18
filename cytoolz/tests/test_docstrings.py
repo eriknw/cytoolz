@@ -58,15 +58,14 @@ def test_docstrings_uptodate():
             diff = list(differ.compare(toolz_doc.splitlines(),
                                        cytoolz_doc.splitlines()))
             fulldiff = list(diff)
-            # remove additional lines at the beginning
-            while diff and diff[0].startswith('+'):
-                diff.pop(0)
-            # remove additional lines at the end
-            while diff and diff[-1].startswith('+'):
-                diff.pop()
+            # remove additional lines at the beginning (the Cython header)
+            limit = 2
+            while diff and diff[0].startswith('+') and limit > 0:
+                print(diff.pop(0))
+                limit -= 1
 
             def checkbad(line):
-                return (line.startswith('+') and
+                return ((line.startswith('+') or line.startswith('-')) and
                         not ('# doctest: +SKIP' in line and
                              key in skipped_doctests))
 
